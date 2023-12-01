@@ -2,11 +2,34 @@
 
 #include "Config.hpp"
 
-void Animation::Initialize(const char *obj_file, const char *split_cache_file) {
+constexpr int kShadowMapSize = 720;
+
+constexpr float kZNear = .1f, kZFar = 4.f;
+constexpr float kCornellLightHeight = 1.5f, kCornellLightRadius = 0.6f;
+constexpr glm::vec3 kCornellLeftColor = {.63f, .065f, .05f}, kCornellRightColor = {.161f, .133f, .427f},
+                    kCornellOtherColor = {.725f, .71f, .68f}, kCornellLightColor = {1.f, 1.f, 1.f};
+
+void Animation::Initialize(const char *obj_file) {
 	{
-		auto cornell_mesh = MeshLoader{}.MakeCornellBox({.63f, .065f, .05f}, {.161f, .133f, .427f}, {.725f, .71f, .68f},
-		                                                {1.f, 1.f, 1.f});
+		auto cornell_mesh = MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornellOtherColor,
+		                                                kCornellLightColor, kCornellLightHeight, kCornellLightRadius);
 		m_cornell_gpu_model.Initialize({&cornell_mesh, 1});
+	}
+	{
+		// auto tumbler_mesh = MeshLoader{}.Load(obj_file, kCornellOtherColor);
+		auto tumbler_mesh = MeshLoader{}.MakeSphere(1.0f, 4, glm::vec3{.0f, 1.f, .0f});
+		tumbler_mesh.Normalize(true);
+		m_tumbler_gpu_model.Initialize({&tumbler_mesh, 1});
+
+		{
+			auto trans = glm::identity<glm::mat4>();
+			float scale = .3f;
+			trans[0][0] = scale;
+			trans[1][1] = scale;
+			trans[2][2] = scale;
+			trans[3] = glm::vec4(glm::vec3(.2f, -1.f, .4f), 1.f);
+			m_tumbler_gpu_model.SetModel(0, trans);
+		}
 	}
 
 	// Load Shaders
@@ -21,6 +44,19 @@ void Animation::Initialize(const char *obj_file, const char *split_cache_file) {
 		m_mesh_shader.LoadBinary(kMeshVertSPIRV, sizeof(kMeshVertSPIRV), GL_VERTEX_SHADER);
 		m_mesh_shader.LoadBinary(kMeshFragSPIRV, sizeof(kMeshFragSPIRV), GL_FRAGMENT_SHADER);
 		m_mesh_shader.Finalize();
+	}
+
+	{
+		m_shadow_shader.Initialize();
+		constexpr const GLuint kShadowVertSPIRV[] = {
+#include <shader/shadow.vert.u32>
+		};
+		constexpr const GLuint kShadowFragSPIRV[] = {
+#include <shader/shadow.frag.u32>
+		};
+		m_shadow_shader.LoadBinary(kShadowVertSPIRV, sizeof(kShadowVertSPIRV), GL_VERTEX_SHADER);
+		m_shadow_shader.LoadBinary(kShadowFragSPIRV, sizeof(kShadowFragSPIRV), GL_FRAGMENT_SHADER);
+		m_shadow_shader.Finalize();
 	}
 
 	constexpr const GLuint kQuadVertSPIRV[] = {
@@ -48,6 +84,14 @@ void Animation::Initialize(const char *obj_file, const char *split_cache_file) {
 	m_quad_vao.Initialize();
 
 	m_camera_buffer.Initialize();
+	glm::mat4 proj = glm::perspective(glm::pi<float>() / 3.0f, 1.f, kZNear, kZFar); // aspect ratio = 1
+	glm::mat4 view =
+	    glm::lookAt(glm::vec3{.0f, .0f, 1.f + glm::sqrt(3.f)}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, 1.f, .0f});
+
+	glm::mat4 shadow_proj = glm::perspective(glm::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, kZNear, kZFar);
+	glm::mat4 shadow_view =
+	    glm::lookAt(glm::vec3{.0f, kCornellLightHeight, .0f}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, .0f, 1.f});
+	m_camera_buffer.Update(proj * view, shadow_proj * shadow_view);
 }
 
 void Animation::Update(float delta_t) {}
@@ -56,13 +100,23 @@ void Animation::Draw(int width, int height) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-	glm::mat4 proj = glm::perspective(glm::pi<float>() / 3.0f, float(width) / float(height), 0.1f, 32.0f);
-	glm::mat4 view =
-	    glm::lookAt(glm::vec3{.0f, .0f, 1.f + glm::sqrt(3.f)}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, 1.f, .0f});
-	m_camera_buffer.Update(proj * view);
 	m_camera_buffer.BindUniform(0);
 
+	// shadow map view
+	glViewport(0, 0, kShadowMapSize, kShadowMapSize);
+	glCullFace(GL_FRONT);
+	{
+		m_shadow_map.UseFBO(kShadowMapSize, kShadowMapSize);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		m_shadow_shader.Use();
+		m_tumbler_gpu_model.Draw();
+	}
+
+	m_shadow_map.BindOutput(6);
+
+	// main view
 	glViewport(0, 0, width, height);
+	glCullFace(GL_BACK);
 	{ // G-Buffer
 		m_gbuffer.UseFBO(width, height);
 
@@ -71,6 +125,7 @@ void Animation::Draw(int width, int height) {
 		m_mesh_shader.Use();
 		// draw model
 		m_cornell_gpu_model.Draw();
+		m_tumbler_gpu_model.Draw();
 	}
 
 	// Post process

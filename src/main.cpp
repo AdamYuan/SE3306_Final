@@ -17,12 +17,12 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	GLFWwindow *window = glfwCreateWindow(kWidth, kHeight, "Fracture", nullptr, nullptr);
+	GLFWwindow *window = glfwCreateWindow(kWidth, kHeight, "Tumbler", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, key_callback);
 	gl3wInit();
 
-	animation.Initialize("bunny.obj", "bunny_splits");
+	animation.Initialize("bunny.obj");
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 

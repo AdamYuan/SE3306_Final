@@ -124,7 +124,6 @@ void MeshLoader::make_sphere_triangles(float radius, uint32_t subdivisions) {
 
 	for (uint32_t i = 0; i < subdivisions; ++i) {
 		std::vector<Triangle> new_triangles;
-
 		for (const auto &tri : m_triangles) {
 			auto mid01 = find_mid(tri[0], tri[1]);
 			auto mid12 = find_mid(tri[1], tri[2]);
@@ -135,8 +134,7 @@ void MeshLoader::make_sphere_triangles(float radius, uint32_t subdivisions) {
 			new_triangles.push_back({mid02, mid12, tri[2]});
 			new_triangles.push_back({mid01, mid12, mid02});
 		}
-		m_triangles.insert(m_triangles.end(), new_triangles.begin(), new_triangles.end());
-		new_triangles.clear();
+		m_triangles = std::move(new_triangles);
 	}
 }
 
@@ -147,7 +145,7 @@ Mesh MeshLoader::MakeSphere(float radius, uint32_t subdivisions, const glm::vec3
 }
 
 Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &right_color, const glm::vec3 &other_color,
-                                const glm::vec3 &light_color) {
+                                const glm::vec3 &light_color, float light_height, float light_radius) {
 	m_triangles = {{
 	                   glm::vec3{-1.f, -1.f, -1.f},
 	                   glm::vec3{+1.f, -1.f, +1.f},
@@ -213,12 +211,16 @@ Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &ri
 	make_vertex_info_map();
 	mesh.Combine(generate_mesh(right_color)); // right
 
-	make_sphere_triangles(0.6f, 4);
+	make_sphere_triangles(light_radius, 4);
 	for (auto &tri : m_triangles) {
-		tri[0].y += 1.5f;
-		tri[1].y += 1.5f;
-		tri[2].y += 1.5f;
+		tri[0].y += light_height;
+		tri[1].y += light_height;
+		tri[2].y += light_height;
 	}
+	m_triangles.erase(
+	    std::remove_if(m_triangles.begin(), m_triangles.end(),
+	                   [](const auto &tri) { return tri[0].y > 1.f && tri[1].y > 1.f && tri[2].y > 1.f; }),
+	    m_triangles.end());
 	make_vertex_info_map();
 	mesh.Combine(generate_mesh(light_color)); // light
 

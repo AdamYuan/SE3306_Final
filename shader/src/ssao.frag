@@ -7,7 +7,7 @@ layout(binding = 2) uniform sampler2D uDepth;
 layout(binding = 4) uniform sampler1D uSamples;
 layout(binding = 5) uniform sampler2D uNoise;
 
-layout(std140, binding = 0) uniform uuCamera { mat4 uViewProjection, uInverseViewProjection; };
+layout(std140, binding = 0) uniform uuCamera { mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection; };
 
 vec2 sign_not_zero(in const vec2 v) { return vec2((v.x >= 0.0) ? 1.0 : -1.0, (v.y >= 0.0) ? +1.0 : -1.0); }
 vec3 oct_to_float32x3(vec2 e) {

@@ -28,5 +28,5 @@ public:
 	Mesh Load(const char *filename, const glm::vec3 &color);
 	Mesh MakeSphere(float radius, uint32_t subdivisions, const glm::vec3 &color);
 	Mesh MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &right_color, const glm::vec3 &other_color,
-	                    const glm::vec3 &light_color);
+	                    const glm::vec3 &light_color, float light_height, float light_radius);
 };

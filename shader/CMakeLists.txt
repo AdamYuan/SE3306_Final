@@ -4,6 +4,8 @@ project(SE3306_Final)
 set(SHADER_SRC
         mesh.frag
         mesh.vert
+        shadow.frag
+        shadow.vert
         quad.vert
         final.frag
         ssao.frag
