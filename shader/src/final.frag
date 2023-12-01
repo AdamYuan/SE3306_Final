@@ -1,14 +1,17 @@
 #version 450
 
+#include "Binding.h"
+
 layout(location = 0) out vec4 oColor;
 
-layout(binding = 0) uniform sampler2D uAlbedo;
-layout(binding = 1) uniform sampler2D uNormal;
-layout(binding = 2) uniform sampler2D uDepth;
-layout(binding = 3) uniform sampler2D uOcclusion;
-layout(binding = 6) uniform sampler2DShadow uShadowMap;
+layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
+layout(binding = GBUFFER_NORMAL_TEXTURE) uniform sampler2D uNormal;
+layout(binding = GBUFFER_DEPTH_TEXTURE) uniform sampler2D uDepth;
+layout(binding = SHADOW_MAP_TEXTURE) uniform sampler2DShadow uShadowMap;
 
-layout(std140, binding = 0) uniform uuCamera { mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection; };
+layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
+	mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection;
+};
 
 const float kCornellLightHeight = 1.5;
 
@@ -39,8 +42,9 @@ float compute_visibility(in const vec3 position, in const vec3 normal) {
 	{
 		vec4 shadow_pos = uShadowViewProjection * vec4(position, 1);
 		shadow_pos /= shadow_pos.w;
-		shadow_pos.xyz = shadow_pos.xyz * .5 + .5;
-		shadow = textureProj(uShadowMap, shadow_pos);
+		shadow_pos.xyz = shadow_pos.xyz * 0.5 + 0.5;
+
+		float shadow_size = 1. / textureSize(uShadowMap, 0).x; // square shadow map ensured
 
 		shadow = 0;
 #define SHADOW_SAMPLE(OFFSET) shadow += textureProjOffset(uShadowMap, shadow_pos, OFFSET)
@@ -50,13 +54,13 @@ float compute_visibility(in const vec3 position, in const vec3 normal) {
 	SHADOW_SAMPLE(ivec2(X_OFFSET, 0)); \
 	SHADOW_SAMPLE(ivec2(X_OFFSET, 1)); \
 	SHADOW_SAMPLE(ivec2(X_OFFSET, 2))
-
 		SHADOW_SAMPLE_X(-2);
 		SHADOW_SAMPLE_X(-1);
 		SHADOW_SAMPLE_X(0);
 		SHADOW_SAMPLE_X(1);
 		SHADOW_SAMPLE_X(2);
 		shadow *= 0.04;
+		shadow = smoothstep(0.02, 1.0, shadow);
 	}
 
 	return diffuse * shadow;
@@ -69,36 +73,9 @@ void main() {
 	float depth = texelFetch(uDepth, coord, 0).r;
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
 
-	float occlusion;
-	{
-		vec2 ps = 1.0 / vec2(textureSize(uOcclusion, 0)).xy;
-		vec2 uv = gl_FragCoord.xy * ps;
-		uint cnt = 0;
-
-#define BLUR(NEI_UV) \
-	{ \
-		vec2 nei_uv = NEI_UV; \
-		if (texture(uAlbedo, nei_uv).rgb == albedo) { \
-			++cnt; \
-			occlusion += texture(uOcclusion, nei_uv).r; \
-		} \
-	}
-		BLUR(vec2(uv.x - ps.x, uv.y - ps.y))
-		BLUR(vec2(uv.x, uv.y - ps.y))
-		BLUR(vec2(uv.x + ps.x, uv.y - ps.y))
-		BLUR(vec2(uv.x - ps.x, uv.y))
-		BLUR(uv)
-		BLUR(vec2(uv.x + ps.x, uv.y))
-		BLUR(vec2(uv.x - ps.x, uv.y + ps.y))
-		BLUR(vec2(uv.x, uv.y + ps.y))
-		BLUR(vec2(uv.x + ps.x, uv.y + ps.y))
-		occlusion /= float(cnt);
-#undef BLUR
-	}
-
 	float visibility = compute_visibility(position, normal);
 
-	vec3 emissive = albedo == vec3(1) ? vec3(1) : vec3(0);
+	vec3 emissive = albedo == vec3(1) ? vec3(2) : vec3(0);
 	vec3 color = vec3(2) * albedo * visibility + emissive;
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

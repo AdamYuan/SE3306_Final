@@ -76,6 +76,42 @@ void Data(const GLvoid *pixels, GLsizei width, GLenum format, GLenum type, GLint
 void GenerateMipmap() { glGenerateTextureMipmap(id_); }
 }
 ;
+
+DEF_TEXTURE_CLASS(Texture2DArray, GL_TEXTURE_2D_ARRAY)
+static GLsizei GetLevelCount(GLsizei width, GLsizei height) {
+	GLsizei cnt = 1;
+	while ((width | height) >> cnt)
+		++cnt;
+	return cnt;
+}
+void Storage(GLsizei width, GLsizei height, GLsizei depth, GLenum internal_format, GLsizei levels = 1) {
+	glTextureStorage3D(id_, levels, internal_format, width, height, depth);
+}
+void Data(const GLvoid *pixels, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+          GLint level = 0) {
+	glTextureSubImage3D(id_, level, 0, 0, 0, width, height, depth, format, type, pixels);
+}
+void GenerateMipmap() { glGenerateTextureMipmap(id_); }
+}
+;
+
+DEF_TEXTURE_CLASS(Texture3D, GL_TEXTURE_3D)
+static GLsizei GetLevelCount(GLsizei width, GLsizei height, GLsizei depth) {
+	GLsizei cnt = 1;
+	while ((width | height | depth) >> cnt)
+		++cnt;
+	return cnt;
+}
+void Storage(GLsizei width, GLsizei height, GLsizei depth, GLenum internal_format, GLsizei levels = 1) {
+	glTextureStorage3D(id_, levels, internal_format, width, height, depth);
+}
+void Data(const GLvoid *pixels, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+          GLint level = 0) {
+	glTextureSubImage3D(id_, level, 0, 0, 0, width, height, depth, format, type, pixels);
+}
+void GenerateMipmap() { glGenerateTextureMipmap(id_); }
+}
+;
 }
 
 #endif // MYGL3_TEXTURE_HPP

@@ -20,14 +20,13 @@ add_executable(
         Tumbler
         src/main.cpp
         src/Mesh.cpp
+        src/Voxel.cpp
         src/CameraBuffer.cpp
         src/MeshLoader.cpp
         src/GPUMesh.cpp
         src/Animation.cpp
         src/GBuffer.cpp
         src/ShadowMap.cpp
-        src/DeepGBuffer.cpp
-        src/SSAOBuffer.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader dep)
 

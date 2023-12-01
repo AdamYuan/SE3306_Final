@@ -1,6 +1,21 @@
 #include "ShadowMap.hpp"
 
-void ShadowMap::initialize(int width, int height) {
+#include <shader/Binding.h>
+
+void ShadowMap::Initialize() {
+	m_shader.Initialize();
+	constexpr const GLuint kVertSPIRV[] = {
+#include <shader/shadow.vert.u32>
+	};
+	constexpr const GLuint kFragSPIRV[] = {
+#include <shader/shadow.frag.u32>
+	};
+	m_shader.LoadBinary(kVertSPIRV, sizeof(kVertSPIRV), GL_VERTEX_SHADER);
+	m_shader.LoadBinary(kFragSPIRV, sizeof(kFragSPIRV), GL_FRAGMENT_SHADER);
+	m_shader.Finalize();
+}
+
+void ShadowMap::initialize_fbo(int width, int height) {
 	if (m_width == width && m_height == height)
 		return;
 
@@ -16,4 +31,6 @@ void ShadowMap::initialize(int width, int height) {
 
 	m_fbo.Initialize();
 	m_fbo.AttachTexture2D(m_depth, GL_DEPTH_ATTACHMENT);
+
+	m_depth.Bind(SHADOW_MAP_TEXTURE);
 }

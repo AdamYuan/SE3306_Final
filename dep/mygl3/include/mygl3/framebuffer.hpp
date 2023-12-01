@@ -75,6 +75,9 @@ public:
 	void AttachTexture2D(const Texture2D &texture, GLenum attachment, GLint level = 0) {
 		glNamedFramebufferTexture(fbo_, attachment, texture.Get(), level);
 	}
+	void AttachTexture2DArray(const Texture2DArray &texture, GLenum attachment, GLint level = 0) {
+		glNamedFramebufferTexture(fbo_, attachment, texture.Get(), level);
+	}
 	void AttachRenderbuffer(const RenderBuffer &rbo, GLenum attachment) {
 		glNamedFramebufferRenderbuffer(fbo_, attachment, GL_RENDERBUFFER, rbo.Get());
 	}

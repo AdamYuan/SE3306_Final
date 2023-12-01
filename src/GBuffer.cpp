@@ -1,6 +1,21 @@
 #include "GBuffer.hpp"
 
-void GBuffer::initialize(int width, int height) {
+#include <shader/Binding.h>
+
+void GBuffer::Initialize() {
+	m_shader.Initialize();
+	constexpr const GLuint kVertSPIRV[] = {
+#include <shader/gbuffer.vert.u32>
+	};
+	constexpr const GLuint kFragSPIRV[] = {
+#include <shader/gbuffer.frag.u32>
+	};
+	m_shader.LoadBinary(kVertSPIRV, sizeof(kVertSPIRV), GL_VERTEX_SHADER);
+	m_shader.LoadBinary(kFragSPIRV, sizeof(kFragSPIRV), GL_FRAGMENT_SHADER);
+	m_shader.Finalize();
+}
+
+void GBuffer::initialize_fbo(int width, int height) {
 	if (m_width == width && m_height == height)
 		return;
 	m_width = width;
@@ -28,4 +43,8 @@ void GBuffer::initialize(int width, int height) {
 
 	GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 	glNamedFramebufferDrawBuffers(m_fbo.Get(), 2, attachments);
+
+	m_albedo.Bind(GBUFFER_ALBEDO_TEXTURE);
+	m_normal.Bind(GBUFFER_NORMAL_TEXTURE);
+	m_depth.Bind(GBUFFER_DEPTH_TEXTURE);
 }
