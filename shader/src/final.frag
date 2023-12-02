@@ -99,7 +99,7 @@ vec3 cone_trace(in const vec3 origin, in const vec3 dir, in const float tan_half
 		float diameter = 2. * tan_half_cone * dist;
 		vec4 samp = sample_voxel(origin + dist * dir, log2(diameter * inv_voxel_size), axis_indices, axis_weights);
 		acc += samp * (1.0 - acc.a);
-		dist += diameter * 0.5f;
+		dist += diameter * 0.5;
 	}
 
 	return acc.rgb;
