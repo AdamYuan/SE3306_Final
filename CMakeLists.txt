@@ -27,6 +27,7 @@ add_executable(
         src/Animation.cpp
         src/GBuffer.cpp
         src/ShadowMap.cpp
+        src/Tumbler.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader dep)
 

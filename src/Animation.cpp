@@ -6,8 +6,9 @@ constexpr int kShadowMapSize = 480, kVoxelResolution = 64;
 
 constexpr float kZNear = .1f, kZFar = 4.f;
 constexpr float kCornellLightHeight = 1.5f, kCornellLightRadius = 0.6f;
-constexpr glm::vec3 kCornellLeftColor = {.63f, .065f, .05f}, kCornellRightColor = {.161f, .133f, .427f},
+constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColor = {.486f, .631f, .663},
                     kCornellOtherColor = {.725f, .71f, .68f}, kCornellLightColor = {1.f, 1.f, 1.f};
+constexpr glm::vec3 kTumblerColor = {.63f, .065f, .05f};
 
 void Animation::Initialize(const char *obj_file) {
 	{
@@ -17,7 +18,7 @@ void Animation::Initialize(const char *obj_file) {
 	}
 	{
 		// auto model = MeshLoader{}.Load(obj_file, kCornellOtherColor);
-		auto tumbler_mesh = MeshLoader{}.MakeSphere(1.0f, 4, glm::vec3{.0f, 100.0f, .0f});
+		auto tumbler_mesh = MeshLoader{}.MakeSphere(1.0f, 4, kTumblerColor);
 		tumbler_mesh.Normalize(true);
 		m_tumbler_gpu_model.Initialize({&tumbler_mesh, 1});
 		// m_tumbler_gpu_model.Initialize(std::vector<Mesh>{std::move(tumbler_mesh), std::move(model)});
