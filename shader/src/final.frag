@@ -73,10 +73,8 @@ mat3 normal_to_tbn(in const vec3 normal) {
 
 vec4 sample_voxel(in const vec3 position, in const float lod, in const ivec3 axis_indices, in const vec3 axis_weights) {
 	vec3 voxel_pos = position * VOXEL_SCALE * .5 + .5;
-	if (lod < 1.0)
-		return textureLod(uVoxelRadiance, voxel_pos, lod);
 	vec4 mipmap_acc = vec4(0);
-	float mipmap_lod = lod - 1.0;
+	float mipmap_lod = max(lod - 1.0, 0.0);
 	mipmap_acc += axis_weights.x > 0.0
 	                  ? axis_weights.x * textureLod(uVoxelRadianceMipmaps[axis_indices.x], voxel_pos, mipmap_lod)
 	                  : vec4(0);
@@ -86,21 +84,21 @@ vec4 sample_voxel(in const vec3 position, in const float lod, in const ivec3 axi
 	mipmap_acc += axis_weights.z > 0.0
 	                  ? axis_weights.z * textureLod(uVoxelRadianceMipmaps[axis_indices.z], voxel_pos, mipmap_lod)
 	                  : vec4(0);
-	return mipmap_acc;
+	return lod >= 1.0 ? mipmap_acc : lod * mipmap_acc + (1.0 - lod) * texture(uVoxelRadiance, voxel_pos);
 }
 
-vec3 cone_trace(in const vec3 origin, in const vec3 dir, in const float tan_half_cone) {
+vec3 cone_trace(in const vec3 origin, in const vec3 dir, in const float tan_half_cone, in const float voxel_size) {
 	vec4 acc = vec4(0);
-	float voxel_size = 2.0 * VOXEL_SCALE / textureSize(uVoxelRadiance, 0).x, inv_voxel_size = 1.0 / voxel_size;
-	float dist = 0.2;
+
+	float dist = 0.2, inv_voxel_size = 1.0 / voxel_size;
 
 	ivec3 axis_indices = ivec3(dir.x < 0.0 ? 0 : 1, dir.y < 0.0 ? 2 : 3, dir.z < 0.0 ? 4 : 5);
 	vec3 axis_weights = dir * dir;
 
 	while (dist < 4. && acc.a < 1.) {
 		float diameter = 2. * tan_half_cone * dist;
-		acc += sample_voxel(origin + dist * dir, log2(diameter * inv_voxel_size), axis_indices, axis_weights) *
-		       (1.0 - acc.a);
+		vec4 samp = sample_voxel(origin + dist * dir, log2(diameter * inv_voxel_size), axis_indices, axis_weights);
+		acc += samp * (1.0 - acc.a);
 		dist += diameter * 0.5f;
 	}
 
@@ -110,13 +108,15 @@ vec3 cone_trace(in const vec3 origin, in const vec3 dir, in const float tan_half
 vec3 IndirectLight(in const vec3 position, in const vec3 normal) {
 	mat3 tbn = normal_to_tbn(normal);
 
+	float voxel_size = 2.0 * VOXEL_SCALE / textureSize(uVoxelRadiance, 0).x;
+
 	vec3 radiance = vec3(0);
-	radiance += kConeWeights[0] * cone_trace(position, normalize(tbn * kConeDirections[0]), 0.57735);
-	radiance += kConeWeights[1] * cone_trace(position, normalize(tbn * kConeDirections[1]), 0.57735);
-	radiance += kConeWeights[2] * cone_trace(position, normalize(tbn * kConeDirections[2]), 0.57735);
-	radiance += kConeWeights[3] * cone_trace(position, normalize(tbn * kConeDirections[3]), 0.57735);
-	radiance += kConeWeights[4] * cone_trace(position, normalize(tbn * kConeDirections[4]), 0.57735);
-	radiance += kConeWeights[5] * cone_trace(position, normalize(tbn * kConeDirections[5]), 0.57735);
+	radiance += kConeWeights[0] * cone_trace(position, normalize(tbn * kConeDirections[0]), 0.57735, voxel_size);
+	radiance += kConeWeights[1] * cone_trace(position, normalize(tbn * kConeDirections[1]), 0.57735, voxel_size);
+	radiance += kConeWeights[2] * cone_trace(position, normalize(tbn * kConeDirections[2]), 0.57735, voxel_size);
+	radiance += kConeWeights[3] * cone_trace(position, normalize(tbn * kConeDirections[3]), 0.57735, voxel_size);
+	radiance += kConeWeights[4] * cone_trace(position, normalize(tbn * kConeDirections[4]), 0.57735, voxel_size);
+	radiance += kConeWeights[5] * cone_trace(position, normalize(tbn * kConeDirections[5]), 0.57735, voxel_size);
 
 	return radiance;
 }
