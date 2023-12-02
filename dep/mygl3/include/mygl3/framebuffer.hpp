@@ -36,9 +36,10 @@ public:
 		}
 		glCreateRenderbuffers(1, &rbo_);
 	}
-	void Load(GLenum internal_format, GLsizei width, GLsizei height) {
+	void Storage(GLenum internal_format, GLsizei width, GLsizei height) {
 		glNamedRenderbufferStorage(rbo_, internal_format, width, height);
 	}
+	void Bind() { glBindRenderbuffer(GL_RENDERBUFFER, rbo_); }
 	GLuint Get() const { return rbo_; }
 };
 

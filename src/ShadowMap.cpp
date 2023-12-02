@@ -15,7 +15,7 @@ void ShadowMap::Initialize() {
 	m_shader.Finalize();
 }
 
-void ShadowMap::initialize_fbo(int width, int height) {
+void ShadowMap::initialize_target(int width, int height) {
 	if (m_width == width && m_height == height)
 		return;
 

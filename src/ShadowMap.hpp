@@ -12,12 +12,12 @@ private:
 	mygl3::FrameBuffer m_fbo;
 	int m_width{-1}, m_height{-1};
 
-	void initialize_fbo(int width, int height);
+	void initialize_target(int width, int height);
 
 public:
 	void Initialize();
 	template <typename DrawFunc> void Generate(int width, int height, DrawFunc &&draw_func) {
-		initialize_fbo(width, height);
+		initialize_target(width, height);
 		m_fbo.Bind();
 		m_shader.Use();
 		draw_func();

@@ -6,6 +6,7 @@
 #include "GBuffer.hpp"
 #include "GPUMesh.hpp"
 #include "ShadowMap.hpp"
+#include "Voxel.hpp"
 
 #include <mygl3/shader.hpp>
 
@@ -18,6 +19,7 @@ private:
 	ShadowMap m_shadow_map;
 	GBuffer m_gbuffer;
 	CameraBuffer m_camera_buffer;
+	Voxel m_voxel;
 
 public:
 	void Initialize(const char *obj_file);

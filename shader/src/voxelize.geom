@@ -4,16 +4,19 @@ layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
 layout(location = 0) in vec3 vNormal[];
-layout(location = 1) in vec3 vColor[];
+layout(location = 1) in vec3 vAlbedo[];
+layout(location = 2) in vec3 vShadowPos[];
 
 layout(location = 0) out vec3 gNormal;
-layout(location = 1) out vec3 gColor;
-layout(location = 2) flat out uint gAxis;
+layout(location = 1) out vec3 gAlbedo;
 
-vec3 Project(in vec3 v, in uint axis) {
-	vec3 ret = axis == 0 ? v.yzx : (axis == 1 ? v.zxy : v.xyz);
-	return ret;
-}
+// for direct light calculation
+layout(location = 2) out vec3 gWorldPos;
+layout(location = 3) out vec3 gShadowPos;
+
+layout(location = 4) flat out uint gAxis;
+
+vec3 Project(in const vec3 v, in const uint axis) { return axis == 0 ? v.yzx : (axis == 1 ? v.zxy : v.xyz); }
 
 void main() {
 	vec3 pos0 = gl_in[0].gl_Position.xyz;
@@ -25,23 +28,24 @@ void main() {
 	                ? 0
 	                : ((axis_weight.y > axis_weight.z) ? 1 : 2);
 
-	vec3 center = (pos0 + pos1 + pos2) * 0.33333333333;
-	pos0 += normalize(pos0 - center) * 0.02;
-	pos1 += normalize(pos1 - center) * 0.02;
-	pos2 += normalize(pos2 - center) * 0.02;
-
 	gAxis = axis;
 
 	gNormal = vNormal[0];
-	gColor = vColor[0];
+	gAlbedo = vAlbedo[0];
+	gWorldPos = pos0;
+	gShadowPos = vShadowPos[0];
 	gl_Position = vec4(Project(pos0, axis), 1.0);
 	EmitVertex();
 	gNormal = vNormal[1];
-	gColor = vColor[1];
+	gAlbedo = vAlbedo[1];
+	gWorldPos = pos1;
+	gShadowPos = vShadowPos[1];
 	gl_Position = vec4(Project(pos1, axis), 1.0);
 	EmitVertex();
 	gNormal = vNormal[2];
-	gColor = vColor[2];
+	gAlbedo = vAlbedo[2];
+	gWorldPos = pos2;
+	gShadowPos = vShadowPos[2];
 	gl_Position = vec4(Project(pos2, axis), 1.0);
 	EmitVertex();
 	EndPrimitive();

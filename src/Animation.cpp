@@ -2,7 +2,7 @@
 
 #include "Config.hpp"
 
-constexpr int kShadowMapSize = 480;
+constexpr int kShadowMapSize = 480, kVoxelResolution = 64;
 
 constexpr float kZNear = .1f, kZFar = 4.f;
 constexpr float kCornellLightHeight = 1.5f, kCornellLightRadius = 0.6f;
@@ -16,20 +16,11 @@ void Animation::Initialize(const char *obj_file) {
 		m_cornell_gpu_model.Initialize({&cornell_mesh, 1});
 	}
 	{
-		// auto tumbler_mesh = MeshLoader{}.Load(obj_file, kCornellOtherColor);
-		auto tumbler_mesh = MeshLoader{}.MakeSphere(1.0f, 4, glm::vec3{.0f, 1.f, .0f});
+		// auto model = MeshLoader{}.Load(obj_file, kCornellOtherColor);
+		auto tumbler_mesh = MeshLoader{}.MakeSphere(1.0f, 4, glm::vec3{.0f, 100.0f, .0f});
 		tumbler_mesh.Normalize(true);
 		m_tumbler_gpu_model.Initialize({&tumbler_mesh, 1});
-
-		{
-			auto trans = glm::identity<glm::mat4>();
-			float scale = .3f;
-			trans[0][0] = scale;
-			trans[1][1] = scale;
-			trans[2][2] = scale;
-			trans[3] = glm::vec4(glm::vec3(.2f, -1.f, .4f), 1.f);
-			m_tumbler_gpu_model.SetModel(0, trans);
-		}
+		// m_tumbler_gpu_model.Initialize(std::vector<Mesh>{std::move(tumbler_mesh), std::move(model)});
 	}
 
 	// Load Shaders
@@ -60,21 +51,47 @@ void Animation::Initialize(const char *obj_file) {
 
 	m_gbuffer.Initialize();
 	m_shadow_map.Initialize();
+	m_voxel.Initialize();
 }
 
-void Animation::Update(float delta_t) {}
+void Animation::Update(float delta_t) {
+	static float angle{};
+	angle += delta_t;
+	{
+		auto trans = glm::identity<glm::mat4>();
+		float scale = .3f;
+		trans[0][0] = scale;
+		trans[1][1] = scale;
+		trans[2][2] = scale;
+		trans[3] = glm::vec4(glm::vec3(glm::cos(angle), -1.f, glm::sin(angle)), 1.f);
+		m_tumbler_gpu_model.SetModel(0, trans);
+	}
+}
 
 void Animation::Draw(int width, int height) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-	// shadow map view
+	// shadow map
 	glViewport(0, 0, kShadowMapSize, kShadowMapSize);
 	glCullFace(GL_FRONT);
 	m_shadow_map.Generate(kShadowMapSize, kShadowMapSize, [this]() {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		m_tumbler_gpu_model.Draw();
 	});
+
+	// voxels
+	glViewport(0, 0, kVoxelResolution, kVoxelResolution);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	m_voxel.Generate(kVoxelResolution, [this]() {
+		glClear(GL_COLOR_BUFFER_BIT);
+		m_cornell_gpu_model.Draw();
+		m_tumbler_gpu_model.Draw();
+	});
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 
 	// main view
 	glViewport(0, 0, width, height);

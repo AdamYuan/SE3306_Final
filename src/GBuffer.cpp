@@ -15,7 +15,7 @@ void GBuffer::Initialize() {
 	m_shader.Finalize();
 }
 
-void GBuffer::initialize_fbo(int width, int height) {
+void GBuffer::initialize_target(int width, int height) {
 	if (m_width == width && m_height == height)
 		return;
 	m_width = width;
