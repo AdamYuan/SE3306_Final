@@ -64,7 +64,7 @@ void Animation::Update(float delta_t) {
 		trans[0][0] = scale;
 		trans[1][1] = scale;
 		trans[2][2] = scale;
-		trans[3] = glm::vec4(glm::vec3(glm::cos(angle), -1.f, glm::sin(angle)), 1.f);
+		trans[3] = glm::vec4(glm::vec3(glm::cos(angle), -1.0f, glm::sin(angle)), 1.f);
 		m_tumbler_gpu_model.SetModel(0, trans);
 	}
 }

@@ -3,6 +3,7 @@ project(SE3306_Final)
 
 set(SHADER_HEADER
         Binding.h
+        Config.h
 )
 
 set(SHADER_SRC
@@ -13,6 +14,8 @@ set(SHADER_SRC
         voxelize.frag
         voxelize.geom
         voxelize.vert
+        voxel_mipmap_0.comp
+        voxel_mipmap.comp
         quad.vert
         final.frag
 )

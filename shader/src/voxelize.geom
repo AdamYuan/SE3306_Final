@@ -1,5 +1,7 @@
 #version 450 core
 
+#include "Config.h"
+
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
@@ -16,7 +18,10 @@ layout(location = 3) out vec3 gShadowPos;
 
 layout(location = 4) flat out uint gAxis;
 
-vec3 Project(in const vec3 v, in const uint axis) { return axis == 0 ? v.yzx : (axis == 1 ? v.zxy : v.xyz); }
+vec3 Project(vec3 v, in const uint axis) {
+	v *= VOXEL_SCALE;
+	return axis == 0 ? v.yzx : (axis == 1 ? v.zxy : v.xyz);
+}
 
 void main() {
 	vec3 pos0 = gl_in[0].gl_Position.xyz;

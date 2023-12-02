@@ -1,6 +1,7 @@
 #version 450
 
 #include "Binding.h"
+#include "Config.h"
 
 layout(location = 0) out vec4 oColor;
 
@@ -9,6 +10,7 @@ layout(binding = GBUFFER_NORMAL_TEXTURE) uniform sampler2D uNormal;
 layout(binding = GBUFFER_DEPTH_TEXTURE) uniform sampler2D uDepth;
 layout(binding = SHADOW_MAP_TEXTURE) uniform sampler2DShadow uShadowMap;
 layout(binding = VOXEL_RADIANCE_TEXTURE) uniform sampler3D uVoxelRadiance;
+layout(binding = VOXEL_RADIANCE_MIPMAP_TEXTURE) uniform sampler3D uVoxelRadianceMipmaps[6];
 
 layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
 	mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection;
@@ -28,6 +30,7 @@ vec3 oct_to_float32x3(vec2 e) {
 	return normalize(v);
 }
 
+const float kCornellLightHeight = 1.5;
 const vec3 kCornellLightRadiance = vec3(2.0);
 
 float DirectShadow(in const vec3 position, in const vec3 normal) {
@@ -68,18 +71,36 @@ mat3 normal_to_tbn(in const vec3 normal) {
 	return mat3(tangent, cross(tangent, normal), normal);
 }
 
-vec4 sample_voxel(in const vec3 position, in const float lod) {
-	return textureLod(uVoxelRadiance, position * .5 + .5, lod);
+vec4 sample_voxel(in const vec3 position, in const float lod, in const ivec3 axis_indices, in const vec3 axis_weights) {
+	vec3 voxel_pos = position * VOXEL_SCALE * .5 + .5;
+	if (lod < 1.0)
+		return textureLod(uVoxelRadiance, voxel_pos, lod);
+	vec4 mipmap_acc = vec4(0);
+	float mipmap_lod = lod - 1.0;
+	mipmap_acc += axis_weights.x > 0.0
+	                  ? axis_weights.x * textureLod(uVoxelRadianceMipmaps[axis_indices.x], voxel_pos, mipmap_lod)
+	                  : vec4(0);
+	mipmap_acc += axis_weights.y > 0.0
+	                  ? axis_weights.y * textureLod(uVoxelRadianceMipmaps[axis_indices.y], voxel_pos, mipmap_lod)
+	                  : vec4(0);
+	mipmap_acc += axis_weights.z > 0.0
+	                  ? axis_weights.z * textureLod(uVoxelRadianceMipmaps[axis_indices.z], voxel_pos, mipmap_lod)
+	                  : vec4(0);
+	return mipmap_acc;
 }
 
-vec3 cone_trace(in const vec3 origin, in const vec3 dir, in const float tan_half_cone, in const float lod_bias) {
+vec3 cone_trace(in const vec3 origin, in const vec3 dir, in const float tan_half_cone) {
 	vec4 acc = vec4(0);
-	float inv_voxel_size = textureSize(uVoxelRadiance, 0).x * 0.5;
-	float dist = 1.0 / inv_voxel_size;
+	float voxel_size = 2.0 * VOXEL_SCALE / textureSize(uVoxelRadiance, 0).x, inv_voxel_size = 1.0 / voxel_size;
+	float dist = 0.2;
+
+	ivec3 axis_indices = ivec3(dir.x < 0.0 ? 0 : 1, dir.y < 0.0 ? 2 : 3, dir.z < 0.0 ? 4 : 5);
+	vec3 axis_weights = dir * dir;
 
 	while (dist < 4. && acc.a < 1.) {
 		float diameter = 2. * tan_half_cone * dist;
-		acc += sample_voxel(origin + dist * dir, log2(diameter * inv_voxel_size) + lod_bias) * (1.0 - acc.a);
+		acc += sample_voxel(origin + dist * dir, log2(diameter * inv_voxel_size), axis_indices, axis_weights) *
+		       (1.0 - acc.a);
 		dist += diameter * 0.5f;
 	}
 
@@ -90,14 +111,14 @@ vec3 IndirectLight(in const vec3 position, in const vec3 normal) {
 	mat3 tbn = normal_to_tbn(normal);
 
 	vec3 radiance = vec3(0);
-	radiance += kConeWeights[0] * cone_trace(position, normalize(tbn * kConeDirections[0]), 0.57735, 4);
-	radiance += kConeWeights[1] * cone_trace(position, normalize(tbn * kConeDirections[1]), 0.57735, 4);
-	radiance += kConeWeights[2] * cone_trace(position, normalize(tbn * kConeDirections[2]), 0.57735, 4);
-	radiance += kConeWeights[3] * cone_trace(position, normalize(tbn * kConeDirections[3]), 0.57735, 4);
-	radiance += kConeWeights[4] * cone_trace(position, normalize(tbn * kConeDirections[4]), 0.57735, 4);
-	radiance += kConeWeights[5] * cone_trace(position, normalize(tbn * kConeDirections[5]), 0.57735, 4);
+	radiance += kConeWeights[0] * cone_trace(position, normalize(tbn * kConeDirections[0]), 0.57735);
+	radiance += kConeWeights[1] * cone_trace(position, normalize(tbn * kConeDirections[1]), 0.57735);
+	radiance += kConeWeights[2] * cone_trace(position, normalize(tbn * kConeDirections[2]), 0.57735);
+	radiance += kConeWeights[3] * cone_trace(position, normalize(tbn * kConeDirections[3]), 0.57735);
+	radiance += kConeWeights[4] * cone_trace(position, normalize(tbn * kConeDirections[4]), 0.57735);
+	radiance += kConeWeights[5] * cone_trace(position, normalize(tbn * kConeDirections[5]), 0.57735);
 
-	return radiance * 3.1415926;
+	return radiance;
 }
 
 void main() {
@@ -109,6 +130,6 @@ void main() {
 
 	vec3 color = albedo == vec3(1)
 	                 ? kCornellLightRadiance
-	                 : albedo * IndirectLight(position, normal) * (DirectShadow(position, normal) * 0.5 + 0.5);
+	                 : albedo * IndirectLight(position, normal) * (DirectShadow(position, normal) * 0.7 + 0.3);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
