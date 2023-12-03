@@ -74,22 +74,22 @@ public:
 		glAttachShader(id_, cur);
 	}
 
-	void LoadBinary(const GLuint *src, GLsizei length, GLenum type) {
-		shaders.emplace_back();
-		GLuint &cur = shaders.back();
+	/* void LoadBinary(const GLuint *src, GLsizei length, GLenum type) {
+	    shaders.emplace_back();
+	    GLuint &cur = shaders.back();
 
-		cur = glCreateShader(type);
-		glShaderBinary(1, &cur, GL_SHADER_BINARY_FORMAT_SPIR_V, src, length);
-		glSpecializeShader(cur, "main", 0, nullptr, nullptr);
-		int success;
-		glGetShaderiv(cur, GL_COMPILE_STATUS, &success);
-		if (!success) {
-			char log[16384];
-			glGetShaderInfoLog(cur, 16384, nullptr, log);
-			printf("******SHADER COMPILE ERROR******\nerr:\n%s\n\n\n", log);
-		}
-		glAttachShader(id_, cur);
-	}
+	    cur = glCreateShader(type);
+	    glShaderBinary(1, &cur, GL_SHADER_BINARY_FORMAT_SPIR_V, src, length);
+	    glSpecializeShader(cur, "main", 0, nullptr, nullptr);
+	    int success;
+	    glGetShaderiv(cur, GL_COMPILE_STATUS, &success);
+	    if (!success) {
+	        char log[16384];
+	        glGetShaderInfoLog(cur, 16384, nullptr, log);
+	        printf("******SHADER COMPILE ERROR******\nerr:\n%s\n\n\n", log);
+	    }
+	    glAttachShader(id_, cur);
+	} */
 
 	void Finalize() {
 		glLinkProgram(id_);

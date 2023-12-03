@@ -25,16 +25,16 @@ void Animation::Initialize(const char *obj_file) {
 	}
 
 	// Load Shaders
-	constexpr const GLuint kQuadVertSPIRV[] = {
-#include <shader/quad.vert.u32>
-	};
+	constexpr const char *kQuadVert =
+#include <shader/quad.vert.str>
+	    ;
 	{
 		m_final_shader.Initialize();
-		constexpr const GLuint kFinalFragSPIRV[] = {
-#include <shader/final.frag.u32>
-		};
-		m_final_shader.LoadBinary(kQuadVertSPIRV, sizeof(kQuadVertSPIRV), GL_VERTEX_SHADER);
-		m_final_shader.LoadBinary(kFinalFragSPIRV, sizeof(kFinalFragSPIRV), GL_FRAGMENT_SHADER);
+		constexpr const char *kFinalFrag =
+#include <shader/final.frag.str>
+		    ;
+		m_final_shader.Load(kQuadVert, GL_VERTEX_SHADER);
+		m_final_shader.Load(kFinalFrag, GL_FRAGMENT_SHADER);
 		m_final_shader.Finalize();
 	}
 

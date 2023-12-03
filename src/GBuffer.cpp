@@ -4,14 +4,14 @@
 
 void GBuffer::Initialize() {
 	m_shader.Initialize();
-	constexpr const GLuint kVertSPIRV[] = {
-#include <shader/gbuffer.vert.u32>
-	};
-	constexpr const GLuint kFragSPIRV[] = {
-#include <shader/gbuffer.frag.u32>
-	};
-	m_shader.LoadBinary(kVertSPIRV, sizeof(kVertSPIRV), GL_VERTEX_SHADER);
-	m_shader.LoadBinary(kFragSPIRV, sizeof(kFragSPIRV), GL_FRAGMENT_SHADER);
+	constexpr const char *kVert =
+#include <shader/gbuffer.vert.str>
+	    ;
+	constexpr const char *kFrag =
+#include <shader/gbuffer.frag.str>
+	    ;
+	m_shader.Load(kVert, GL_VERTEX_SHADER);
+	m_shader.Load(kFrag, GL_FRAGMENT_SHADER);
 	m_shader.Finalize();
 }
 

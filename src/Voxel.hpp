@@ -8,7 +8,7 @@ class Voxel {
 private:
 	mygl3::Shader m_voxelize_shader, m_mipmap_0_shader, m_mipmap_shader;
 
-	mygl3::Texture3D m_albedo, m_normal, m_radiance, m_radiance_mipmaps[6];
+	mygl3::Texture3D /*m_albedo, m_normal, */ m_radiance, m_radiance_mipmaps[6];
 	mygl3::RenderBuffer m_rbo;
 	int m_resolution{-1}, m_mipmaps{};
 

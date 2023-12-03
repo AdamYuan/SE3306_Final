@@ -24,30 +24,30 @@ set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)
 
 list(TRANSFORM SHADER_HEADER PREPEND ${SHADER_INCLUDE_PATH}/)
 
-find_program(GLSLC "glslc")
-IF (GLSLC)
-    function(add_spirv_shader INPUT_FILE)
-        add_custom_command(OUTPUT ${SHADER_INCLUDE_PATH}/${INPUT_FILE}.u32
-                COMMAND glslc src/${INPUT_FILE} -I${SHADER_INCLUDE_PATH} -o ${SHADER_INCLUDE_PATH}/${INPUT_FILE}.u32 -O -Os -mfmt=num --target-env=opengl
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/${INPUT_FILE} ${SHADER_HEADER}
-        )
-    endfunction()
+add_executable(shader_generator generator/generator.cpp)
 
-    foreach (X IN LISTS SHADER_SRC)
-        add_spirv_shader(${X})
-    endforeach ()
-ENDIF ()
+function(add_shader INPUT_FILE)
+    add_custom_command(
+            OUTPUT ${SHADER_INCLUDE_PATH}/${INPUT_FILE}.str
+            COMMAND $<TARGET_FILE_DIR:shader_generator>/shader_generator src/${INPUT_FILE} ${SHADER_INCLUDE_PATH}/${INPUT_FILE}.str ${SHADER_INCLUDE_PATH}/
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DEPENDS shader_generator ${CMAKE_CURRENT_SOURCE_DIR}/src/${INPUT_FILE} ${SHADER_HEADER}
+    )
+endfunction()
 
-set(SHADER_U32)
 foreach (X IN LISTS SHADER_SRC)
-    list(APPEND SHADER_U32 include/shader/${X}.u32)
+    add_shader(${X})
+endforeach ()
+
+set(SHADER_STR)
+foreach (X IN LISTS SHADER_SRC)
+    list(APPEND SHADER_STR ${SHADER_INCLUDE_PATH}/${X}.str)
 endforeach ()
 
 add_custom_target(
-        shader_u32 ALL DEPENDS
-        ${SHADER_U32}
+        shader_str ALL DEPENDS
+        ${SHADER_STR}
 )
 add_library(shader INTERFACE)
-add_dependencies(shader shader_u32)
+add_dependencies(shader shader_str)
 target_include_directories(shader INTERFACE include)
