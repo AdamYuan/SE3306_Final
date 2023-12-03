@@ -1,19 +1,19 @@
 #include "Animation.hpp"
 
 #include "Config.hpp"
+#include <shader/Config.h>
 
 constexpr int kShadowMapSize = 480, kVoxelResolution = 64;
 
-constexpr float kZNear = .1f, kZFar = 4.f;
-constexpr float kCornellLightHeight = 1.5f, kCornellLightRadius = 0.6f;
 constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColor = {.486f, .631f, .663},
-                    kCornellOtherColor = {.725f, .71f, .68f}, kCornellLightColor = {1.f, 1.f, 1.f};
+                    kCornellOtherColor = {.725f, .71f, .68f};
 constexpr glm::vec3 kTumblerColor = {.63f, .065f, .05f};
 
 void Animation::Initialize(const char *obj_file) {
 	{
-		auto cornell_mesh = MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornellOtherColor,
-		                                                kCornellLightColor, kCornellLightHeight, kCornellLightRadius);
+		auto cornell_mesh =
+		    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornellOtherColor,
+		                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius);
 		m_cornell_gpu_model.Initialize({&cornell_mesh, 1});
 	}
 	{
@@ -41,11 +41,11 @@ void Animation::Initialize(const char *obj_file) {
 	m_quad_vao.Initialize();
 
 	m_camera_buffer.Initialize();
-	glm::mat4 proj = glm::perspective(glm::pi<float>() / 3.0f, 1.f, kZNear, kZFar); // aspect ratio = 1
+	glm::mat4 proj = glm::perspective(glm::pi<float>() / 3.0f, 1.f, Z_NEAR, Z_FAR); // aspect ratio = 1
 	glm::mat4 view =
 	    glm::lookAt(glm::vec3{.0f, .0f, 1.f + glm::sqrt(3.f)}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, 1.f, .0f});
 
-	glm::mat4 shadow_proj = glm::perspective(glm::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, kZNear, kZFar);
+	glm::mat4 shadow_proj = glm::perspective(glm::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, Z_NEAR, Z_FAR);
 	glm::mat4 shadow_view =
 	    glm::lookAt(glm::vec3{.0f, kCornellLightHeight, .0f}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, .0f, 1.f});
 	m_camera_buffer.Update(proj * view, shadow_proj * shadow_view);

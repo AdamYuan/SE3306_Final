@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
 				return EXIT_FAILURE;
 			}
 
+			shader += "#define GLSL\n";
 			shader += {std::istreambuf_iterator<char>(include_fin), std::istreambuf_iterator<char>{}};
 		} else {
 			shader += line;

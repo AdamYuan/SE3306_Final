@@ -30,13 +30,19 @@ vec3 oct_to_float32x3(vec2 e) {
 	return normalize(v);
 }
 
-const float kCornellLightHeight = 1.5;
-const vec3 kCornellLightRadiance = vec3(2.0);
+float linearize_depth(in const float depth) {
+	return (2.0 * Z_NEAR * Z_FAR) / (Z_FAR + Z_NEAR - depth * (Z_FAR - Z_NEAR));
+}
+float de_linearize_depth(in const float linear_depth) {
+	return (2.0 * Z_NEAR * Z_FAR / linear_depth - Z_FAR - Z_NEAR) / (Z_NEAR - Z_FAR);
+}
 
 float DirectShadow(in const vec3 position, in const vec3 normal) {
 	vec4 shadow_pos = uShadowViewProjection * vec4(position, 1);
 	shadow_pos /= shadow_pos.w;
 	shadow_pos.xyz = shadow_pos.xyz * 0.5 + 0.5;
+
+	shadow_pos.z = de_linearize_depth(linearize_depth(shadow_pos.z) + 0.05);
 
 	float shadow_size = 1. / textureSize(uShadowMap, 0).x; // square shadow map ensured
 
@@ -128,8 +134,9 @@ void main() {
 	float depth = texelFetch(uDepth, coord, 0).r;
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
 
-	vec3 color = albedo == vec3(1)
-	                 ? kCornellLightRadiance
-	                 : albedo * IndirectLight(position, normal) * (DirectShadow(position, normal) * 0.7 + 0.3);
+	bool emissive = any(greaterThan(albedo, vec3(1)));
+
+	vec3 color =
+	    emissive ? albedo : albedo * IndirectLight(position, normal) * (DirectShadow(position, normal) * 0.5 + 0.5);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
