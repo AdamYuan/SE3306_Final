@@ -18,7 +18,7 @@ void Animation::Initialize(const char *obj_file) {
 	}
 	{
 		// auto model = MeshLoader{}.Load(obj_file, kCornellOtherColor);
-		auto tumbler_mesh = MeshLoader{}.MakeSphere(1.0f, 4, kTumblerColor);
+		auto tumbler_mesh = MeshLoader{}.MakeTumbler(10, 100, kTumblerColor);
 		tumbler_mesh.Normalize(true);
 		m_tumbler_gpu_model.Initialize({&tumbler_mesh, 1});
 		// m_tumbler_gpu_model.Initialize(std::vector<Mesh>{std::move(tumbler_mesh), std::move(model)});
@@ -60,11 +60,12 @@ void Animation::Update(float delta_t) {
 	angle += delta_t;
 	{
 		auto trans = glm::identity<glm::mat4>();
-		float scale = .3f;
+		float scale = .5f;
 		trans[0][0] = scale;
 		trans[1][1] = scale;
 		trans[2][2] = scale;
 		trans[3] = glm::vec4(glm::vec3(glm::cos(angle), -1.0f, glm::sin(angle)), 1.f);
+		// trans[3] = glm::vec4(glm::vec3(0.0f, -1.0f, 0.0f), 1.f);
 		m_tumbler_gpu_model.SetModel(0, trans);
 	}
 }

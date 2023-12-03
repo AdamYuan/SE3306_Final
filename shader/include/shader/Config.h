@@ -8,11 +8,13 @@
 #ifndef GLSL
 #include <glm/glm.hpp>
 #define vec3 glm::vec3
+#define const constexpr
 #endif
 
 const float kCornellLightHeight = 1.5f, kCornellLightRadius = 0.6f;
 const vec3 kCornellLightRadiance = vec3(2.0);
 
 #undef vec3
+#undef const
 
 #endif

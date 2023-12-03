@@ -1,5 +1,7 @@
 #include "MeshLoader.hpp"
 
+#include "Tumbler.hpp"
+
 #include <cfloat>
 #include <unordered_set>
 
@@ -225,4 +227,58 @@ Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &ri
 	mesh.Combine(generate_mesh(light_color)); // light
 
 	return mesh;
+}
+
+Mesh MeshLoader::MakeTumbler(uint32_t y_subdivisions, uint32_t x_subdivisions, const glm::vec3 &color) {
+	m_triangles.clear();
+
+	float y_min = -Tumbler::kBottomRadius;
+	std::vector<glm::vec2> y_r_vec;
+	for (uint32_t i = 1; i <= y_subdivisions * 2; ++i) {
+		float deg = float(i) / float(y_subdivisions * 2) * 2.0f * glm::pi<float>() / 3.0f;
+		y_r_vec.emplace_back(-glm::cos(deg) * Tumbler::kBottomRadius, glm::sin(deg) * Tumbler::kBottomRadius);
+	}
+
+	float upper_sphere_y = 2.0f * (Tumbler::kBottomRadius - Tumbler::kTopRadius);
+	float y_max = upper_sphere_y + Tumbler::kTopRadius;
+	for (uint32_t i = y_subdivisions; i; --i) {
+		float deg = float(i) / float(y_subdivisions) * glm::pi<float>() / 3.0f;
+		y_r_vec.emplace_back(upper_sphere_y + glm::cos(deg) * Tumbler::kTopRadius, glm::sin(deg) * Tumbler::kTopRadius);
+	}
+
+	std::vector<float> deg_vec;
+	for (uint32_t i = 0; i < x_subdivisions; ++i) {
+		float deg = float(i) / float(x_subdivisions) * glm::pi<float>() * 2.0f;
+		deg_vec.push_back(deg);
+	}
+
+	for (uint32_t i = 0; i < x_subdivisions; ++i) {
+		float deg = deg_vec[i], next_deg = deg_vec[(i + 1) % x_subdivisions];
+		m_triangles.push_back({
+		    glm::vec3(0, y_min, 0),
+		    glm::vec3(y_r_vec.front()[1] * glm::cos(deg), y_r_vec.front()[0], y_r_vec.front()[1] * glm::sin(deg)),
+		    glm::vec3(y_r_vec.front()[1] * glm::cos(next_deg), y_r_vec.front()[0],
+		              y_r_vec.front()[1] * glm::sin(next_deg)),
+		});
+
+		for (uint32_t j = 0; j < y_r_vec.size() - 1; ++j) {
+			auto y_r = y_r_vec[j], next_y_r = y_r_vec[j + 1];
+			glm::vec3 v0 = glm::vec3(y_r[1] * glm::cos(deg), y_r[0], y_r[1] * glm::sin(deg));
+			glm::vec3 v1 = glm::vec3(y_r[1] * glm::cos(next_deg), y_r[0], y_r[1] * glm::sin(next_deg));
+			glm::vec3 v2 = glm::vec3(next_y_r[1] * glm::cos(deg), next_y_r[0], next_y_r[1] * glm::sin(deg));
+			glm::vec3 v3 = glm::vec3(next_y_r[1] * glm::cos(next_deg), next_y_r[0], next_y_r[1] * glm::sin(next_deg));
+			m_triangles.push_back({v0, v3, v1});
+			m_triangles.push_back({v0, v2, v3});
+		}
+
+		m_triangles.push_back({
+		    glm::vec3(0, y_max, 0),
+		    glm::vec3(y_r_vec.back()[1] * glm::cos(next_deg), y_r_vec.back()[0],
+		              y_r_vec.back()[1] * glm::sin(next_deg)),
+		    glm::vec3(y_r_vec.back()[1] * glm::cos(deg), y_r_vec.back()[0], y_r_vec.back()[1] * glm::sin(deg)),
+		});
+	}
+
+	make_vertex_info_map();
+	return generate_mesh(color);
 }
