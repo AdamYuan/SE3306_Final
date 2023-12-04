@@ -1,5 +1,6 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include "Animation.hpp"
 #include "Config.hpp"
@@ -31,9 +32,14 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
+		std::optional<glm::vec2> drag = std::nullopt;
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+			glm::dvec2 cursor_pos;
+			glfwGetCursorPos(window, &cursor_pos.x, &cursor_pos.y);
+			drag = glm::vec2{(float)cursor_pos.x / (float)kWidth, (float)cursor_pos.y / (float)kHeight};
+		}
 		auto cur_time = (float)glfwGetTime();
-
-		animation.Update(cur_time - prev_time);
+		animation.Update(cur_time - prev_time, drag);
 
 		animation.Draw(kWidth, kHeight);
 		glfwSwapBuffers(window);

@@ -9,5 +9,5 @@ private:
 
 public:
 	void Initialize();
-	void Update(const glm::mat4 &view_proj, const glm::mat4 &shadow_view_proj);
+	void Update(const glm::mat4 &view_proj, const glm::mat4 &inv_view_proj, const glm::mat4 &shadow_view_proj);
 };

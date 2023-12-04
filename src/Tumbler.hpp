@@ -4,14 +4,15 @@
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/glm.hpp>
 
+#include <optional>
 #include <random>
 
-#include "Transform.hpp"
+#include "RigidBody.hpp"
 
-class Tumbler final : public Transform {
+struct Tumbler final : public RigidBody {
 public:
 	// parameters
-	inline static constexpr float kBottomRadius = 1.0f, kTopRadius = 0.5f, kHalfAngle = glm::pi<float>() / 9.0f,
+	inline static constexpr float kBottomRadius = 0.2f, kTopRadius = 0.1f, kHalfAngle = glm::pi<float>() / 9.0f,
 	                              kMass = 5.0f;
 	static_assert(kTopRadius <= kBottomRadius);
 
@@ -83,43 +84,20 @@ private:
 	friend class MeshLoader;
 
 public:
-	/* inline static glm::mat3 get_inertia_sample(uint32_t samples) {
-	    glm::vec3 aabb_min = {-kBottomRadius, -kBottomRadius, -kBottomRadius};
-	    glm::vec3 aabb_max = {kBottomRadius, kTopSphereY + kTopRadius, kBottomRadius};
-	    std::mt19937 gen{std::random_device{}()};
-	    std::uniform_real_distribution<float> x_dis{aabb_min.x, aabb_max.x}, y_dis{aabb_min.y, aabb_max.y},
-	        z_dis{aabb_min.z, aabb_max.z};
+	inline float GetSDF(const glm::vec3 &p) const { return get_sdf(GetLocalPos(p)); }
+	inline glm::vec3 GetSDFGradient(const glm::vec3 &p) const { return rotate_mat * get_sdf_gradient(GetLocalPos(p)); }
+	inline glm::mat3 GetInertia() const { return rotate_mat * get_inertia() * inv_rotate_mat; }
+	inline std::optional<float> RayCast(const glm::vec3 &origin, const glm::vec3 &dir, float threshold = 0.0001f,
+	                                    uint32_t max_steps = 32) const {
+		glm::vec3 local_orig = GetLocalPos(origin), local_dir = inv_rotate_mat * dir;
 
-	    glm::mat3 inertia{};
-
-	    uint32_t actual_samples = 0;
-	    for (uint32_t s = 0; s < samples; ++s) {
-	        glm::vec3 p = {x_dis(gen), y_dis(gen), z_dis(gen)};
-	        if (get_sdf(p) <= 0.0f) {
-	            ++actual_samples;
-	            inertia[0][0] += p.y * p.y + p.z * p.z;
-	            inertia[0][1] -= p.x * p.y;
-	            inertia[0][2] -= p.x * p.z;
-
-	            inertia[1][0] -= p.y * p.x;
-	            inertia[1][1] += p.x * p.x + p.z * p.z;
-	            inertia[1][2] -= p.y * p.z;
-
-	            inertia[2][0] -= p.z * p.x;
-	            inertia[2][1] -= p.z * p.y;
-	            inertia[2][2] += p.x * p.x + p.y * p.y;
-	        }
-	    }
-
-	    printf("actual: %u\n", actual_samples);
-	    float box_volume = (aabb_max.x - aabb_min.x) * (aabb_max.y - aabb_min.y) * (aabb_max.z - aabb_min.z);
-	    printf("volume: %f\n", (float)actual_samples / (float)samples * box_volume);
-
-	    float rou = kMass / float(actual_samples);
-	    for (int i = 0; i < 3; ++i)
-	        for (int j = 0; j < 3; ++j)
-	            inertia[i][j] *= rou;
-
-	    return inertia;
-	} */
+		float t = 0.0f;
+		while (max_steps--) {
+			float sdf = get_sdf(local_orig + t * local_dir);
+			if (sdf < threshold)
+				return t;
+			t += sdf;
+		}
+		return std::nullopt;
+	}
 };

@@ -9,10 +9,10 @@ void CameraBuffer::Initialize() {
 	m_buffer.BindBase(GL_UNIFORM_BUFFER, CAMERA_UNIFORM_BUFFER);
 }
 
-void CameraBuffer::Update(const glm::mat4 &view_proj, const glm::mat4 &shadow_view_proj) {
+void CameraBuffer::Update(const glm::mat4 &view_proj, const glm::mat4 &inv_view_proj, const glm::mat4 &shadow_view_proj) {
 	glm::mat4 data[] = {
 	    view_proj,
-	    glm::inverse(view_proj),
+	    inv_view_proj,
 	    shadow_view_proj,
 	};
 	m_buffer.SubData(0, data, data + 3);

@@ -1,6 +1,7 @@
 #include "Animation.hpp"
 
 #include "Config.hpp"
+#include <gcem.hpp>
 #include <shader/Config.h>
 
 constexpr int kShadowMapSize = 480, kVoxelResolution = 64, kVoxelMipmaps = 5;
@@ -8,6 +9,13 @@ constexpr int kShadowMapSize = 480, kVoxelResolution = 64, kVoxelMipmaps = 5;
 constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColor = {.486f, .631f, .663},
                     kCornellOtherColor = {.725f, .71f, .68f};
 constexpr glm::vec3 kTumblerColor = {.63f, .065f, .05f};
+
+constexpr float kCameraFov = glm::pi<float>() / 3.f;
+constexpr glm::vec3 kCameraPos = {.0f, .0f, 1.f + 1.f / gcem::tan(kCameraFov * 0.5f)};
+
+static const glm::mat4 kCameraViewProj = glm::perspective(kCameraFov, 1.f, Z_NEAR, Z_FAR) *
+                                         glm::lookAt(kCameraPos, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, 1.f, .0f});
+static const glm::mat4 kInvCameraViewProj = glm::inverse(kCameraViewProj);
 
 void Animation::Initialize(const char *obj_file) {
 	{
@@ -19,7 +27,6 @@ void Animation::Initialize(const char *obj_file) {
 	{
 		// auto model = MeshLoader{}.Load(obj_file, kCornellOtherColor);
 		auto tumbler_mesh = MeshLoader{}.MakeTumbler(10, 100, kTumblerColor);
-		tumbler_mesh.Normalize(true);
 		m_tumbler_gpu_model.Initialize({&tumbler_mesh, 1});
 		// m_tumbler_gpu_model.Initialize(std::vector<Mesh>{std::move(tumbler_mesh), std::move(model)});
 	}
@@ -41,32 +48,39 @@ void Animation::Initialize(const char *obj_file) {
 	m_quad_vao.Initialize();
 
 	m_camera_buffer.Initialize();
-	glm::mat4 proj = glm::perspective(glm::pi<float>() / 3.0f, 1.f, Z_NEAR, Z_FAR); // aspect ratio = 1
-	glm::mat4 view =
-	    glm::lookAt(glm::vec3{.0f, .0f, 1.f + glm::sqrt(3.f)}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, 1.f, .0f});
-
 	glm::mat4 shadow_proj = glm::perspective(glm::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, Z_NEAR, Z_FAR);
 	glm::mat4 shadow_view =
 	    glm::lookAt(glm::vec3{.0f, kCornellLightHeight, .0f}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, .0f, 1.f});
-	m_camera_buffer.Update(proj * view, shadow_proj * shadow_view);
+	m_camera_buffer.Update(kCameraViewProj, kInvCameraViewProj, shadow_proj * shadow_view);
 
 	m_gbuffer.Initialize();
 	m_shadow_map.Initialize();
 	m_voxel.Initialize();
 }
 
-void Animation::Update(float delta_t) {
+#include <glm/gtx/string_cast.hpp>
+void Animation::Update(float delta_t, const std::optional<glm::vec2> &drag) {
 	static float angle{};
 	angle += delta_t;
-	{
-		auto trans = glm::identity<glm::mat4>();
-		float scale = .3f;
-		trans[0][0] = scale;
-		trans[1][1] = scale;
-		trans[2][2] = scale;
-		trans[3] = glm::vec4(glm::vec3(glm::cos(angle), -1.0f, glm::sin(angle)), 1.f);
-		// trans[3] = glm::vec4(glm::vec3(0.0f, -1.0f, 0.0f), 1.f);
-		m_tumbler_gpu_model.SetModel(0, trans);
+
+	m_tumbler.center = glm::vec3(glm::cos(angle), -1.0f + Tumbler::kBottomRadius, glm::sin(angle));
+	m_tumbler.angular_velocity.x = 0.1;
+	m_tumbler.Update(delta_t);
+
+	m_tumbler_gpu_model.SetModel(0, m_tumbler.GetModel());
+
+	if (drag.has_value()) {
+		glm::vec3 dir;
+		{
+			glm::vec4 clip = glm::vec4{drag.value() * 2.0f - 1.0f, 1.0f, 1.0f};
+			clip.y = -clip.y;
+			glm::vec4 world = kInvCameraViewProj * clip;
+			world /= world.w;
+			dir = glm::normalize(glm::vec3{world} - kCameraPos);
+		}
+		auto opt_t = m_tumbler.RayCast(kCameraPos, dir);
+		if (opt_t.has_value())
+			printf("%f\n", opt_t.value());
 	}
 }
 
