@@ -229,21 +229,25 @@ Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &ri
 	return mesh;
 }
 
+#include <glm/gtx/string_cast.hpp>
 Mesh MeshLoader::MakeTumbler(uint32_t y_subdivisions, uint32_t x_subdivisions, const glm::vec3 &color) {
 	m_triangles.clear();
+
+	// printf("%s\n", glm::to_string(Tumbler::get_inertia_sample(100000)).c_str());
+	printf("%s\n", glm::to_string(Tumbler::get_inertia()).c_str());
 
 	float y_min = -Tumbler::kBottomRadius;
 	std::vector<glm::vec2> y_r_vec;
 	for (uint32_t i = 1; i <= y_subdivisions * 2; ++i) {
-		float deg = float(i) / float(y_subdivisions * 2) * 2.0f * glm::pi<float>() / 3.0f;
+		float deg = float(i) / float(y_subdivisions * 2) * (glm::pi<float>() * 0.5f + Tumbler::kHalfAngle);
 		y_r_vec.emplace_back(-glm::cos(deg) * Tumbler::kBottomRadius, glm::sin(deg) * Tumbler::kBottomRadius);
 	}
 
-	float upper_sphere_y = 2.0f * (Tumbler::kBottomRadius - Tumbler::kTopRadius);
-	float y_max = upper_sphere_y + Tumbler::kTopRadius;
+	float y_max = Tumbler::kTopSphereY + Tumbler::kTopRadius;
 	for (uint32_t i = y_subdivisions; i; --i) {
-		float deg = float(i) / float(y_subdivisions) * glm::pi<float>() / 3.0f;
-		y_r_vec.emplace_back(upper_sphere_y + glm::cos(deg) * Tumbler::kTopRadius, glm::sin(deg) * Tumbler::kTopRadius);
+		float deg = float(i) / float(y_subdivisions) * (glm::pi<float>() * 0.5f - Tumbler::kHalfAngle);
+		y_r_vec.emplace_back(Tumbler::kTopSphereY + glm::cos(deg) * Tumbler::kTopRadius,
+		                     glm::sin(deg) * Tumbler::kTopRadius);
 	}
 
 	std::vector<float> deg_vec;

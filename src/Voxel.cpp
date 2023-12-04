@@ -59,10 +59,11 @@ void Voxel::generate_mipmap() {
 	}
 }
 
-void Voxel::initialize_target(int resolution) {
-	if (m_resolution == resolution)
+void Voxel::initialize_target(int resolution, int mipmaps) {
+	if (m_resolution == resolution && m_mipmaps == mipmaps)
 		return;
 	m_resolution = resolution;
+	m_mipmaps = mipmaps;
 
 	m_rbo.Initialize();
 	m_rbo.Storage(GL_R8, resolution, resolution);
@@ -77,8 +78,6 @@ void Voxel::initialize_target(int resolution) {
 	m_normal.SetSizeFilter(GL_NEAREST, GL_NEAREST);
 	m_normal.SetWrapFilter(GL_CLAMP_TO_BORDER); */
 
-	m_mipmaps = mygl3::Texture3D::GetLevelCount(resolution, resolution, resolution);
-
 	m_radiance.Initialize();
 	m_radiance.Storage(resolution, resolution, resolution, GL_RGBA16F, 1);
 	m_radiance.SetSizeFilter(GL_LINEAR, GL_LINEAR);
@@ -86,7 +85,7 @@ void Voxel::initialize_target(int resolution) {
 
 	for (auto &m : m_radiance_mipmaps) {
 		m.Initialize();
-		m.Storage(resolution / 2, resolution / 2, resolution / 2, GL_RGBA16F, m_mipmaps - 1);
+		m.Storage(resolution / 2, resolution / 2, resolution / 2, GL_RGBA16F, mipmaps - 1);
 		m.SetSizeFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 		m.SetWrapFilter(GL_CLAMP_TO_BORDER);
 	}

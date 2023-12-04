@@ -3,7 +3,7 @@
 #include "Config.hpp"
 #include <shader/Config.h>
 
-constexpr int kShadowMapSize = 480, kVoxelResolution = 64;
+constexpr int kShadowMapSize = 480, kVoxelResolution = 64, kVoxelMipmaps = 5;
 
 constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColor = {.486f, .631f, .663},
                     kCornellOtherColor = {.725f, .71f, .68f};
@@ -60,7 +60,7 @@ void Animation::Update(float delta_t) {
 	angle += delta_t;
 	{
 		auto trans = glm::identity<glm::mat4>();
-		float scale = .5f;
+		float scale = .3f;
 		trans[0][0] = scale;
 		trans[1][1] = scale;
 		trans[2][2] = scale;
@@ -86,7 +86,7 @@ void Animation::Draw(int width, int height) {
 	glViewport(0, 0, kVoxelResolution, kVoxelResolution);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	m_voxel.Generate(kVoxelResolution, [this]() {
+	m_voxel.Generate(kVoxelResolution, kVoxelMipmaps, [this]() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		m_cornell_gpu_model.Draw();
 		m_tumbler_gpu_model.Draw();
