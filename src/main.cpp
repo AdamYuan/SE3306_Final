@@ -3,7 +3,8 @@
 #include <glm/glm.hpp>
 
 #include "Animation.hpp"
-#include "Config.hpp"
+
+constexpr int kWidth = 720, kHeight = 720;
 
 Animation animation = {};
 

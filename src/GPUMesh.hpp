@@ -16,7 +16,7 @@ private:
 	bool m_model_changed = false;
 
 public:
-	void Initialize(std::span<const Mesh> meshes);
+	void Initialize(std::span<const Mesh> meshes, std::span<const uint32_t> counts = {});
 	[[nodiscard]] inline uint32_t GetMeshCount() const { return m_models.size(); }
 	inline void SetModel(uint32_t mesh_id, const glm::mat4 &model) {
 		m_models[mesh_id] = model;

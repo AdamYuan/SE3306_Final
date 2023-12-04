@@ -1,6 +1,5 @@
 #include "Animation.hpp"
 
-#include "Config.hpp"
 #include <gcem.hpp>
 #include <shader/Config.h>
 
@@ -9,6 +8,9 @@ constexpr int kShadowMapSize = 480, kVoxelResolution = 64, kVoxelMipmaps = 5;
 constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColor = {.486f, .631f, .663},
                     kCornellOtherColor = {.725f, .71f, .68f};
 constexpr glm::vec3 kTumblerColor = {.63f, .065f, .05f};
+
+constexpr uint32_t kTumblerCount = 5;
+constexpr float kTumblerPlaceRadius = 0.6f;
 
 constexpr float kCameraFov = glm::pi<float>() / 3.f;
 constexpr glm::vec3 kCameraPos = {.0f, .0f, 1.f + 1.f / gcem::tan(kCameraFov * 0.5f)};
@@ -27,7 +29,7 @@ void Animation::Initialize(const char *obj_file) {
 	{
 		// auto model = MeshLoader{}.Load(obj_file, kCornellOtherColor);
 		auto tumbler_mesh = MeshLoader{}.MakeTumbler(10, 100, kTumblerColor);
-		m_tumbler_gpu_model.Initialize({&tumbler_mesh, 1});
+		m_tumbler_gpu_model.Initialize({&tumbler_mesh, 1}, {&kTumblerCount, 1});
 		// m_tumbler_gpu_model.Initialize(std::vector<Mesh>{std::move(tumbler_mesh), std::move(model)});
 	}
 
@@ -56,31 +58,52 @@ void Animation::Initialize(const char *obj_file) {
 	m_gbuffer.Initialize();
 	m_shadow_map.Initialize();
 	m_voxel.Initialize();
+
+	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
 }
 
 #include <glm/gtx/string_cast.hpp>
-void Animation::Update(float delta_t, const std::optional<glm::vec2> &drag) {
-	static float angle{};
-	angle += delta_t;
+void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_pos) {
+	m_playground.Update(delta_t);
 
-	m_tumbler.center = glm::vec3(glm::cos(angle), -1.0f + Tumbler::kBottomRadius, glm::sin(angle));
-	m_tumbler.angular_velocity.x = 0.1;
-	m_tumbler.Update(delta_t);
+	m_playground.SetTumblerMesh(&m_tumbler_gpu_model);
 
-	m_tumbler_gpu_model.SetModel(0, m_tumbler.GetModel());
-
-	if (drag.has_value()) {
+	// process drag
+	if (opt_drag_pos.has_value()) {
 		glm::vec3 dir;
 		{
-			glm::vec4 clip = glm::vec4{drag.value() * 2.0f - 1.0f, 1.0f, 1.0f};
+			glm::vec4 clip = glm::vec4{opt_drag_pos.value() * 2.0f - 1.0f, 1.0f, 1.0f};
 			clip.y = -clip.y;
 			glm::vec4 world = kInvCameraViewProj * clip;
 			world /= world.w;
 			dir = glm::normalize(glm::vec3{world} - kCameraPos);
 		}
-		auto opt_t = m_tumbler.RayCast(kCameraPos, dir);
-		if (opt_t.has_value())
-			printf("%f\n", opt_t.value());
+		if (m_opt_drag && m_opt_drag.value().locked) {
+			// already dragging
+			auto &drag = m_opt_drag.value();
+			float t = (drag.plane_y - kCameraPos.y) / dir.y;
+			if (t > 1e-4f) {
+				glm::vec3 pos = kCameraPos + dir * t;
+				m_playground.MoveLockedTumbler({pos.x - drag.xz.x, pos.z - drag.xz.y}, 0.015f);
+				drag.xz = {pos.x, pos.z};
+			}
+		} else if (!m_opt_drag) {
+			auto opt_t = m_playground.TryLockTumbler(kCameraPos, dir);
+			if (opt_t) {
+				float t = opt_t.value();
+				glm::vec3 pos = kCameraPos + dir * t;
+
+				m_opt_drag = DragInfo{
+				    .locked = true,
+				    .xz = glm::vec2{pos.x, pos.z},
+				    .plane_y = pos.y,
+				};
+			} else
+				m_opt_drag = DragInfo{.locked = false};
+		}
+	} else {
+		m_playground.UnlockTumbler();
+		m_opt_drag = std::nullopt;
 	}
 }
 

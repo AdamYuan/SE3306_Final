@@ -12,7 +12,7 @@
 struct Tumbler final : public RigidBody {
 public:
 	// parameters
-	inline static constexpr float kBottomRadius = 0.2f, kTopRadius = 0.1f, kHalfAngle = glm::pi<float>() / 9.0f,
+	inline static constexpr float kBottomRadius = 0.18f, kTopRadius = 0.09f, kHalfAngle = glm::pi<float>() / 9.0f,
 	                              kMass = 5.0f;
 	static_assert(kTopRadius <= kBottomRadius);
 

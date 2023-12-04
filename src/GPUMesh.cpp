@@ -8,21 +8,24 @@ struct DrawElementsIndirectCommand {
 	GLuint base_instance;
 };
 
-void GPUMesh::Initialize(std::span<const Mesh> meshes) {
+void GPUMesh::Initialize(std::span<const Mesh> meshes, std::span<const uint32_t> counts) {
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;
 
 	GLuint instance = 0;
 	std::vector<DrawElementsIndirectCommand> draw_commands;
-	draw_commands.reserve(meshes.size());
-	for (const auto &mesh : meshes) {
-		draw_commands.push_back({
-		    .count = GLuint(mesh.GetTriangles().size() * 3),
-		    .instance_count = 1,
-		    .first_index = GLuint(indices.size()),
-		    .base_vertex = GLint(vertices.size()),
-		    .base_instance = instance,
-		});
+	for (std::size_t i = 0; i < meshes.size(); ++i) {
+		const auto &mesh = meshes[i];
+		GLuint count = i < counts.size() ? counts[i] : 1;
+
+		for (GLuint c = 0; c < count; ++c)
+			draw_commands.push_back({
+			    .count = GLuint(mesh.GetTriangles().size() * 3),
+			    .instance_count = 1,
+			    .first_index = GLuint(indices.size()),
+			    .base_vertex = GLint(vertices.size()),
+			    .base_instance = instance + c,
+			});
 
 		vertices.insert(vertices.end(), mesh.GetVertices().begin(), mesh.GetVertices().end());
 		for (const auto &tri : mesh.GetTriangles()) {
@@ -31,7 +34,7 @@ void GPUMesh::Initialize(std::span<const Mesh> meshes) {
 			indices.push_back(tri[2]);
 		}
 
-		++instance;
+		instance += count;
 	}
 	m_vertex_buffer.Initialize();
 	m_vertex_buffer.Storage(vertices.data(), vertices.data() + vertices.size(), 0);
@@ -40,7 +43,7 @@ void GPUMesh::Initialize(std::span<const Mesh> meshes) {
 	m_draw_cmd_buffer.Initialize();
 	m_draw_cmd_buffer.Storage(draw_commands.data(), draw_commands.data() + draw_commands.size(), 0);
 
-	m_models.resize(meshes.size(), glm::identity<glm::mat4>());
+	m_models.resize(instance, glm::identity<glm::mat4>());
 	m_model_buffer.Initialize();
 	m_model_buffer.Storage(m_models.data(), m_models.data() + m_models.size(), GL_DYNAMIC_STORAGE_BIT);
 

@@ -29,6 +29,7 @@ add_executable(
         src/ShadowMap.cpp
         src/Tumbler.cpp
         src/Sphere.cpp
+        src/Playground.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader dep)
 

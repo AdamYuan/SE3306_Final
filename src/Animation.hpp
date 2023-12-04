@@ -6,7 +6,7 @@
 #include "GBuffer.hpp"
 #include "GPUMesh.hpp"
 #include "ShadowMap.hpp"
-#include "Tumbler.hpp"
+#include "Playground.hpp"
 #include "Voxel.hpp"
 
 #include <mygl3/shader.hpp>
@@ -23,13 +23,18 @@ private:
 	CameraBuffer m_camera_buffer;
 	Voxel m_voxel;
 
-	Tumbler m_tumbler;
+	Playground m_playground;
 
 	// drag & drop
-	std::optional<glm::vec2> m_drag_pos;
+	struct DragInfo {
+		bool locked;
+		glm::vec2 xz;
+		float plane_y;
+	};
+	std::optional<DragInfo> m_opt_drag;
 
 public:
 	void Initialize(const char *obj_file);
-	void Update(float delta_t, const std::optional<glm::vec2> &drag);
+	void Update(float delta_t, const std::optional<glm::vec2> &opt_drag_pos);
 	void Draw(int width, int height);
 };

@@ -137,6 +137,6 @@ void main() {
 	bool emissive = any(greaterThan(albedo, vec3(1)));
 
 	vec3 color =
-	    emissive ? albedo : albedo * IndirectLight(position, normal) * (DirectShadow(position, normal) * 0.5 + 0.5);
+	    emissive ? albedo : albedo * IndirectLight(position, normal) * (DirectShadow(position, normal) * 0.7 + 0.3);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
