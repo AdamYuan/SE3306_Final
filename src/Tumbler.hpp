@@ -38,51 +38,55 @@ private:
 		                     : (edge.y > kTopEdgeY ? glm::normalize(p - glm::vec3{.0f, kTopSphereY, .0f})
 		                                           : glm::normalize(glm::vec3{p.x, ry.x * gcem::tan(kHalfAngle), p.z}));
 	}
-	inline static constexpr glm::mat3 get_inertia() {
+	struct Inertia {
 		// integrals
-		constexpr float kA = kHalfAngle;
-		constexpr float kSinA = gcem::sin(kHalfAngle);
-		constexpr float kCosA = gcem::cos(kHalfAngle);
-		constexpr float kTanA = gcem::tan(kHalfAngle);
-		constexpr float kB = kBottomRadius;
-		constexpr float kB2 = gcem::pow(kBottomRadius, 2);
-		constexpr float kB3 = gcem::pow(kBottomRadius, 3);
-		// constexpr float kB4 = gcem::pow(kBottomRadius, 4);
-		constexpr float kB5 = gcem::pow(kBottomRadius, 5);
-		constexpr float kT = kTopRadius;
-		constexpr float kT2 = gcem::pow(kTopRadius, 2);
-		constexpr float kT3 = gcem::pow(kTopRadius, 3);
-		constexpr float kT4 = gcem::pow(kTopRadius, 4);
-		constexpr float kT5 = gcem::pow(kTopRadius, 5);
-		constexpr float kBottom2 = kB3 * (2.0f - kSinA) * gcem::pow(kSinA + 1.0f, 2) / 3.0f;
-		constexpr float kY2Bottom2 = 1.0f / 15.0f * kB5 * (-3.f * gcem::pow(kSinA, 5) + 5.f * gcem::pow(kSinA, 3) + 2);
-		constexpr float kBottom4 =
+		static constexpr float kA = kHalfAngle;
+		static constexpr float kSinA = gcem::sin(kHalfAngle);
+		static constexpr float kCosA = gcem::cos(kHalfAngle);
+		static constexpr float kTanA = gcem::tan(kHalfAngle);
+		static constexpr float kB = kBottomRadius;
+		static constexpr float kB2 = gcem::pow(kBottomRadius, 2);
+		static constexpr float kB3 = gcem::pow(kBottomRadius, 3);
+		// static constexpr float kB4 = gcem::pow(kBottomRadius, 4);
+		static constexpr float kB5 = gcem::pow(kBottomRadius, 5);
+		static constexpr float kT = kTopRadius;
+		static constexpr float kT2 = gcem::pow(kTopRadius, 2);
+		static constexpr float kT3 = gcem::pow(kTopRadius, 3);
+		static constexpr float kT4 = gcem::pow(kTopRadius, 4);
+		static constexpr float kT5 = gcem::pow(kTopRadius, 5);
+		static constexpr float kBottom2 = kB3 * (2.0f - kSinA) * gcem::pow(kSinA + 1.0f, 2) / 3.0f;
+		static constexpr float kY2Bottom2 =
+		    1.0f / 15.0f * kB5 * (-3.f * gcem::pow(kSinA, 5) + 5.f * gcem::pow(kSinA, 3) + 2);
+		static constexpr float kBottom4 =
 		    kB5 * (3.0f * gcem::pow(kSinA, 2) - 9.0f * kSinA + 8.0f) * gcem::pow(kSinA + 1.0f, 3) / 15.0f;
-		constexpr float kTop2 = kT3 * (gcem::pow(kSinA, 3) - 3.f * kSinA + 2.0f) / 3.0f;
-		constexpr float kH = kTopSphereY;
-		constexpr float kH2 = kH * kH;
-		constexpr float kY2Top2 =
+		static constexpr float kTop2 = kT3 * (gcem::pow(kSinA, 3) - 3.f * kSinA + 2.0f) / 3.0f;
+		static constexpr float kH = kTopSphereY;
+		static constexpr float kH2 = kH * kH;
+		static constexpr float kY2Top2 =
 		    1.0f / 30.0f * kT3 * gcem::pow(kSinA - 1.f, 2) *
 		    (2.f * kSinA * (5.f * kH2 + 15.f * kH * kT + 4.f * kT2) + 3.f * kT * kSinA * kSinA * (5.f * kH + 4.f * kT) +
 		     6.f * kT2 * gcem::pow(kSinA, 3) + 20.f * kH2 + 15.f * kH * kT + 4.f * kT2);
-		constexpr float kTop4 =
+		static constexpr float kTop4 =
 		    kT5 * gcem::pow(1.0f - kSinA, 3) * (3.0f * gcem::pow(kSinA, 2) + 9.0f * kSinA + 8.0f) / 15.0f;
-		constexpr float kMiddle2 = gcem::pow(kCosA, 3) * (kB3 - kT3) / kTanA / 3.0f;
-		constexpr float kY2Middle2 = -1.0f / 120.0f * kCosA / gcem::pow(kTanA, 3) *
-		                             (-3.0f * gcem::cos(4.f * kA) * (kB5 - kT5) +
-		                              6.f * gcem::cos(2.f * kA) * (3.f * kB5 - 5.f * kB * kT4 + 2.f * kT5) -
-		                              19.f * kB5 + 40.f * kB2 * kT3 - 30.f * kB * kT4 + 9.f * kT5);
-		constexpr float kMiddle4 = gcem::pow(kCosA, 5) * (kB5 - kT5) / kTanA / 5.0f;
-		constexpr float kInt2 = kBottom2 + kMiddle2 + kTop2;
-		constexpr float kY2Int2 = kY2Bottom2 + kY2Middle2 + kY2Top2;
-		constexpr float kInt4 = kBottom4 + kMiddle4 + kTop4;
+		static constexpr float kMiddle2 = gcem::pow(kCosA, 3) * (kB3 - kT3) / kTanA / 3.0f;
+		static constexpr float kY2Middle2 = -1.0f / 120.0f * kCosA / gcem::pow(kTanA, 3) *
+		                                    (-3.0f * gcem::cos(4.f * kA) * (kB5 - kT5) +
+		                                     6.f * gcem::cos(2.f * kA) * (3.f * kB5 - 5.f * kB * kT4 + 2.f * kT5) -
+		                                     19.f * kB5 + 40.f * kB2 * kT3 - 30.f * kB * kT4 + 9.f * kT5);
+		static constexpr float kMiddle4 = gcem::pow(kCosA, 5) * (kB5 - kT5) / kTanA / 5.0f;
+		static constexpr float kInt2 = kBottom2 + kMiddle2 + kTop2;
+		static constexpr float kY2Int2 = kY2Bottom2 + kY2Middle2 + kY2Top2;
+		static constexpr float kInt4 = kBottom4 + kMiddle4 + kTop4;
 
-		constexpr float kPiRou = kMass / kInt2;
-		constexpr float kI0 = 0.5f * kPiRou * kInt4;
-		constexpr float kI1 = 0.25f * kPiRou * (kInt4 + 4 * kY2Int2);
-		constexpr glm::mat3 kInertia = glm::mat3{kI1, 0.0f, 0.0f, 0.0f, kI0, 0.0f, 0.0f, 0.0f, kI1};
-		return kInertia;
-	}
+		static constexpr float kPiRou = kMass / kInt2;
+		static constexpr float kI0 = 0.5f * kPiRou * kInt4;
+		static constexpr float kI1 = 0.25f * kPiRou * (kInt4 + 4 * kY2Int2);
+		static constexpr glm::mat3 kInertia = glm::mat3{kI1, 0.0f, 0.0f, 0.0f, kI0, 0.0f, 0.0f, 0.0f, kI1};
+		static constexpr glm::mat3 kInvInertia =
+		    glm::mat3{1.0f / kI1, 0.0f, 0.0f, 0.0f, 1.0f / kI0, 0.0f, 0.0f, 0.0f, 1.0f / kI1};
+	};
+	inline static constexpr glm::mat3 get_inertia() { return Inertia::kInertia; }
+	inline static constexpr glm::mat3 get_inv_inertia() { return Inertia::kInvInertia; }
 	friend class MeshLoader;
 	friend class Collider;
 
@@ -90,6 +94,7 @@ public:
 	inline float GetSDF(const glm::vec3 &p) const { return get_sdf(GetLocalPos(p)); }
 	inline glm::vec3 GetSDFGradient(const glm::vec3 &p) const { return rotate_mat * get_sdf_gradient(GetLocalPos(p)); }
 	inline glm::mat3 GetInertia() const { return rotate_mat * get_inertia() * inv_rotate_mat; }
+	inline glm::mat3 GetInvInertia() const { return rotate_mat * get_inv_inertia() * inv_rotate_mat; }
 	/* inline void RotateGround(const glm::vec2 &xz_dir) {
 	    glm::vec3 dir = {xz_dir[0], 0.f, xz_dir[1]};
 	    glm::vec3 axis = {dir.z, 0.f, -dir.x};
@@ -151,9 +156,19 @@ public:
 		glm::vec3 r = glm::vec3{0.f, 1.f, 0.f};
 		glm::vec3 t = glm::cross(r, force); // torque
 		glm::vec3 l = t * delta_t;          // angular momentum
-		glm::vec3 delta_angular_velocity = glm::inverse(GetInertia()) * l;
+		glm::vec3 delta_angular_velocity = get_inv_inertia() * l;
 		angular_velocity += delta_angular_velocity;
 		linear_velocity +=
 		    glm::vec3{-delta_angular_velocity.z * kBottomRadius, .0f, delta_angular_velocity.x * kBottomRadius};
+	}
+
+	inline void ApplyFrictionForce(float delta_t) {
+		if (linear_velocity != glm::vec3{})
+			linear_velocity = glm::normalize(linear_velocity) *
+			                  glm::max(glm::length(linear_velocity) - kGravity * kGroundMu * delta_t, 0.0f);
+		if (angular_velocity != glm::vec3{})
+			angular_velocity =
+			    glm::normalize(angular_velocity) *
+			    glm::max(glm::length(angular_velocity) - kGravity * kGroundMu * delta_t / kBottomRadius, 0.0f);
 	}
 };

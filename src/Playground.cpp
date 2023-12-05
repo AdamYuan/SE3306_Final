@@ -65,6 +65,7 @@ void Playground::UnlockTumbler() {
 void Playground::Update(float delta_t) {
 	for (auto &tumbler : m_tumblers) {
 		Collider::TestBoundary(&tumbler);
+		tumbler.ApplyFrictionForce(delta_t);
 		tumbler.ApplyRecoverForce(delta_t);
 	}
 	if (m_opt_lock.has_value()) {

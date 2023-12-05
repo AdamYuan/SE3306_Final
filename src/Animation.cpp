@@ -9,7 +9,7 @@ constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColo
                     kCornellOtherColor = {.725f, .71f, .68f};
 constexpr glm::vec3 kTumblerColor = {.63f, .065f, .05f};
 
-constexpr uint32_t kTumblerCount = 1;
+constexpr uint32_t kTumblerCount = 5;
 constexpr float kTumblerPlaceRadius = 0.6f;
 
 constexpr float kCameraFov = glm::pi<float>() / 3.f;

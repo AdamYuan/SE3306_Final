@@ -4,6 +4,10 @@
 #include <glm/gtx/quaternion.hpp>
 
 struct RigidBody {
+public:
+	inline static constexpr float kGravity = 0.1f;
+	inline static constexpr float kGroundMu = 0.2f;
+
 protected:
 	glm::mat3 rotate_mat{glm::identity<glm::mat3>()}, inv_rotate_mat{glm::identity<glm::mat3>()};
 
