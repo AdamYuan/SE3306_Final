@@ -3,6 +3,8 @@
 #include <gcem.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 #include <optional>
 #include <random>
@@ -82,11 +84,53 @@ private:
 		return kInertia;
 	}
 	friend class MeshLoader;
+	friend class Collider;
 
 public:
 	inline float GetSDF(const glm::vec3 &p) const { return get_sdf(GetLocalPos(p)); }
 	inline glm::vec3 GetSDFGradient(const glm::vec3 &p) const { return rotate_mat * get_sdf_gradient(GetLocalPos(p)); }
 	inline glm::mat3 GetInertia() const { return rotate_mat * get_inertia() * inv_rotate_mat; }
+	/* inline void RotateGround(const glm::vec2 &xz_dir) {
+	    glm::vec3 dir = {xz_dir[0], 0.f, xz_dir[1]};
+	    glm::vec3 axis = {dir.z, 0.f, -dir.x};
+	    Rotate(axis);
+	} */
+	inline void RotateGround(const glm::vec2 &xz_dir) {
+		glm::vec3 dir = {xz_dir[0], 0.f, xz_dir[1]};
+		glm::vec3 axis = {dir.z, 0.f, -dir.x};
+		Rotate(axis);
+		center += dir * Tumbler::kBottomRadius;
+	}
+	inline void RotateGroundAxis(const glm::vec2 &xz_axis) {
+		glm::vec3 axis = {xz_axis[0], 0.f, xz_axis[1]};
+		glm::vec3 dir = {-axis.z, 0.f, axis.x};
+		Rotate(axis);
+		center += dir * Tumbler::kBottomRadius;
+	}
+	/* inline void MoveTop(const glm::vec3 &offset) {
+	    // TODO: Improve this
+	    glm::vec3 top_dir = rotate_mat * glm::vec3{.0f, kTopSphereY, .0f};
+	    glm::vec3 top_dir_offset = top_dir + offset;
+
+	    glm::vec3 old_center = center;
+	    glm::vec3 old_top_pos = center + top_dir;
+
+	    top_dir = glm::normalize(top_dir);
+	    top_dir_offset = glm::normalize(top_dir_offset);
+
+	    glm::vec3 axis = glm::cross(top_dir_offset, top_dir);
+	    // printf("%s\n", glm::to_string(axis).c_str());
+	    float angle = glm::asin(glm::length(axis));
+
+	    if (axis.xz() != glm::vec2{})
+	        RotateGroundAxis(-glm::normalize(glm::vec2{axis.x, axis.z}) * angle);
+
+	    glm::vec3 actual_offset = GetWorldPos({.0f, kTopSphereY, .0f}) - old_top_pos;
+	    if (glm::dot(actual_offset, offset) <= .0f) {
+	        center = old_center + offset;
+	        center.y = -1.f + kBottomRadius;
+	    }
+	} */
 	inline std::optional<float> RayCast(const glm::vec3 &origin, const glm::vec3 &dir, float threshold = 0.0001f,
 	                                    uint32_t max_steps = 32) const {
 		glm::vec3 local_orig = GetLocalPos(origin), local_dir = inv_rotate_mat * dir;
@@ -99,5 +143,17 @@ public:
 			t += sdf;
 		}
 		return std::nullopt;
+	}
+
+	inline void ApplyRecoverForce(float delta_t) {
+		glm::vec3 dir = rotate_mat[1];
+		glm::vec3 force = {-dir.x, .0f, -dir.z};
+		glm::vec3 r = {0.f, 1.f, 0.f};
+		glm::vec3 t = glm::cross(r, force); // torque
+		glm::vec3 l = t * delta_t;          // angular momentum
+		glm::vec3 delta_angular_velocity = glm::inverse(GetInertia()) * l;
+		angular_velocity += delta_angular_velocity;
+		linear_velocity +=
+		    glm::vec3{-delta_angular_velocity.z * kBottomRadius, .0f, delta_angular_velocity.x * kBottomRadius};
 	}
 };

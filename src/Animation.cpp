@@ -83,9 +83,9 @@ void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_p
 			auto &drag = m_opt_drag.value();
 			float t = (drag.plane_y - kCameraPos.y) / dir.y;
 			if (t > 1e-4f) {
-				glm::vec3 pos = kCameraPos + dir * t;
-				m_playground.MoveLockedTumbler({pos.x - drag.xz.x, pos.z - drag.xz.y}, 0.015f);
-				drag.xz = {pos.x, pos.z};
+				glm::vec2 pos = (kCameraPos + dir * t).xz();
+				m_playground.MoveLockedTumbler(pos - drag.xz, 0.015f);
+				drag.xz = pos;
 			}
 		} else if (!m_opt_drag) {
 			auto opt_t = m_playground.TryLockTumbler(kCameraPos, dir);

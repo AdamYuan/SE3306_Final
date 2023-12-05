@@ -1,5 +1,7 @@
 #include "Playground.hpp"
 
+#include "Collider.hpp"
+
 #include <cfloat>
 #include <random>
 
@@ -44,10 +46,7 @@ void Playground::MoveLockedTumbler(const glm::vec2 &offset, float rotate_angle) 
 	if (lock.translate) {
 		m_tumblers[lock.index].center += glm::vec3{offset.x, 0.0f, offset.y};
 	} else {
-		glm::vec3 axis = glm::normalize(glm::vec3{offset.y, 0.f, -offset.x});
-		glm::vec3 dir = {-axis.z, 0.f, axis.x};
-		m_tumblers[lock.index].Rotate(axis * rotate_angle);
-		m_tumblers[lock.index].center += dir * rotate_angle * Tumbler::kBottomRadius;
+		m_tumblers[lock.index].RotateGround(glm::normalize(offset) * rotate_angle);
 	}
 }
 
@@ -61,6 +60,10 @@ void Playground::Update(float delta_t) {
 		m_tumblers[idx].angular_velocity = {};
 		m_tumblers[idx].linear_velocity = {};
 	}
-	for (auto &tumbler : m_tumblers)
+	for (auto &tumbler : m_tumblers) {
+		Collider::TestBoundary(&tumbler);
+
+		tumbler.ApplyRecoverForce(delta_t);
 		tumbler.Update(delta_t);
+	}
 }
