@@ -147,8 +147,8 @@ public:
 
 	inline void ApplyRecoverForce(float delta_t) {
 		glm::vec3 dir = rotate_mat[1];
-		glm::vec3 force = {-dir.x, .0f, -dir.z};
-		glm::vec3 r = {0.f, 1.f, 0.f};
+		glm::vec3 force = -dir;
+		glm::vec3 r = glm::vec3{0.f, 1.f, 0.f};
 		glm::vec3 t = glm::cross(r, force); // torque
 		glm::vec3 l = t * delta_t;          // angular momentum
 		glm::vec3 delta_angular_velocity = glm::inverse(GetInertia()) * l;

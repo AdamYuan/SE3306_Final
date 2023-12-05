@@ -54,16 +54,24 @@ void Playground::SetTumblerMesh(GPUMesh *p_mesh, uint32_t begin_id) const {
 	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
 		p_mesh->SetModel(begin_id + i, m_tumblers[i].GetModel());
 }
-void Playground::Update(float delta_t) {
+void Playground::UnlockTumbler() {
 	if (m_opt_lock.has_value()) {
 		auto idx = m_opt_lock.value().index;
 		m_tumblers[idx].angular_velocity = {};
 		m_tumblers[idx].linear_velocity = {};
 	}
+	m_opt_lock = std::nullopt;
+}
+void Playground::Update(float delta_t) {
 	for (auto &tumbler : m_tumblers) {
 		Collider::TestBoundary(&tumbler);
-
 		tumbler.ApplyRecoverForce(delta_t);
-		tumbler.Update(delta_t);
 	}
+	if (m_opt_lock.has_value()) {
+		auto idx = m_opt_lock.value().index;
+		m_tumblers[idx].angular_velocity = {};
+		m_tumblers[idx].linear_velocity = {};
+	}
+	for (auto &tumbler : m_tumblers)
+		tumbler.Update(delta_t);
 }

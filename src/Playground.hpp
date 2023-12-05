@@ -24,6 +24,6 @@ public:
 	void SetTumblerMesh(GPUMesh *p_mesh, uint32_t begin_id = 0) const;
 	std::optional<float> TryLockTumbler(const glm::vec3 &origin, const glm::vec3 &dir);
 	void MoveLockedTumbler(const glm::vec2 &offset, float rotate_angle);
-	inline void UnlockTumbler() { m_opt_lock = std::nullopt; }
+	void UnlockTumbler();
 	void Update(float delta_t);
 };
