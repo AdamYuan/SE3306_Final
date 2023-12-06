@@ -85,7 +85,7 @@ void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_p
 				float t = (drag.plane_y - kCameraPos.y) / dir.y;
 				if (t > 1e-4f) {
 					glm::vec2 pos = (kCameraPos + dir * t).xz();
-					pos = glm::clamp(pos, glm::vec2(-1.f), glm::vec2(1.f));
+					pos = glm::clamp(pos, glm::vec2(-2.f), glm::vec2(2.f));
 					m_playground.MoveLockedTumbler(pos - drag.xz);
 					drag.xz = pos;
 				}

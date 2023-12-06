@@ -63,8 +63,7 @@ struct Collider {
 	inline static void TestBoundary(Sphere *p_sphere) {
 		TestBoundary(p_sphere, []() {});
 	}
-
-	inline static constexpr float kTumblerRestitution = .5f;
+	inline static constexpr float kTumblerRestitution = .2f;
 	inline static void Test(Tumbler *p_tumbler_0, Tumbler *p_tumbler_1) {
 		uint32_t hit_count = 0;
 		glm::vec3 hit_pos = {};
@@ -91,13 +90,21 @@ struct Collider {
 
 		hit_pos /= float(hit_count);
 		glm::vec3 hit_dir = (p_tumbler_0->GetSDFGradient(hit_pos) - p_tumbler_1->GetSDFGradient(hit_pos)) * .5f;
+		hit_dir = glm::normalize(hit_dir);
 		float hit_depth = -(p_tumbler_0->GetSDF(hit_pos) + p_tumbler_1->GetSDF(hit_pos));
 		hit_depth = glm::max(.0f, hit_depth);
-		hit_dir.y = .0f;
-		hit_dir = glm::normalize(hit_dir);
 
-		p_tumbler_0->center -= hit_dir * hit_depth;
-		p_tumbler_1->center += hit_dir * hit_depth;
-		// printf("hit\n");
+		glm::vec3 xz_hit_dir = glm::normalize(glm::vec3{hit_dir.x, .0f, hit_dir.z});
+		p_tumbler_0->center -= xz_hit_dir * hit_depth;
+		p_tumbler_1->center += xz_hit_dir * hit_depth;
+
+		glm::vec3 speed_0 = p_tumbler_0->GetVelocity(hit_pos), speed_1 = p_tumbler_1->GetVelocity(hit_pos);
+		float v0 = glm::dot(speed_0, hit_dir), v1 = glm::dot(speed_1, hit_dir);
+
+		float v = v0 - v1;
+		v = glm::clamp(v, -1.f, 1.f);
+		p_tumbler_0->ApplyMomentum(hit_pos, -hit_dir * v * Tumbler::kMass * kTumblerRestitution);
+		p_tumbler_1->ApplyMomentum(hit_pos, hit_dir * v * Tumbler::kMass * kTumblerRestitution);
+		// printf("v0=%f, v1=%f\n", v0, v1);
 	}
 };

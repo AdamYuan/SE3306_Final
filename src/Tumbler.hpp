@@ -151,9 +151,13 @@ public:
 	}
 
 	inline void ApplyMomentum(const glm::vec3 &origin, const glm::vec3 &momentum) {
-		glm::vec3 l = glm::cross(origin - this->center, momentum); // angular momentum
-		angular_velocity += get_inv_inertia() * l;
-		linear_velocity += momentum / kMass;
+		glm::vec3 fake_center = center;
+		fake_center.y -= kBottomRadius * .5f;
+		glm::vec3 l = glm::cross(origin - fake_center, momentum); // angular momentum
+		glm::vec3 delta_angular_velocity = get_inv_inertia() * l;
+		angular_velocity += delta_angular_velocity;
+		linear_velocity +=
+		    glm::vec3{-delta_angular_velocity.z * kBottomRadius, .0f, delta_angular_velocity.x * kBottomRadius};
 	}
 
 	inline glm::vec3 GetTopSpherePos() const { return center + kTopSphereY * rotate_mat[1]; }
