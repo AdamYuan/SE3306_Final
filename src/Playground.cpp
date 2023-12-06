@@ -48,18 +48,37 @@ void Playground::PopMarbleMesh(GPUMesh *p_mesh) const {
 	}
 	p_mesh->SetMeshCount(cnt);
 }
-
-void Playground::SplatMarbles(uint32_t marble_count, const glm::vec4 &initial_color) {
-	m_marbles.resize(marble_count, {.color = initial_color, .alive = true});
-
-	std::uniform_real_distribution<float> dir_dis{-1.f, 1.f}, speed_dis{2.f, 4.f};
-	for (auto &marble : m_marbles) {
-		glm::vec3 dir;
-		do {
-			dir = {dir_dis(m_rand), dir_dis(m_rand), dir_dis(m_rand)};
-		} while (dir == glm::vec3{});
-		marble.linear_velocity = glm::normalize(dir) * speed_dis(m_rand);
-	}
+void Playground::PopFireballMesh(GPUMesh *p_mesh) const {
+	if (m_fireball) {
+		p_mesh->SetMeshCount(1);
+		p_mesh->SetModel(0, m_fireball.value().GetModel());
+	} else
+		p_mesh->SetMeshCount(0);
 }
 
-void Playground::ClearMarbles() { m_marbles.clear(); }
+template <typename Rand> inline static glm::vec3 gen_random_dir(Rand *p_rand) {
+	std::uniform_real_distribution<float> dir_dis{-1.f, 1.f};
+	glm::vec3 dir;
+	do {
+		dir = {dir_dis(*p_rand), dir_dis(*p_rand), dir_dis(*p_rand)};
+	} while (dir == glm::vec3{} || glm::length(dir) > 1.f);
+	return glm::normalize(dir);
+}
+
+void Playground::CreateMarbles(uint32_t marble_count, const glm::vec4 &initial_color, float min_speed,
+                               float max_speed) {
+	m_marbles.resize(marble_count, {.color = initial_color, .alive = true});
+
+	std::uniform_real_distribution<float> dir_dis{-1.f, 1.f}, speed_dis{min_speed, max_speed};
+	for (auto &marble : m_marbles)
+		marble.linear_velocity = gen_random_dir(&m_rand) * speed_dis(m_rand);
+}
+
+void Playground::DeleteMarbles() { m_marbles.clear(); }
+
+void Playground::CreateFireball(float speed) {
+	m_fireball = Fireball{};
+	auto &fireball = m_fireball.value();
+	fireball.linear_velocity = gen_random_dir(&m_rand) * speed;
+}
+void Playground::DeleteFireball() { m_fireball = std::nullopt; }

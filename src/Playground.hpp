@@ -15,6 +15,7 @@ private:
 
 	std::vector<Tumbler> m_tumblers;
 	std::vector<Marble> m_marbles;
+	std::optional<Fireball> m_fireball;
 
 public:
 	struct RayCastInfo {
@@ -26,10 +27,15 @@ public:
 	std::optional<RayCastInfo> RayCastTumbler(const glm::vec3 &origin, const glm::vec3 &dir);
 
 	void PopMarbleMesh(GPUMesh *p_mesh) const;
-	void SplatMarbles(uint32_t marble_count, const glm::vec4 &initial_color);
-	void ClearMarbles();
+	void CreateMarbles(uint32_t marble_count, const glm::vec4 &initial_color, float min_speed, float max_speed);
+	void DeleteMarbles();
 
-	template <typename MarbleHitCallback> void Update(float delta_t, MarbleHitCallback &&marble_callback) {
+	void PopFireballMesh(GPUMesh *p_mesh) const;
+	void CreateFireball(float speed);
+	void DeleteFireball();
+
+	template <typename MarbleHitCallback, typename FireballHitCallback>
+	void Update(float delta_t, MarbleHitCallback &&marble_callback, FireballHitCallback &&fireball_callback) {
 		for (uint32_t i = 0; i < m_tumblers.size(); ++i)
 			for (uint32_t j = i + 1; j < m_tumblers.size(); ++j)
 				Collider::Test(&m_tumblers[i], &m_tumblers[j]);
@@ -52,6 +58,15 @@ public:
 				Collider::Test(&marble, &tumbler, marble_callback);
 			marble.ApplyGravity(delta_t);
 			marble.Update(delta_t);
+		}
+		if (m_fireball) {
+			auto &fireball = m_fireball.value();
+			Collider::TestBoundary(&fireball, fireball_callback);
+			for (auto &tumbler : m_tumblers)
+				Collider::Test(&fireball, &tumbler, fireball_callback);
+			for (auto &marble : m_marbles)
+				Collider::Test(&fireball, &marble, fireball_callback, marble_callback);
+			fireball.Update(delta_t);
 		}
 	}
 };

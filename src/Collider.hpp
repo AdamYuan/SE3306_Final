@@ -101,7 +101,7 @@ struct Collider {
 		}
 
 		if (opt_hit_type)
-			callback(static_cast<Derived *>(p_sphere), opt_hit_type.value());
+			callback((Derived *)(p_sphere), opt_hit_type.value());
 	}
 
 	inline static constexpr float kTumblerRestitution = .3f;
@@ -167,5 +167,13 @@ struct Collider {
 		p_sphere->linear_velocity = new_l_v;
 
 		callback(static_cast<Derived *>(p_sphere), SphereHitType::kTumbler);
+	}
+	template <typename FireballCallback, typename MarbleCallback>
+	inline static void Test(Fireball *p_fireball, Marble *p_marble, FireballCallback &&fireball_callback,
+	                        MarbleCallback &&marble_callback) {
+		if (glm::distance(p_fireball->center, p_marble->center) >= Fireball::kRadius)
+			return;
+		marble_callback(p_marble, SphereHitType::kSphere);
+		fireball_callback(p_fireball, SphereHitType::kSphere);
 	}
 };

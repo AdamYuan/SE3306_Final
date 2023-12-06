@@ -29,7 +29,7 @@ struct Marble final : public Sphere<Marble> {
 	inline void ApplyGravity(float delta_t) { linear_velocity.y -= kGravity * delta_t; }
 };
 
-struct Fireball final : public Sphere<Marble> {
+struct Fireball final : public Sphere<Fireball> {
 	inline static constexpr float kMass = 1.f;
-	inline static constexpr float kRadius = 0.1f;
+	inline static constexpr float kRadius = .2f;
 };

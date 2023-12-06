@@ -14,6 +14,10 @@ constexpr uint32_t kTumblerCount = 5;
 constexpr float kTumblerPlaceRadius = 0.6f;
 
 constexpr uint32_t kMarbleCount = 30;
+constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
+
+constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .05f} * 5.f;
+constexpr float kFireballSpeed = 2.f;
 
 constexpr float kCameraFov = glm::pi<float>() / 3.f;
 constexpr glm::vec3 kCameraPos = {.0f, .0f, 1.f + 1.f / gcem::tan(kCameraFov * 0.5f)};
@@ -36,6 +40,10 @@ void Animation::Initialize() {
 	{
 		auto marble_mesh = MeshLoader{}.MakeMarble(3, kCornelFloorTexture);
 		m_marble_gpu_mesh.Initialize({&marble_mesh, 1}, {&kMarbleCount, 1});
+	}
+	{
+		auto fireball_mesh = MeshLoader{}.MakeFireball(4, kFireballRadiance);
+		m_fireball_gpu_mesh.Initialize({&fireball_mesh, 1});
 	}
 
 	// Load Shaders
@@ -122,51 +130,58 @@ void Animation::Drag(const std::optional<glm::vec2> &opt_drag_pos) {
 }
 
 void Animation::ToggleMarbles() {
-	if (!m_marbles_flag) {
-		m_playground.SplatMarbles(kMarbleCount, glm::vec4{kCornellOtherColor, 1.0f});
-	} else {
-		m_playground.ClearMarbles();
-	}
+	if (!m_marbles_flag)
+		m_playground.CreateMarbles(kMarbleCount, glm::vec4{kCornellOtherColor, 1.0f}, kMarbleMinSpeed, kMarbleMaxSpeed);
+	else
+		m_playground.DeleteMarbles();
+
 	m_marbles_flag ^= 1;
 }
 
 void Animation::ToggleFireball() {
-	if (!m_fire_ball_flag) {
-	} else {
-	}
+	if (!m_fire_ball_flag)
+		m_playground.CreateFireball(kFireballSpeed);
+	else
+		m_playground.DeleteFireball();
 	m_fire_ball_flag ^= 1;
 }
 
 void Animation::Update(float delta_t) {
-	m_playground.Update(delta_t, [](Marble *p_marble, SphereHitType hit_type) {
-		switch (hit_type) {
-		case SphereHitType::kFront:
-			return;
-		case SphereHitType::kLeft:
-			p_marble->color = {kCornellLeftColor, 1.0f};
-			return;
-		case SphereHitType::kRight:
-			p_marble->color = {kCornellRightColor, 1.0f};
-			return;
-		case SphereHitType::kBottom:
-			p_marble->color = {};
-			return;
-		case SphereHitType::kLight:
-			p_marble->color = {kCornellLightRadiance, 1.0f};
-			return;
-		case SphereHitType::kTumbler:
-			p_marble->color = {kTumblerColor, 1.0f};
-			return;
-		case SphereHitType::kSphere:
-			p_marble->alive = false;
-			return;
-		default:
-			p_marble->color = {kCornellOtherColor, 1.0f};
-			return;
-		}
-	});
+	m_playground.Update(
+	    delta_t,
+	    [](Marble *p_marble, SphereHitType hit_type) {
+		    switch (hit_type) {
+		    case SphereHitType::kFront:
+			    return;
+		    case SphereHitType::kLeft:
+			    p_marble->color = {kCornellLeftColor, 1.0f};
+			    return;
+		    case SphereHitType::kRight:
+			    p_marble->color = {kCornellRightColor, 1.0f};
+			    return;
+		    case SphereHitType::kBottom:
+			    p_marble->color = {};
+			    return;
+		    case SphereHitType::kLight:
+			    p_marble->color = {kCornellLightRadiance, 1.0f};
+			    return;
+		    case SphereHitType::kTumbler:
+			    p_marble->color = {kTumblerColor, 1.0f};
+			    return;
+		    case SphereHitType::kSphere:
+			    p_marble->alive = false;
+			    return;
+		    default:
+			    p_marble->color = {kCornellOtherColor, 1.0f};
+			    return;
+		    }
+	    },
+	    [](Fireball *p_fireball, SphereHitType hit_type) {
+
+	    });
 	m_playground.PopTumblerMesh(&m_tumbler_gpu_mesh);
 	m_playground.PopMarbleMesh(&m_marble_gpu_mesh);
+	m_playground.PopFireballMesh(&m_fireball_gpu_mesh);
 }
 
 void Animation::Draw(int width, int height) {
@@ -179,7 +194,6 @@ void Animation::Draw(int width, int height) {
 	m_shadow_map.Generate(kShadowMapSize, kShadowMapSize, [this]() {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		m_tumbler_gpu_mesh.Draw();
-		// m_marble_gpu_mesh.Draw();
 	});
 
 	// Voxels
@@ -191,6 +205,7 @@ void Animation::Draw(int width, int height) {
 		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw();
 		m_marble_gpu_mesh.Draw();
+		m_fireball_gpu_mesh.Draw();
 	});
 
 	glEnable(GL_DEPTH_TEST);
@@ -204,6 +219,7 @@ void Animation::Draw(int width, int height) {
 		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw();
 		m_marble_gpu_mesh.Draw();
+		m_fireball_gpu_mesh.Draw();
 	});
 
 	// Post Process

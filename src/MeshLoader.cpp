@@ -90,11 +90,11 @@ void MeshLoader::make_sphere_triangles(float radius, uint32_t subdivisions) {
 	}
 }
 
-Mesh MeshLoader::MakeSphere(float radius, uint32_t subdivisions, const glm::vec3 &color) {
-	make_sphere_triangles(radius, subdivisions);
-	make_vertex_info_map();
-	return generate_mesh(color);
-}
+/* Mesh MeshLoader::MakeSphere(float radius, uint32_t subdivisions, const glm::vec3 &color) {
+    make_sphere_triangles(radius, subdivisions);
+    make_vertex_info_map();
+    return generate_mesh(color);
+} */
 
 Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &right_color, uint32_t floor_texture,
                                 const glm::vec3 &other_color, const glm::vec3 &light_color, float light_height,
@@ -246,4 +246,10 @@ Mesh MeshLoader::MakeMarble(uint32_t subdivisions, uint32_t floor_texture) {
 		return glm::vec3{-float(floor_texture), glm::atan(p.z, p.x) / glm::pi<float>(),
 		                 glm::asin(p.y) / glm::pi<float>()};
 	});
+}
+
+Mesh MeshLoader::MakeFireball(uint32_t subdivisions, const glm::vec3 &color) {
+	make_sphere_triangles(Fireball::kRadius, subdivisions);
+	make_vertex_info_map();
+	return generate_mesh(color);
 }

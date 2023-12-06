@@ -25,6 +25,8 @@ public:
 	inline uint32_t GetMaxMeshCount() const { return m_instance_infos.size(); }
 	inline uint32_t GetCurrentMeshCount() const { return m_count; }
 	inline void SetMeshCount(uint32_t count) {
+		if (count == m_count)
+			return;
 		m_count = glm::clamp(count, 0u, GetMaxMeshCount());
 		m_changed = true;
 	}
