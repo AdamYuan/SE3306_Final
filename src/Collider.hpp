@@ -1,12 +1,13 @@
 #pragma once
 
 #include <bitset>
+#include <shader/Config.h>
 
 #include "Sphere.hpp"
 #include "Tumbler.hpp"
 
 struct Collider {
-	inline static constexpr float kBoundaryRestitution = .5f;
+	inline static constexpr float kTumblerBoundaryRestitution = .5f;
 	inline static void TestBoundary(Tumbler *p_tumbler) {
 		std::bitset<3> velocity_update_flags;
 
@@ -50,8 +51,9 @@ struct Collider {
 
 		const auto update_velocity = [&](auto axis) {
 			if (axis != 1) {
-				p_tumbler->linear_velocity[axis] = -p_tumbler->linear_velocity[axis] * kBoundaryRestitution;
-				p_tumbler->angular_velocity[axis ^ 2] = -p_tumbler->angular_velocity[axis ^ 2] * kBoundaryRestitution;
+				p_tumbler->linear_velocity[axis] = -p_tumbler->linear_velocity[axis] * kTumblerBoundaryRestitution;
+				p_tumbler->angular_velocity[axis ^ 2] =
+				    -p_tumbler->angular_velocity[axis ^ 2] * kTumblerBoundaryRestitution;
 			} else {
 				p_tumbler->linear_velocity = {};
 				p_tumbler->angular_velocity = {};
@@ -65,10 +67,43 @@ struct Collider {
 			update_velocity(2);
 	}
 
-	/* template <typename CallbackFunc> inline static void TestBoundary(Sphere *p_sphere, CallbackFunc &&callback) {}
-	inline static void TestBoundary(Sphere *p_sphere) {
-	    TestBoundary(p_sphere, []() {});
-	} */
+	template <typename Derived, typename Callback>
+	inline static void TestBoundary(Sphere<Derived> *p_sphere, Callback &&callback) {
+		std::optional<SphereHitType> opt_hit_type;
+
+		const auto test = [&](auto axis) {
+			if (p_sphere->center[axis] - Derived::kRadius < -1.f) {
+				p_sphere->center[axis] = -1.f + Derived::kRadius;
+				p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] + 1e-4f;
+				opt_hit_type = static_cast<SphereHitType>(axis * 2);
+
+				// velocity_update_flags[axis] = true;
+			} else if (p_sphere->center[axis] + Derived::kRadius > 1.f) {
+				p_sphere->center[axis] = 1.f - Derived::kRadius;
+				p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] - 1e-4f;
+				opt_hit_type = static_cast<SphereHitType>(axis * 2 + 1);
+
+				// velocity_update_flags[axis] = true;
+			}
+		};
+
+		test(0);
+		test(1);
+		test(2);
+
+		glm::vec3 light_diff = p_sphere->center - glm::vec3{.0f, kCornellLightHeight, .0f};
+		float light_dist = glm::length(light_diff);
+		if (light_dist < Derived::kRadius + kCornellLightRadius) {
+			glm::vec3 light_norm = glm::normalize(light_diff);
+			p_sphere->center += light_norm * (Derived::kRadius + kCornellLightRadius - light_dist);
+			p_sphere->linear_velocity = glm::reflect(p_sphere->linear_velocity, light_norm);
+			opt_hit_type = SphereHitType::kLight;
+		}
+
+		if (opt_hit_type)
+			callback(static_cast<Derived *>(p_sphere), opt_hit_type.value());
+	}
+
 	inline static constexpr float kTumblerRestitution = .3f;
 	inline static void Test(Tumbler *p_tumbler_0, Tumbler *p_tumbler_1) {
 		uint32_t hit_count = 0;
@@ -111,8 +146,26 @@ struct Collider {
 		v = glm::clamp(v, -1.f, 1.f);
 
 		// TODO: maybe more accurate?
-		p_tumbler_0->ApplyMomentum(hit_pos, -hit_dir * v * Tumbler::kMass * kTumblerRestitution);
-		p_tumbler_1->ApplyMomentum(hit_pos, hit_dir * v * Tumbler::kMass * kTumblerRestitution);
+		p_tumbler_0->ApplyMomentum(hit_pos, -hit_dir * v * Tumbler::kMass * kTumblerRestitution,
+		                           -.5f * Tumbler::kBottomRadius);
+		p_tumbler_1->ApplyMomentum(hit_pos, hit_dir * v * Tumbler::kMass * kTumblerRestitution,
+		                           -.5f * Tumbler::kBottomRadius);
 		// printf("v0=%f, v1=%f\n", v0, v1);
+	}
+
+	template <typename Derived, typename Callback>
+	inline static void Test(Sphere<Derived> *p_sphere, Tumbler *p_tumbler, Callback &&callback) {
+		float sdf = p_tumbler->GetSDF(p_sphere->center);
+		if (sdf >= Derived::kRadius)
+			return;
+
+		glm::vec3 dir = p_tumbler->GetSDFGradient(p_sphere->center);
+		p_sphere->center += dir * (Derived::kRadius - sdf);
+
+		glm::vec3 new_l_v = glm::reflect(p_sphere->linear_velocity, dir);
+		p_tumbler->ApplyMomentum(p_sphere->center, (p_sphere->linear_velocity - new_l_v) * Derived::kMass);
+		p_sphere->linear_velocity = new_l_v;
+
+		callback(static_cast<Derived *>(p_sphere), SphereHitType::kTumbler);
 	}
 };

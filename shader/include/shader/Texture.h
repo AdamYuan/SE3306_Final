@@ -4,8 +4,9 @@
 #ifdef GLSL
 vec3 texture_func_1(in const vec2 coord) {
 	const vec3 color = vec3(.725, .71, .68);
-	int id = int(floor(coord.x * 4)) + int(floor(coord.y * 4));
-	return (id & 1) == 0 ? color * 1.1 : color * .5;
+	const float coef[2] = {1.1, 0.5};
+	ivec2 icoord = ivec2(floor(coord * 4));
+	return color * coef[(icoord.x + icoord.y) & 1];
 }
 vec3 GetAlbedo(in const vec3 color) { return color.r < .0 ? texture_func_1(color.yz) : color; }
 #endif

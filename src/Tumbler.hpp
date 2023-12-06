@@ -91,6 +91,8 @@ private:
 	friend class Collider;
 
 public:
+	bool locked = false;
+
 	inline float GetSDF(const glm::vec3 &p) const { return get_sdf(GetLocalPos(p)); }
 	inline glm::vec3 GetSDFGradient(const glm::vec3 &p) const { return rotate_mat * get_sdf_gradient(GetLocalPos(p)); }
 	inline glm::mat3 GetInertia() const { return rotate_mat * get_inertia() * inv_rotate_mat; }
@@ -100,17 +102,30 @@ public:
 	    glm::vec3 axis = {dir.z, 0.f, -dir.x};
 	    Rotate(axis);
 	} */
+
 	inline void RotateGround(const glm::vec2 &xz_dir) {
 		glm::vec3 dir = {xz_dir[0], 0.f, xz_dir[1]};
 		glm::vec3 axis = {dir.z, 0.f, -dir.x};
 		Rotate(axis);
 		center += dir * Tumbler::kBottomRadius;
 	}
-	inline void RotateGroundAxis(const glm::vec2 &xz_axis) {
-		glm::vec3 axis = {xz_axis[0], 0.f, xz_axis[1]};
-		glm::vec3 dir = {-axis.z, 0.f, axis.x};
-		Rotate(axis);
-		center += dir * Tumbler::kBottomRadius;
+	/* inline void RotateGroundAxis(const glm::vec2 &xz_axis) {
+	    glm::vec3 axis = {xz_axis[0], 0.f, xz_axis[1]};
+	    glm::vec3 dir = {-axis.z, 0.f, axis.x};
+	    Rotate(axis);
+	    center += dir * Tumbler::kBottomRadius;
+	} */
+	inline void MoveLocked(const glm::vec2 &offset) {
+		if (!locked)
+			return;
+		center += glm::vec3{offset.x, 0.0f, offset.y};
+	}
+	inline void RotateLocked(const glm::vec2 &offset, float rotate_angle) {
+		if (!locked)
+			return;
+		if (offset == glm::vec2{})
+			return;
+		RotateGround(glm::normalize(offset) * rotate_angle);
 	}
 	inline std::optional<float> RayCast(const glm::vec3 &origin, const glm::vec3 &dir, float threshold = 0.0001f,
 	                                    uint32_t max_steps = 32) const {
@@ -126,9 +141,9 @@ public:
 		return std::nullopt;
 	}
 
-	inline void ApplyMomentum(const glm::vec3 &origin, const glm::vec3 &momentum) {
+	inline void ApplyMomentum(const glm::vec3 &origin, const glm::vec3 &momentum, float center_y_bias = .0f) {
 		glm::vec3 fake_center = center;
-		fake_center.y -= kBottomRadius * .5f;
+		fake_center.y += center_y_bias;
 		glm::vec3 l = glm::cross(origin - fake_center, momentum); // angular momentum
 		glm::vec3 delta_angular_velocity = get_inv_inertia() * l;
 		angular_velocity += delta_angular_velocity;

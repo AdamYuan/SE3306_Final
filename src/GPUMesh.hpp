@@ -24,7 +24,10 @@ public:
 	void Initialize(std::span<const Mesh> meshes, std::span<const uint32_t> counts = {});
 	inline uint32_t GetMaxMeshCount() const { return m_instance_infos.size(); }
 	inline uint32_t GetCurrentMeshCount() const { return m_count; }
-	inline void SetMeshCount(uint32_t count) { m_count = glm::clamp(count, 0u, GetMaxMeshCount()); }
+	inline void SetMeshCount(uint32_t count) {
+		m_count = glm::clamp(count, 0u, GetMaxMeshCount());
+		m_changed = true;
+	}
 	inline void SetModel(uint32_t mesh_id, const glm::mat4 &model) {
 		m_instance_infos[mesh_id].model = model;
 		m_changed = true;

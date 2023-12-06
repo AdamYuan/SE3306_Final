@@ -9,8 +9,13 @@ constexpr int kWidth = 720, kHeight = 720;
 Animation animation = {};
 
 static void key_callback(GLFWwindow *, int key, int, int action, int) {
-	// if (action == GLFW_PRESS && key == GLFW_KEY_SPACE)
-	// animation.Start();
+	if (action != GLFW_PRESS)
+		return;
+
+	if (key == GLFW_KEY_S)
+		animation.ToggleMarbles();
+	else if (key == GLFW_KEY_F)
+		animation.ToggleFireball();
 }
 
 int main() {
@@ -24,7 +29,7 @@ int main() {
 	glfwSetKeyCallback(window, key_callback);
 	gl3wInit();
 
-	animation.Initialize("bunny.obj");
+	animation.Initialize();
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 

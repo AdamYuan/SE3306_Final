@@ -94,6 +94,8 @@ void GPUMesh::Initialize(std::span<const Mesh> meshes, std::span<const uint32_t>
 }
 
 void GPUMesh::Draw() {
+	if (m_count == 0)
+		return;
 	if (m_changed) {
 		m_instance_info_buffer.SubData(0, m_instance_infos.data(), m_instance_infos.data() + m_count);
 		m_changed = false;

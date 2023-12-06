@@ -1,8 +1,8 @@
 #include "MeshLoader.hpp"
 
+#include "Sphere.hpp"
 #include "Tumbler.hpp"
 
-#include <cfloat>
 #include <unordered_set>
 
 void MeshLoader::make_vertex_info_map() {
@@ -181,12 +181,11 @@ Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &ri
 	return mesh;
 }
 
-#include <glm/gtx/string_cast.hpp>
 Mesh MeshLoader::MakeTumbler(uint32_t y_subdivisions, uint32_t x_subdivisions, const glm::vec3 &color) {
 	m_triangles.clear();
 
 	// printf("%s\n", glm::to_string(Tumbler::get_inertia_sample(100000)).c_str());
-	printf("%s\n", glm::to_string(Tumbler::get_inertia()).c_str());
+	// printf("%s\n", glm::to_string(Tumbler::get_inertia()).c_str());
 
 	float y_min = -Tumbler::kBottomRadius;
 	std::vector<glm::vec2> y_r_vec;
@@ -237,4 +236,14 @@ Mesh MeshLoader::MakeTumbler(uint32_t y_subdivisions, uint32_t x_subdivisions, c
 
 	make_vertex_info_map();
 	return generate_mesh(color);
+}
+
+Mesh MeshLoader::MakeMarble(uint32_t subdivisions, uint32_t floor_texture) {
+	make_sphere_triangles(Marble::kRadius, subdivisions);
+	make_vertex_info_map();
+	return generate_mesh([floor_texture](glm::vec3 p) {
+		p /= Marble::kRadius;
+		return glm::vec3{-float(floor_texture), glm::atan(p.z, p.x) / glm::pi<float>(),
+		                 glm::asin(p.y) / glm::pi<float>()};
+	});
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Collider.hpp"
 #include "GPUMesh.hpp"
 #include "Sphere.hpp"
 #include "Tumbler.hpp"
@@ -10,21 +11,47 @@
 
 class Playground {
 private:
-	std::vector<Tumbler> m_tumblers;
-	// std::vector<Sphere> m_spheres;
+	std::mt19937 m_rand{std::random_device{}()};
 
-	std::optional<uint32_t> m_opt_lock;
+	std::vector<Tumbler> m_tumblers;
+	std::vector<Marble> m_marbles;
 
 public:
-	struct LockInfo {
+	struct RayCastInfo {
 		float t;
-		bool below_center;
+		Tumbler *p_tumbler;
 	};
 	void Initialize(uint32_t tumbler_count, float place_radius);
-	void SetTumblerMesh(GPUMesh *p_mesh, uint32_t begin_id = 0) const;
-	std::optional<LockInfo> TryLockTumbler(const glm::vec3 &origin, const glm::vec3 &dir);
-	void MoveLockedTumbler(const glm::vec2 &offset);
-	void RotateLockedTumbler(const glm::vec2 &offset, float rotate_angle);
-	void UnlockTumbler();
-	void Update(float delta_t);
+	void PopTumblerMesh(GPUMesh *p_mesh) const;
+	std::optional<RayCastInfo> RayCastTumbler(const glm::vec3 &origin, const glm::vec3 &dir);
+
+	void PopMarbleMesh(GPUMesh *p_mesh) const;
+	void SplatMarbles(uint32_t marble_count, const glm::vec4 &initial_color);
+	void ClearMarbles();
+
+	template <typename MarbleHitCallback> void Update(float delta_t, MarbleHitCallback &&marble_callback) {
+		for (uint32_t i = 0; i < m_tumblers.size(); ++i)
+			for (uint32_t j = i + 1; j < m_tumblers.size(); ++j)
+				Collider::Test(&m_tumblers[i], &m_tumblers[j]);
+
+		for (auto &tumbler : m_tumblers) {
+			Collider::TestBoundary(&tumbler);
+			tumbler.ApplyFrictionForce(delta_t);
+			tumbler.ApplyRecoverForce(delta_t);
+		}
+		for (auto &tumbler : m_tumblers) {
+			if (tumbler.locked) {
+				tumbler.angular_velocity = {};
+				tumbler.linear_velocity = {};
+			}
+			tumbler.Update(delta_t);
+		}
+		for (auto &marble : m_marbles) {
+			Collider::TestBoundary(&marble, marble_callback);
+			for (auto &tumbler : m_tumblers)
+				Collider::Test(&marble, &tumbler, marble_callback);
+			marble.ApplyGravity(delta_t);
+			marble.Update(delta_t);
+		}
+	}
 };

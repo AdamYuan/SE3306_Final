@@ -17,14 +17,19 @@ template <typename Derived> struct Sphere : public RigidBody {
 	}
 };
 
-struct Marble : public Sphere<Marble> {
-	inline static constexpr float kMass = 1.f;
-	inline static constexpr float kRadius = 0.05f;
+enum class SphereHitType { kLeft, kRight, kBottom, kTop, kBack, kFront, kLight, kTumbler, kSphere };
+
+struct Marble final : public Sphere<Marble> {
+	inline static constexpr float kMass = .15f;
+	inline static constexpr float kRadius = 0.06f;
 
 	glm::vec4 color = {};
+	bool alive = true;
+
+	inline void ApplyGravity(float delta_t) { linear_velocity.y -= kGravity * delta_t; }
 };
 
-struct FireBall : public Sphere<Marble> {
-	inline static constexpr float kMass = 10.f;
+struct Fireball final : public Sphere<Marble> {
+	inline static constexpr float kMass = 1.f;
 	inline static constexpr float kRadius = 0.1f;
 };

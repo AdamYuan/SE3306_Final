@@ -29,4 +29,6 @@ public:
 	                    const glm::vec3 &other_color, const glm::vec3 &light_color, float light_height,
 	                    float light_radius);
 	Mesh MakeTumbler(uint32_t y_subdivisions, uint32_t x_subdivisions, const glm::vec3 &color);
+	Mesh MakeMarble(uint32_t subdivisions, uint32_t floor_texture);
+	Mesh MakeFireball(uint32_t subdivisions, const glm::vec3 &color);
 };
