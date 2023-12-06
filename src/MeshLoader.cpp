@@ -5,54 +5,6 @@
 #include <cfloat>
 #include <unordered_set>
 
-void MeshLoader::load_obj_triangles(const char *filename) {
-	m_triangles.clear();
-
-	tinyobj::attrib_t attrib;
-	std::vector<tinyobj::material_t> materials;
-	std::vector<tinyobj::shape_t> shapes;
-
-	std::string load_warnings, load_errors;
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &load_warnings, &load_errors, filename)) {
-		printf("Failed to load %s\n", filename);
-		return;
-	}
-	if (!load_errors.empty()) {
-		printf("%s\n", load_errors.c_str());
-		return;
-	}
-	if (!load_warnings.empty())
-		printf("%s\n", load_warnings.c_str());
-
-	if (materials.size() > 1)
-		printf("too much materials\n");
-
-	glm::vec3 pmin(FLT_MAX), pmax(-FLT_MAX);
-	// Loop over shapes
-	for (const auto &shape : shapes) {
-		size_t index_offset = 0, face = 0;
-		// Loop over faces(polygon)
-		for (const auto &num_face_vertex : shape.mesh.num_face_vertices) {
-			// Loop over triangles in the face.
-			if (num_face_vertex != 3) {
-				printf("Non-triangle face\n");
-				continue;
-			}
-			Triangle t;
-			for (size_t i = 0; i < num_face_vertex; ++i) {
-				tinyobj::index_t index = shape.mesh.indices[index_offset + i];
-				t[i] = {attrib.vertices[3 * index.vertex_index + 0], attrib.vertices[3 * index.vertex_index + 1],
-				        attrib.vertices[3 * index.vertex_index + 2]};
-			}
-
-			m_triangles.push_back(t);
-
-			index_offset += num_face_vertex;
-			face++;
-		}
-	}
-}
-
 void MeshLoader::make_vertex_info_map() {
 	m_vertex_map.clear();
 	for (const auto &t : m_triangles) {
@@ -68,7 +20,7 @@ void MeshLoader::make_vertex_info_map() {
 	}
 }
 
-Mesh MeshLoader::generate_mesh(const glm::vec3 &color) const {
+template <typename ColorFunc> Mesh MeshLoader::generate_mesh(ColorFunc &&color_func) const {
 	Mesh mesh = {};
 
 	{ // push vertices to mesh
@@ -78,7 +30,7 @@ Mesh MeshLoader::generate_mesh(const glm::vec3 &color) const {
 			auto &vert = mesh.m_vertices[v.second.idx];
 			vert.position = v.first;
 			vert.normal = glm::normalize(v.second.norm);
-			vert.color = color;
+			vert.color = color_func(v.first);
 		}
 	}
 
@@ -90,10 +42,8 @@ Mesh MeshLoader::generate_mesh(const glm::vec3 &color) const {
 	return mesh;
 }
 
-Mesh MeshLoader::Load(const char *filename, const glm::vec3 &color) {
-	load_obj_triangles(filename);
-	make_vertex_info_map();
-	return generate_mesh(color);
+Mesh MeshLoader::generate_mesh(const glm::vec3 &color) const {
+	return generate_mesh([&color](auto &&) { return color; });
 }
 
 void MeshLoader::make_sphere_triangles(float radius, uint32_t subdivisions) {
@@ -146,8 +96,9 @@ Mesh MeshLoader::MakeSphere(float radius, uint32_t subdivisions, const glm::vec3
 	return generate_mesh(color);
 }
 
-Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &right_color, const glm::vec3 &other_color,
-                                const glm::vec3 &light_color, float light_height, float light_radius) {
+Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &right_color, uint32_t floor_texture,
+                                const glm::vec3 &other_color, const glm::vec3 &light_color, float light_height,
+                                float light_radius) {
 	m_triangles = {{
 	                   glm::vec3{-1.f, -1.f, -1.f},
 	                   glm::vec3{+1.f, -1.f, +1.f},
@@ -159,7 +110,8 @@ Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &ri
 	                   glm::vec3{+1.f, -1.f, +1.f},
 	               }};
 	make_vertex_info_map();
-	Mesh mesh = generate_mesh(other_color); // bottom
+	Mesh mesh = generate_mesh(
+	    [floor_texture](const glm::vec3 &p) { return glm::vec3(-float(floor_texture), p.x, p.z); }); // bottom
 
 	m_triangles = {{
 	                   glm::vec3{-1.f, 1.f, -1.f},

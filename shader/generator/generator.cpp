@@ -1,27 +1,24 @@
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <string>
 
-// usage: shader, output, include directory
-int main(int argc, char **argv) {
-	--argc, ++argv;
-	if (argc != 3)
-		return EXIT_FAILURE;
+std::filesystem::path include_path;
 
-	std::string line;
-
-	std::string shader;
-
-	std::filesystem::path include_path = argv[2];
-
-	std::ifstream fin{argv[0]};
-	if (!fin.is_open()) {
-		printf("unable to open %s\n", argv[0]);
-		return EXIT_FAILURE;
+inline std::string read_shader(const std::filesystem::path &file, uint32_t depth = 0u) {
+	if (depth > 10) {
+		printf("circular include in %s\n", file.c_str());
+		exit(EXIT_FAILURE);
 	}
 
+	std::ifstream fin{file};
+	if (!fin.is_open()) {
+		printf("unable to open %s\n", file.c_str());
+		exit(EXIT_FAILURE);
+	}
+
+	std::string shader, line;
 	while (std::getline(fin, line)) {
 		if (line.find("#include") != std::string::npos) {
 			std::string include_file;
@@ -33,19 +30,26 @@ int main(int argc, char **argv) {
 					include_file += c;
 			}
 
-			std::ifstream include_fin{include_path / include_file};
-			if (!include_fin.is_open()) {
-				printf("unable to include \"%s\"\n", include_file.c_str());
-				return EXIT_FAILURE;
-			}
-
 			shader += "#define GLSL\n";
-			shader += {std::istreambuf_iterator<char>(include_fin), std::istreambuf_iterator<char>{}};
+			shader += read_shader(include_path / include_file, depth + 1);
 		} else {
 			shader += line;
 			shader += '\n';
 		}
 	}
+
+	return shader;
+}
+
+// usage: shader, output, include directory
+int main(int argc, char **argv) {
+	--argc, ++argv;
+	if (argc != 3)
+		return EXIT_FAILURE;
+
+	include_path = argv[2];
+
+	std::string shader = read_shader(argv[0]);
 
 	std::ofstream fout{argv[1]};
 	if (!fout.is_open()) {

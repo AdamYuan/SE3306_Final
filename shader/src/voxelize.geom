@@ -6,11 +6,11 @@ layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
 layout(location = 0) in vec3 vNormal[];
-layout(location = 1) in vec3 vAlbedo[];
+layout(location = 1) in vec3 vColor[];
 layout(location = 2) in vec3 vShadowPos[];
 
 layout(location = 0) out vec3 gNormal;
-layout(location = 1) out vec3 gAlbedo;
+layout(location = 1) out vec3 gColor;
 
 // for direct light calculation
 layout(location = 2) out vec3 gWorldPos;
@@ -36,19 +36,19 @@ void main() {
 	gAxis = axis;
 
 	gNormal = vNormal[0];
-	gAlbedo = vAlbedo[0];
+	gColor = vColor[0];
 	gWorldPos = pos0;
 	gShadowPos = vShadowPos[0];
 	gl_Position = vec4(Project(pos0, axis), 1.0);
 	EmitVertex();
 	gNormal = vNormal[1];
-	gAlbedo = vAlbedo[1];
+	gColor = vColor[1];
 	gWorldPos = pos1;
 	gShadowPos = vShadowPos[1];
 	gl_Position = vec4(Project(pos1, axis), 1.0);
 	EmitVertex();
 	gNormal = vNormal[2];
-	gAlbedo = vAlbedo[2];
+	gColor = vColor[2];
 	gWorldPos = pos2;
 	gShadowPos = vShadowPos[2];
 	gl_Position = vec4(Project(pos2, axis), 1.0);

@@ -5,9 +5,8 @@ add_subdirectory(gl3w)
 add_subdirectory(glfw)
 add_subdirectory(mygl3)
 add_subdirectory(glm)
-add_subdirectory(tinyobjloader)
 add_subdirectory(gcem)
 
 add_library(dep INTERFACE)
-target_link_libraries(dep INTERFACE gl3w glfw mygl3 glm tinyobjloader gcem ${CMAKE_DL_LIBS})
+target_link_libraries(dep INTERFACE gl3w glfw mygl3 glm gcem ${CMAKE_DL_LIBS})
 

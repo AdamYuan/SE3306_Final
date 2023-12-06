@@ -32,6 +32,7 @@ struct Collider {
 					glm::vec3 dir = p_tumbler->rotate_mat[1];
 					float angle = -glm::asin(dir.y) - Tumbler::kHalfAngle;
 					p_tumbler->RotateGround(-glm::normalize(dir.xz()) * angle);
+					velocity_update_flags[axis] = true;
 				}
 			} else {
 				if (top_pos[axis] - Tumbler::kTopRadius < -1.f) {
@@ -51,19 +52,24 @@ struct Collider {
 			if (axis != 1) {
 				p_tumbler->linear_velocity[axis] = -p_tumbler->linear_velocity[axis] * kBoundaryRestitution;
 				p_tumbler->angular_velocity[axis ^ 2] = -p_tumbler->angular_velocity[axis ^ 2] * kBoundaryRestitution;
+			} else {
+				p_tumbler->linear_velocity = {};
+				p_tumbler->angular_velocity = {};
 			}
 		};
 		if (velocity_update_flags[0])
 			update_velocity(0);
+		if (velocity_update_flags[1])
+			update_velocity(1);
 		if (velocity_update_flags[2])
 			update_velocity(2);
 	}
 
-	template <typename CallbackFunc> inline static void TestBoundary(Sphere *p_sphere, CallbackFunc &&callback) {}
+	/* template <typename CallbackFunc> inline static void TestBoundary(Sphere *p_sphere, CallbackFunc &&callback) {}
 	inline static void TestBoundary(Sphere *p_sphere) {
-		TestBoundary(p_sphere, []() {});
-	}
-	inline static constexpr float kTumblerRestitution = .2f;
+	    TestBoundary(p_sphere, []() {});
+	} */
+	inline static constexpr float kTumblerRestitution = .3f;
 	inline static void Test(Tumbler *p_tumbler_0, Tumbler *p_tumbler_1) {
 		uint32_t hit_count = 0;
 		glm::vec3 hit_pos = {};
@@ -103,6 +109,8 @@ struct Collider {
 
 		float v = v0 - v1;
 		v = glm::clamp(v, -1.f, 1.f);
+
+		// TODO: maybe more accurate?
 		p_tumbler_0->ApplyMomentum(hit_pos, -hit_dir * v * Tumbler::kMass * kTumblerRestitution);
 		p_tumbler_1->ApplyMomentum(hit_pos, hit_dir * v * Tumbler::kMass * kTumblerRestitution);
 		// printf("v0=%f, v1=%f\n", v0, v1);

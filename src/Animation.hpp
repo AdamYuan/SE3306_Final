@@ -35,6 +35,7 @@ private:
 
 public:
 	void Initialize(const char *obj_file);
-	void Update(float delta_t, const std::optional<glm::vec2> &opt_drag_pos);
+	void Drag(const std::optional<glm::vec2> &opt_drag_pos);
+	void Update(float delta_t);
 	void Draw(int width, int height);
 };

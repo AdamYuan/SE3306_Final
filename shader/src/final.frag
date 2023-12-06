@@ -93,10 +93,14 @@ vec4 sample_voxel(in const vec3 position, in const float lod, in const ivec3 axi
 	return lod >= 1.0 ? mipmap_acc : lod * mipmap_acc + (1.0 - lod) * texture(uVoxelRadiance, voxel_pos);
 }
 
-vec3 cone_trace(in const vec3 origin, in const vec3 dir, in const float tan_half_cone, in const float voxel_size) {
+vec3 cone_trace(in const vec3 origin,
+                in const vec3 dir,
+                in const float tan_half_cone,
+                in const float voxel_size,
+                in const float initial_dist) {
 	vec4 acc = vec4(0);
 
-	float dist = 0.2, inv_voxel_size = 1.0 / voxel_size;
+	float dist = initial_dist, inv_voxel_size = 1.0 / voxel_size;
 
 	ivec3 axis_indices = ivec3(dir.x < 0.0 ? 0 : 1, dir.y < 0.0 ? 2 : 3, dir.z < 0.0 ? 4 : 5);
 	vec3 axis_weights = dir * dir;
@@ -117,12 +121,12 @@ vec3 IndirectLight(in const vec3 position, in const vec3 normal) {
 	float voxel_size = 2.0 * VOXEL_SCALE / textureSize(uVoxelRadiance, 0).x;
 
 	vec3 radiance = vec3(0);
-	radiance += kConeWeights[0] * cone_trace(position, normalize(tbn * kConeDirections[0]), 0.57735, voxel_size);
-	radiance += kConeWeights[1] * cone_trace(position, normalize(tbn * kConeDirections[1]), 0.57735, voxel_size);
-	radiance += kConeWeights[2] * cone_trace(position, normalize(tbn * kConeDirections[2]), 0.57735, voxel_size);
-	radiance += kConeWeights[3] * cone_trace(position, normalize(tbn * kConeDirections[3]), 0.57735, voxel_size);
-	radiance += kConeWeights[4] * cone_trace(position, normalize(tbn * kConeDirections[4]), 0.57735, voxel_size);
-	radiance += kConeWeights[5] * cone_trace(position, normalize(tbn * kConeDirections[5]), 0.57735, voxel_size);
+	radiance += kConeWeights[0] * cone_trace(position, tbn * kConeDirections[0], 0.57735, voxel_size, 0.2);
+	radiance += kConeWeights[1] * cone_trace(position, tbn * kConeDirections[1], 0.57735, voxel_size, 0.2);
+	radiance += kConeWeights[2] * cone_trace(position, tbn * kConeDirections[2], 0.57735, voxel_size, 0.2);
+	radiance += kConeWeights[3] * cone_trace(position, tbn * kConeDirections[3], 0.57735, voxel_size, 0.2);
+	radiance += kConeWeights[4] * cone_trace(position, tbn * kConeDirections[4], 0.57735, voxel_size, 0.2);
+	radiance += kConeWeights[5] * cone_trace(position, tbn * kConeDirections[5], 0.57735, voxel_size, 0.2);
 
 	return radiance;
 }
@@ -130,7 +134,7 @@ vec3 IndirectLight(in const vec3 position, in const vec3 normal) {
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
 	vec3 albedo = texelFetch(uAlbedo, coord, 0).rgb;
-	vec3 normal = oct_to_float32x3(texelFetch(uNormal, coord, 0).rg);
+	vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
 	float depth = texelFetch(uDepth, coord, 0).r;
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
 

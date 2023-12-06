@@ -1,9 +1,11 @@
 #version 450
 
+#include "Texture.h"
+
 layout(location = 0) in vec3 vNormal;
 layout(location = 1) in vec3 vColor;
 
-layout(location = 0) out vec3 oColor;
+layout(location = 0) out vec3 oAlbedo;
 layout(location = 1) out vec2 oNormal;
 
 vec2 sign_not_zero(in const vec2 v) { return vec2((v.x >= 0.0) ? 1.0 : -1.0, (v.y >= 0.0) ? +1.0 : -1.0); }
@@ -16,7 +18,7 @@ vec2 float32x3_to_oct(in const vec3 v) {
 }
 
 void main() {
-	oColor = vColor;
+	oAlbedo = GetAlbedo(vColor);
 	// since uModel is a guarenteed orthogonal matrix, there's no need for transpose(inverse(mat3(uModel)))
 	oNormal = float32x3_to_oct(normalize(vNormal));
 }

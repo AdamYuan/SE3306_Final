@@ -2,9 +2,10 @@
 
 #include "Binding.h"
 #include "Config.h"
+#include "Texture.h"
 
 layout(location = 0) in vec3 gNormal;
-layout(location = 1) in vec3 gAlbedo;
+layout(location = 1) in vec3 gColor;
 layout(location = 2) in vec3 gWorldPos;
 layout(location = 3) in vec3 gShadowPos;
 layout(location = 4) flat in uint gAxis;
@@ -25,10 +26,11 @@ void main() {
 	vec3 normal = normalize(gNormal);
 
 	vec3 light_dir = normalize(vec3(0, kCornellLightHeight, 0) - gWorldPos);
+	vec3 albedo = GetAlbedo(gColor);
 
-	bool emissive = any(greaterThan(gAlbedo, vec3(1)));
-	vec3 radiance = emissive ? gAlbedo
-	                         : kCornellLightRadiance * gAlbedo * max(dot(normal, light_dir), 0.0) *
+	bool emissive = any(greaterThan(albedo, vec3(1)));
+	vec3 radiance = emissive ? albedo
+	                         : kCornellLightRadiance * albedo * max(dot(normal, light_dir), 0.0) *
 	                               textureProj(uShadowMap, vec4(gShadowPos, 1));
 	imageStore(uVoxelRadiance, voxel_pos, vec4(radiance, 1.));
 }

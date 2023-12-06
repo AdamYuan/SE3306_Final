@@ -14,7 +14,7 @@
 struct Tumbler final : public RigidBody {
 public:
 	// parameters
-	inline static constexpr float kBottomRadius = 0.18f, kTopRadius = 0.09f, kHalfAngle = glm::pi<float>() / 9.0f,
+	inline static constexpr float kBottomRadius = 0.2f, kTopRadius = 0.1f, kHalfAngle = glm::pi<float>() / 9.0f,
 	                              kMass = 5.0f;
 	static_assert(kTopRadius <= kBottomRadius);
 
@@ -112,30 +112,6 @@ public:
 		Rotate(axis);
 		center += dir * Tumbler::kBottomRadius;
 	}
-	/* inline void MoveTop(const glm::vec3 &offset) {
-	    // TODO: Improve this
-	    glm::vec3 top_dir = rotate_mat * glm::vec3{.0f, kTopSphereY, .0f};
-	    glm::vec3 top_dir_offset = top_dir + offset;
-
-	    glm::vec3 old_center = center;
-	    glm::vec3 old_top_pos = center + top_dir;
-
-	    top_dir = glm::normalize(top_dir);
-	    top_dir_offset = glm::normalize(top_dir_offset);
-
-	    glm::vec3 axis = glm::cross(top_dir_offset, top_dir);
-	    // printf("%s\n", glm::to_string(axis).c_str());
-	    float angle = glm::asin(glm::length(axis));
-
-	    if (axis.xz() != glm::vec2{})
-	        RotateGroundAxis(-glm::normalize(glm::vec2{axis.x, axis.z}) * angle);
-
-	    glm::vec3 actual_offset = GetWorldPos({.0f, kTopSphereY, .0f}) - old_top_pos;
-	    if (glm::dot(actual_offset, offset) <= .0f) {
-	        center = old_center + offset;
-	        center.y = -1.f + kBottomRadius;
-	    }
-	} */
 	inline std::optional<float> RayCast(const glm::vec3 &origin, const glm::vec3 &dir, float threshold = 0.0001f,
 	                                    uint32_t max_steps = 32) const {
 		glm::vec3 local_orig = GetLocalPos(origin), local_dir = inv_rotate_mat * dir;

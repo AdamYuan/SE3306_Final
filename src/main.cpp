@@ -40,8 +40,8 @@ int main() {
 			drag = glm::vec2{(float)cursor_pos.x / (float)kWidth, (float)cursor_pos.y / (float)kHeight};
 		}
 		auto cur_time = (float)glfwGetTime();
-		animation.Update(cur_time - prev_time, drag);
-
+		animation.Drag(drag);
+		animation.Update(cur_time - prev_time);
 		animation.Draw(kWidth, kHeight);
 		glfwSwapBuffers(window);
 

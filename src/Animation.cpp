@@ -7,6 +7,7 @@ constexpr int kShadowMapSize = 480, kVoxelResolution = 64, kVoxelMipmaps = 5;
 
 constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColor = {.486f, .631f, .663},
                     kCornellOtherColor = {.725f, .71f, .68f};
+constexpr uint32_t kCornelFloorTexture = 1;
 constexpr glm::vec3 kTumblerColor = {.63f, .065f, .05f};
 
 constexpr uint32_t kTumblerCount = 5;
@@ -22,7 +23,7 @@ static const glm::mat4 kInvCameraViewProj = glm::inverse(kCameraViewProj);
 void Animation::Initialize(const char *obj_file) {
 	{
 		auto cornell_mesh =
-		    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornellOtherColor,
+		    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTexture, kCornellOtherColor,
 		                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius);
 		m_cornell_gpu_model.Initialize({&cornell_mesh, 1});
 	}
@@ -62,12 +63,7 @@ void Animation::Initialize(const char *obj_file) {
 	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
 }
 
-#include <glm/gtx/string_cast.hpp>
-void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_pos) {
-	m_playground.Update(delta_t);
-
-	m_playground.SetTumblerMesh(&m_tumbler_gpu_model);
-
+void Animation::Drag(const std::optional<glm::vec2> &opt_drag_pos) {
 	// process drag
 	if (opt_drag_pos.has_value()) {
 		glm::vec3 dir;
@@ -115,6 +111,11 @@ void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_p
 		m_playground.UnlockTumbler();
 		m_opt_drag = std::nullopt;
 	}
+}
+
+void Animation::Update(float delta_t) {
+	m_playground.Update(delta_t);
+	m_playground.SetTumblerMesh(&m_tumbler_gpu_model, 0);
 }
 
 void Animation::Draw(int width, int height) {

@@ -2,13 +2,29 @@
 
 #include "RigidBody.hpp"
 
-struct Sphere final : public RigidBody {
-	float radius{}, mass{};
+template <typename Derived> struct Sphere : public RigidBody {
+	inline static constexpr float kMass = Derived::kMass;
+	inline static constexpr float kRadius = Derived::kRadius;
 
-	// inline float GetSDF(const glm::vec3 &p) const { return glm::distance(p, center) - radius; }
-	// inline glm::vec3 GetSDFGradient(const glm::vec3 &p) const { return glm::normalize(p - center); }
-	inline glm::mat3 GetInertia() const {
-		float i = 0.4f * mass * radius * radius;
+	inline static constexpr glm::mat3 GetInertia() {
+		float i = 0.4f * Derived::kMass * Derived::kRadius * Derived::kRadius;
 		return {i, .0f, .0f, .0f, i, .0f, .0f, .0f, i};
 	}
+	inline static constexpr glm::mat3 GetInvInertia() {
+		float i = 0.4f * Derived::kMass * Derived::kRadius * Derived::kRadius;
+		float inv_i = 1.f / i;
+		return {inv_i, .0f, .0f, .0f, inv_i, .0f, .0f, .0f, inv_i};
+	}
+};
+
+struct Marble : public Sphere<Marble> {
+	inline static constexpr float kMass = 1.f;
+	inline static constexpr float kRadius = 0.05f;
+
+	glm::vec4 color = {};
+};
+
+struct FireBall : public Sphere<Marble> {
+	inline static constexpr float kMass = 10.f;
+	inline static constexpr float kRadius = 0.1f;
 };
