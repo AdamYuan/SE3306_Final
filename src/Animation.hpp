@@ -27,7 +27,7 @@ private:
 
 	// drag & drop
 	struct DragInfo {
-		bool locked;
+		bool locked, below_center;
 		glm::vec2 xz;
 		float plane_y;
 	};

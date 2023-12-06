@@ -24,7 +24,7 @@ struct Collider {
 		test_bottom(2);
 
 		// top
-		glm::vec3 top_pos = p_tumbler->GetWorldPos({.0f, Tumbler::kTopSphereY, .0f});
+		glm::vec3 top_pos = p_tumbler->GetTopSpherePos();
 
 		const auto test_top = [&](auto axis) {
 			if (axis == 1) {
@@ -58,8 +58,46 @@ struct Collider {
 		if (velocity_update_flags[2])
 			update_velocity(2);
 	}
+
 	template <typename CallbackFunc> inline static void TestBoundary(Sphere *p_sphere, CallbackFunc &&callback) {}
 	inline static void TestBoundary(Sphere *p_sphere) {
 		TestBoundary(p_sphere, []() {});
+	}
+
+	inline static constexpr float kTumblerRestitution = .5f;
+	inline static void Test(Tumbler *p_tumbler_0, Tumbler *p_tumbler_1) {
+		uint32_t hit_count = 0;
+		glm::vec3 hit_pos = {};
+
+		const auto test = [&](const Tumbler *l, const Tumbler *r) {
+			glm::vec3 bot_pos = l->center;
+			float bot_sdf = r->GetSDF(bot_pos);
+			if (bot_sdf < Tumbler::kBottomRadius) {
+				++hit_count;
+				hit_pos += bot_pos - r->GetSDFGradient(bot_pos) * bot_sdf;
+			}
+			glm::vec3 top_pos = l->GetTopSpherePos();
+			float top_sdf = r->GetSDF(top_pos);
+			if (top_sdf < Tumbler::kTopRadius) {
+				++hit_count;
+				hit_pos += top_pos - r->GetSDFGradient(top_pos) * top_sdf;
+			}
+		};
+		test(p_tumbler_0, p_tumbler_1);
+		test(p_tumbler_1, p_tumbler_0);
+
+		if (hit_count == 0)
+			return;
+
+		hit_pos /= float(hit_count);
+		glm::vec3 hit_dir = (p_tumbler_0->GetSDFGradient(hit_pos) - p_tumbler_1->GetSDFGradient(hit_pos)) * .5f;
+		float hit_depth = -(p_tumbler_0->GetSDF(hit_pos) + p_tumbler_1->GetSDF(hit_pos));
+		hit_depth = glm::max(.0f, hit_depth);
+		hit_dir.y = .0f;
+		hit_dir = glm::normalize(hit_dir);
+
+		p_tumbler_0->center -= hit_dir * hit_depth;
+		p_tumbler_1->center += hit_dir * hit_depth;
+		// printf("hit\n");
 	}
 };

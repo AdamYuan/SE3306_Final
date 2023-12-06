@@ -150,6 +150,14 @@ public:
 		return std::nullopt;
 	}
 
+	inline void ApplyMomentum(const glm::vec3 &origin, const glm::vec3 &momentum) {
+		glm::vec3 l = glm::cross(origin - this->center, momentum); // angular momentum
+		angular_velocity += get_inv_inertia() * l;
+		linear_velocity += momentum / kMass;
+	}
+
+	inline glm::vec3 GetTopSpherePos() const { return center + kTopSphereY * rotate_mat[1]; }
+
 	inline void ApplyRecoverForce(float delta_t) {
 		glm::vec3 dir = rotate_mat[1];
 		glm::vec3 force = -dir;

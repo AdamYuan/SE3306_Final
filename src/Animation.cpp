@@ -81,23 +81,33 @@ void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_p
 		if (m_opt_drag && m_opt_drag.value().locked) {
 			// already dragging
 			auto &drag = m_opt_drag.value();
-			float t = (drag.plane_y - kCameraPos.y) / dir.y;
-			if (t > 1e-4f) {
-				glm::vec2 pos = (kCameraPos + dir * t).xz();
-				m_playground.MoveLockedTumbler(pos - drag.xz, 0.015f);
+			if (drag.below_center) {
+				float t = (drag.plane_y - kCameraPos.y) / dir.y;
+				if (t > 1e-4f) {
+					glm::vec2 pos = (kCameraPos + dir * t).xz();
+					pos = glm::clamp(pos, glm::vec2(-1.f), glm::vec2(1.f));
+					m_playground.MoveLockedTumbler(pos - drag.xz);
+					drag.xz = pos;
+				}
+			} else {
+				glm::vec2 pos = opt_drag_pos.value();
+				m_playground.RotateLockedTumbler(pos - drag.xz, 0.015f);
 				drag.xz = pos;
 			}
 		} else if (!m_opt_drag) {
-			auto opt_t = m_playground.TryLockTumbler(kCameraPos, dir);
-			if (opt_t) {
-				float t = opt_t.value();
-				glm::vec3 pos = kCameraPos + dir * t;
-
-				m_opt_drag = DragInfo{
-				    .locked = true,
-				    .xz = glm::vec2{pos.x, pos.z},
-				    .plane_y = pos.y,
-				};
+			auto opt_lock = m_playground.TryLockTumbler(kCameraPos, dir);
+			if (opt_lock) {
+				auto lock = opt_lock.value();
+				if (lock.below_center) {
+					glm::vec3 pos = kCameraPos + dir * lock.t;
+					m_opt_drag = DragInfo{
+					    .locked = true,
+					    .below_center = true,
+					    .xz = glm::vec2{pos.x, pos.z},
+					    .plane_y = pos.y,
+					};
+				} else
+					m_opt_drag = DragInfo{.locked = true, .below_center = false, .xz = opt_drag_pos.value()};
 			} else
 				m_opt_drag = DragInfo{.locked = false};
 		}

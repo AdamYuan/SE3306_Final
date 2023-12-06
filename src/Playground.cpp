@@ -18,36 +18,38 @@ void Playground::Initialize(uint32_t tumbler_count, float place_radius) {
 	}
 }
 
-std::optional<float> Playground::TryLockTumbler(const glm::vec3 &origin, const glm::vec3 &dir) {
+std::optional<Playground::LockInfo> Playground::TryLockTumbler(const glm::vec3 &origin, const glm::vec3 &dir) {
 	m_opt_lock = std::nullopt;
 	float min_t = FLT_MAX;
+	bool below_center = false;
 	for (uint32_t i = 0; i < m_tumblers.size(); ++i) {
 		auto opt_t = m_tumblers[i].RayCast(origin, dir);
 		if (opt_t.has_value()) {
 			float t = opt_t.value();
 			if (t < min_t) {
 				min_t = t;
-				bool trans = m_tumblers[i].GetLocalPos(origin + t * dir).y < 0.0f;
-				m_opt_lock = LockInfo{.index = i, .translate = trans};
+				below_center = m_tumblers[i].GetLocalPos(origin + t * dir).y < 0.0f;
+				m_opt_lock = i;
 			}
 		}
 	}
-	return m_opt_lock.has_value() ? std::optional<float>(min_t) : std::nullopt;
+	return m_opt_lock.has_value() ? std::optional<LockInfo>({.t = min_t, .below_center = below_center}) : std::nullopt;
 }
 
-void Playground::MoveLockedTumbler(const glm::vec2 &offset, float rotate_angle) {
+void Playground::MoveLockedTumbler(const glm::vec2 &offset) {
 	if (!m_opt_lock)
 		return;
-
 	if (offset == glm::vec2{})
 		return;
+	m_tumblers[m_opt_lock.value()].center += glm::vec3{offset.x, 0.0f, offset.y};
+}
 
-	const auto &lock = m_opt_lock.value();
-	if (lock.translate) {
-		m_tumblers[lock.index].center += glm::vec3{offset.x, 0.0f, offset.y};
-	} else {
-		m_tumblers[lock.index].RotateGround(glm::normalize(offset) * rotate_angle);
-	}
+void Playground::RotateLockedTumbler(const glm::vec2 &offset, float rotate_angle) {
+	if (!m_opt_lock)
+		return;
+	if (offset == glm::vec2{})
+		return;
+	m_tumblers[m_opt_lock.value()].RotateGround(glm::normalize(offset) * rotate_angle);
 }
 
 void Playground::SetTumblerMesh(GPUMesh *p_mesh, uint32_t begin_id) const {
@@ -56,20 +58,24 @@ void Playground::SetTumblerMesh(GPUMesh *p_mesh, uint32_t begin_id) const {
 }
 void Playground::UnlockTumbler() {
 	if (m_opt_lock.has_value()) {
-		auto idx = m_opt_lock.value().index;
+		auto idx = m_opt_lock.value();
 		m_tumblers[idx].angular_velocity = {};
 		m_tumblers[idx].linear_velocity = {};
 	}
 	m_opt_lock = std::nullopt;
 }
 void Playground::Update(float delta_t) {
+	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
+		for (uint32_t j = i + 1; j < m_tumblers.size(); ++j)
+			Collider::Test(&m_tumblers[i], &m_tumblers[j]);
+
 	for (auto &tumbler : m_tumblers) {
 		Collider::TestBoundary(&tumbler);
 		tumbler.ApplyFrictionForce(delta_t);
 		tumbler.ApplyRecoverForce(delta_t);
 	}
 	if (m_opt_lock.has_value()) {
-		auto idx = m_opt_lock.value().index;
+		auto idx = m_opt_lock.value();
 		m_tumblers[idx].angular_velocity = {};
 		m_tumblers[idx].linear_velocity = {};
 	}
