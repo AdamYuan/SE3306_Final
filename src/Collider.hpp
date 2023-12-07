@@ -72,18 +72,19 @@ struct Collider {
 		std::optional<SphereHitType> opt_hit_type;
 
 		const auto test = [&](auto axis) {
+			auto a1 = (axis + 1) % 3, a2 = (a1 + 1) % 3;
 			if (p_sphere->center[axis] - Derived::kRadius < -1.f) {
 				p_sphere->center[axis] = -1.f + Derived::kRadius;
 				p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] + 1e-4f;
+				p_sphere->angular_velocity[a1] = -p_sphere->linear_velocity[a2] / Derived::kRadius;
+				p_sphere->angular_velocity[a2] = p_sphere->linear_velocity[a1] / Derived::kRadius;
 				opt_hit_type = static_cast<SphereHitType>(axis * 2);
-
-				// velocity_update_flags[axis] = true;
 			} else if (p_sphere->center[axis] + Derived::kRadius > 1.f) {
 				p_sphere->center[axis] = 1.f - Derived::kRadius;
 				p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] - 1e-4f;
+				p_sphere->angular_velocity[a1] = p_sphere->linear_velocity[a2] / Derived::kRadius;
+				p_sphere->angular_velocity[a2] = -p_sphere->linear_velocity[a1] / Derived::kRadius;
 				opt_hit_type = static_cast<SphereHitType>(axis * 2 + 1);
-
-				// velocity_update_flags[axis] = true;
 			}
 		};
 
