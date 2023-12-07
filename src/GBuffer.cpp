@@ -22,7 +22,7 @@ void GBuffer::initialize_target(int width, int height) {
 	m_height = height;
 
 	m_albedo.Initialize();
-	m_albedo.Storage(m_width, m_height, GL_R11F_G11F_B10F, 1);
+	m_albedo.Storage(m_width, m_height, GL_RGB16F, 1);
 	m_albedo.SetSizeFilter(GL_NEAREST, GL_NEAREST);
 	m_albedo.SetWrapFilter(GL_CLAMP_TO_BORDER);
 

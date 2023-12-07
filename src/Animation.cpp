@@ -19,10 +19,10 @@ constexpr float kTumblerPlaceRadius = 0.6f;
 constexpr uint32_t kMarbleCount = 30;
 constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
 
-constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .05f} * 5.f;
+constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .05f} * 8.f;
 constexpr float kFireballSpeed = 2.f;
 
-constexpr uint32_t kMaxParticleCount = 1024;
+constexpr uint32_t kMaxParticleCount = 4096;
 
 constexpr float kCameraFov = glm::pi<float>() / 3.f;
 constexpr glm::vec3 kCameraPos = {.0f, .0f, 1.f + 1.f / gcem::tan(kCameraFov * 0.5f)};
@@ -52,7 +52,7 @@ void Animation::Initialize() {
 		m_fireball_gpu_mesh.Initialize({&fireball_mesh, 1});
 	}
 	{
-		auto particle_mesh = MeshLoader{}.MakeIcoSphere(1.f, 3, {});
+		auto particle_mesh = MeshLoader{}.MakeIcoSphere(1.f, 2, {});
 		m_particle_gpu_mesh.Initialize({&particle_mesh, 1}, {&kMaxParticleCount, 1});
 	}
 
@@ -100,6 +100,7 @@ void Animation::Initialize() {
 	m_voxel.Initialize();
 
 	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
+	m_particle_system.Initialize(kMaxParticleCount);
 }
 
 void Animation::Drag(const std::optional<glm::vec2> &opt_drag_pos) {
@@ -174,6 +175,7 @@ void Animation::ToggleFireball() {
 }
 
 void Animation::Update(float delta_t) {
+	m_particle_system.Update(delta_t);
 	m_playground.Update(
 	    delta_t,
 	    [](Marble *p_marble, SphereHitType hit_type) {
@@ -205,10 +207,12 @@ void Animation::Update(float delta_t) {
 	    },
 	    [](Fireball *p_fireball, SphereHitType hit_type) {
 
-	    });
+	    },
+	    [this, delta_t](const Fireball &fireball) { m_particle_system.SustainFire(fireball, delta_t); });
 	m_playground.PopTumblerMesh(&m_tumbler_gpu_mesh);
 	m_playground.PopMarbleMesh(&m_marble_gpu_mesh);
 	m_playground.PopFireballMesh(&m_fireball_gpu_mesh);
+	m_particle_system.PopMesh(&m_particle_gpu_mesh);
 }
 
 void Animation::Draw(int width, int height) {
@@ -248,6 +252,7 @@ void Animation::Draw(int width, int height) {
 		m_tumbler_gpu_mesh.Draw();
 		m_marble_gpu_mesh.Draw();
 		m_fireball_gpu_mesh.Draw();
+		m_particle_gpu_mesh.Draw();
 	});
 
 	// Post Process

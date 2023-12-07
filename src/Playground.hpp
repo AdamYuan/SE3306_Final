@@ -34,8 +34,8 @@ public:
 	void CreateFireball(float speed);
 	void DeleteFireball();
 
-	template <typename MarbleHitCallback, typename FireballHitCallback>
-	void Update(float delta_t, MarbleHitCallback &&marble_callback, FireballHitCallback &&fireball_callback) {
+	template <typename MarbleHitCallback, typename FireballHitCallback, typename FireballCallback>
+	void Update(float delta_t, MarbleHitCallback &&marble_hit_callback, FireballHitCallback &&fireball_hit_callback, FireballCallback &&fireball_callback) {
 		for (uint32_t i = 0; i < m_tumblers.size(); ++i)
 			for (uint32_t j = i + 1; j < m_tumblers.size(); ++j)
 				Collider::Test(&m_tumblers[i], &m_tumblers[j]);
@@ -53,20 +53,22 @@ public:
 			tumbler.Update(delta_t);
 		}
 		for (auto &marble : m_marbles) {
-			Collider::TestBoundary(&marble, marble_callback);
+			Collider::TestBoundary(&marble, marble_hit_callback);
 			for (auto &tumbler : m_tumblers)
-				Collider::Test(&marble, &tumbler, marble_callback);
+				Collider::Test(&marble, &tumbler, marble_hit_callback);
 			marble.ApplyGravity(delta_t);
 			marble.Update(delta_t);
 		}
 		if (m_fireball) {
 			auto &fireball = m_fireball.value();
-			Collider::TestBoundary(&fireball, fireball_callback);
+			Collider::TestBoundary(&fireball, fireball_hit_callback);
 			for (auto &tumbler : m_tumblers)
-				Collider::Test(&fireball, &tumbler, fireball_callback);
+				Collider::Test(&fireball, &tumbler, fireball_hit_callback);
 			for (auto &marble : m_marbles)
-				Collider::Test(&fireball, &marble, fireball_callback, marble_callback);
+				Collider::Test(&fireball, &marble, fireball_hit_callback, marble_hit_callback);
 			fireball.Update(delta_t);
+
+			fireball_callback(fireball);
 		}
 	}
 };
