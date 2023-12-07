@@ -40,15 +40,15 @@ void Animation::Initialize() {
 		m_tumbler_gpu_mesh.Initialize({&tumbler_mesh, 1}, {&kTumblerCount, 1});
 	}
 	{
-		auto marble_mesh = MeshLoader{}.MakeMarble(3, kCornelFloorTexture);
+		auto marble_mesh = MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTexture);
 		m_marble_gpu_mesh.Initialize({&marble_mesh, 1}, {&kMarbleCount, 1});
 	}
 	{
-		auto fireball_mesh = MeshLoader{}.MakeFireball(4, kFireballRadiance);
+		auto fireball_mesh = MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance);
 		m_fireball_gpu_mesh.Initialize({&fireball_mesh, 1});
 	}
 	{
-		auto particle_mesh = MeshLoader{}.MakeSphere(1.f, 3, {});
+		auto particle_mesh = MeshLoader{}.MakeIcoSphere(1.f, 3, {});
 		m_particle_gpu_mesh.Initialize({&particle_mesh, 1}, {&kMaxParticleCount, 1});
 	}
 
@@ -154,7 +154,7 @@ void Animation::ToggleFireball() {
 
 void Animation::Update(float delta_t) {
 	m_playground.Update(
-	    delta_t,
+	    delta_t * .1f,
 	    [](Marble *p_marble, SphereHitType hit_type) {
 		    switch (hit_type) {
 		    case SphereHitType::kFront:
