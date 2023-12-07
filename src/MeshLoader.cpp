@@ -135,11 +135,6 @@ Mesh MeshLoader::MakeIcoSphere(float radius, uint32_t subdivisions, const glm::v
 	return generate_mesh(color);
 }
 
-inline static float atan2(float y, float x) {
-	bool s = (glm::abs(x) > glm::abs(y));
-	return glm::mix(glm::pi<float>() * .5f - glm::atan(x, y), glm::atan(y, x), s);
-}
-
 Mesh MeshLoader::MakeUVSphere(float radius, uint32_t subdivisions, uint32_t texture) {
 	auto xz_subdivisions = uint32_t((float)subdivisions * glm::pi<float>());
 
@@ -236,7 +231,7 @@ Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &ri
 	return mesh;
 }
 
-Mesh MeshLoader::MakeTumbler(uint32_t y_subdivisions, uint32_t xz_subdivisions, const glm::vec3 &color) {
+Mesh MeshLoader::MakeTumbler(uint32_t y_subdivisions, uint32_t xz_subdivisions, uint32_t texture) {
 	float y_min = -Tumbler::kBottomRadius;
 	std::vector<glm::vec2> y_r_vec;
 	for (uint32_t i = 1; i <= y_subdivisions * 2; ++i) {
@@ -252,5 +247,8 @@ Mesh MeshLoader::MakeTumbler(uint32_t y_subdivisions, uint32_t xz_subdivisions, 
 	}
 
 	make_revolution_triangles(y_min, y_max, y_r_vec, xz_subdivisions, 1);
-	return generate_mesh(color);
+	return generate_mesh([&](VertexKey p) {
+		return glm::vec3{-float(texture), p.layer == 0 ? glm::atan(p.z, p.x) / glm::pi<float>() : 1.0f,
+		                 p.y / Tumbler::kTopSphereY};
+	});
 }

@@ -6,7 +6,7 @@ add_subdirectory(glfw)
 add_subdirectory(mygl3)
 add_subdirectory(glm)
 add_subdirectory(gcem)
+add_subdirectory(stb_image)
 
 add_library(dep INTERFACE)
-target_link_libraries(dep INTERFACE gl3w glfw mygl3 glm gcem ${CMAKE_DL_LIBS})
-
+target_link_libraries(dep INTERFACE gl3w glfw mygl3 glm gcem stb_image ${CMAKE_DL_LIBS})

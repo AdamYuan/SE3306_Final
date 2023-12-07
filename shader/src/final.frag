@@ -90,7 +90,7 @@ vec4 sample_voxel(in const vec3 position, in const float lod, in const ivec3 axi
 	mipmap_acc += axis_weights.z > 0.0
 	                  ? axis_weights.z * textureLod(uVoxelRadianceMipmaps[axis_indices.z], voxel_pos, mipmap_lod)
 	                  : vec4(0);
-	return lod >= 1.0 ? mipmap_acc : lod * mipmap_acc + (1.0 - lod) * texture(uVoxelRadiance, voxel_pos);
+	return lod >= 1.0 ? mipmap_acc : mix(texture(uVoxelRadiance, voxel_pos), mipmap_acc, lod);
 }
 
 vec3 cone_trace(in const vec3 origin,

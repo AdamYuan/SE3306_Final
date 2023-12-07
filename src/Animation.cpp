@@ -1,16 +1,19 @@
 #include "Animation.hpp"
 
 #include <gcem.hpp>
+#include <shader/Binding.h>
 #include <shader/Config.h>
+#include <stb_image.h>
 
 constexpr int kShadowMapSize = 480, kVoxelResolution = 64, kVoxelMipmaps = 5;
 
 constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColor = {.486f, .631f, .663},
                     kCornellOtherColor = {.725f, .71f, .68f};
-constexpr uint32_t kCornelFloorTexture = 1;
-constexpr glm::vec3 kTumblerColor = {.63f, .065f, .05f};
+constexpr uint32_t kCornelFloorTextureID = 1;
 
 constexpr uint32_t kTumblerCount = 5;
+constexpr uint32_t kTumblerTextureID = 2;
+constexpr glm::vec3 kTumblerColor = {.63f, .065f, .05f};
 constexpr float kTumblerPlaceRadius = 0.6f;
 
 constexpr uint32_t kMarbleCount = 30;
@@ -29,18 +32,19 @@ static const glm::mat4 kCameraViewProj = glm::perspective(kCameraFov, 1.f, Z_NEA
 static const glm::mat4 kInvCameraViewProj = glm::inverse(kCameraViewProj);
 
 void Animation::Initialize() {
+	// Load Meshes
 	{
-		auto cornell_mesh =
-		    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTexture, kCornellOtherColor,
-		                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius);
+		auto cornell_mesh = MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID,
+		                                                kCornellOtherColor, kCornellLightRadiance, kCornellLightHeight,
+		                                                kCornellLightRadius);
 		m_cornell_gpu_mesh.Initialize({&cornell_mesh, 1});
 	}
 	{
-		auto tumbler_mesh = MeshLoader{}.MakeTumbler(10, 100, kTumblerColor);
+		auto tumbler_mesh = MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID);
 		m_tumbler_gpu_mesh.Initialize({&tumbler_mesh, 1}, {&kTumblerCount, 1});
 	}
 	{
-		auto marble_mesh = MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTexture);
+		auto marble_mesh = MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID);
 		m_marble_gpu_mesh.Initialize({&marble_mesh, 1}, {&kMarbleCount, 1});
 	}
 	{
@@ -50,6 +54,23 @@ void Animation::Initialize() {
 	{
 		auto particle_mesh = MeshLoader{}.MakeIcoSphere(1.f, 3, {});
 		m_particle_gpu_mesh.Initialize({&particle_mesh, 1}, {&kMaxParticleCount, 1});
+	}
+
+	// Load Textures
+	{
+		constexpr unsigned char kTumblerPNG[] = {
+#include <texture/tumbler.png.u8>
+		};
+		int x, y, c;
+		stbi_uc *img = stbi_load_from_memory(kTumblerPNG, sizeof(kTumblerPNG), &x, &y, &c, 4);
+		m_tumbler_texture.Initialize();
+		m_tumbler_texture.Storage(x, y, GL_RGBA8, mygl3::Texture2D::GetLevelCount(x, y));
+		m_tumbler_texture.Data(img, x, y, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		stbi_image_free(img);
+		m_tumbler_texture.SetWrapFilter(GL_CLAMP_TO_BORDER);
+		m_tumbler_texture.SetSizeFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+		m_tumbler_texture.GenerateMipmap();
+		m_tumbler_texture.Bind(TUMBLER_TEXTURE);
 	}
 
 	// Load Shaders
