@@ -15,6 +15,7 @@ endif ()
 
 add_subdirectory(dep)
 add_subdirectory(shader)
+add_subdirectory(texture)
 
 add_executable(
         Tumbler
@@ -30,6 +31,6 @@ add_executable(
         src/Playground.cpp
         src/ParticleSystem.cpp
 )
-target_link_libraries(Tumbler PRIVATE shader dep)
+target_link_libraries(Tumbler PRIVATE shader texture dep)
 
 install(TARGETS Tumbler RUNTIME DESTINATION)

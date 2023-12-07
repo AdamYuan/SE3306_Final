@@ -154,7 +154,7 @@ void Animation::ToggleFireball() {
 
 void Animation::Update(float delta_t) {
 	m_playground.Update(
-	    delta_t * .1f,
+	    delta_t,
 	    [](Marble *p_marble, SphereHitType hit_type) {
 		    switch (hit_type) {
 		    case SphereHitType::kFront:
