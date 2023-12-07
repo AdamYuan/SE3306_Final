@@ -20,7 +20,7 @@ inline std::string read_shader(const std::filesystem::path &file, uint32_t depth
 
 	std::string shader, line;
 	while (std::getline(fin, line)) {
-		if (line.find("#include") != std::string::npos) {
+		if (line.find("#include") != std::string::npos && line.find('\"') != std::string::npos) {
 			std::string include_file;
 			bool start = false;
 			for (char c : line) {
