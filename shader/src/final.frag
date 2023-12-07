@@ -37,12 +37,12 @@ float de_linearize_depth(in const float linear_depth) {
 	return (2.0 * Z_NEAR * Z_FAR / linear_depth - Z_FAR - Z_NEAR) / (Z_NEAR - Z_FAR);
 }
 
-float DirectShadow(in const vec3 position, in const vec3 normal) {
+float DirectLight(in const vec3 position, in const vec3 normal, in const vec3 light_dir) {
 	vec4 shadow_pos = uShadowViewProjection * vec4(position, 1);
 	shadow_pos /= shadow_pos.w;
 	shadow_pos.xyz = shadow_pos.xyz * 0.5 + 0.5;
 
-	shadow_pos.z = de_linearize_depth(linearize_depth(shadow_pos.z) + 0.05);
+	shadow_pos.z = de_linearize_depth(linearize_depth(shadow_pos.z) + clamp(0.1 * dot(normal, light_dir), -0.02, 0.05));
 
 	float shadow_size = 1. / textureSize(uShadowMap, 0).x; // square shadow map ensured
 
@@ -60,7 +60,7 @@ float DirectShadow(in const vec3 position, in const vec3 normal) {
 	SHADOW_SAMPLE_X(1);
 	SHADOW_SAMPLE_X(2);
 	shadow *= 0.04;
-	return smoothstep(0.02, 1.0, shadow);
+	return smoothstep(0.02, 1.0, shadow) * (max(dot(light_dir, normal), 0) * .5 + .5);
 }
 
 const vec3 kConeDirections[6] = {vec3(0, 0, 1),
@@ -137,10 +137,12 @@ void main() {
 	vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
 	float depth = texelFetch(uDepth, coord, 0).r;
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
+	vec3 light_dir = normalize(vec3(0, kCornellLightHeight, 0) - position);
 
 	bool emissive = any(greaterThan(albedo, vec3(1)));
 
 	vec3 color =
-	    emissive ? albedo : albedo * IndirectLight(position, normal) * (DirectShadow(position, normal) * 0.7 + 0.3);
+	    emissive ? albedo
+	             : albedo * IndirectLight(position, normal) * (DirectLight(position, normal, light_dir) * 0.5 + 0.5);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

@@ -63,7 +63,7 @@ void Animation::Initialize() {
 	m_quad_vao.Initialize();
 
 	m_camera_buffer.Initialize();
-	glm::mat4 shadow_proj = glm::perspective(glm::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, Z_NEAR, Z_FAR);
+	glm::mat4 shadow_proj = glm::perspective(gcem::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, Z_NEAR, Z_FAR);
 	glm::mat4 shadow_view =
 	    glm::lookAt(glm::vec3{.0f, kCornellLightHeight, .0f}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, .0f, 1.f});
 	m_camera_buffer.Update(kCameraViewProj, kInvCameraViewProj, shadow_proj * shadow_view);
@@ -194,6 +194,7 @@ void Animation::Draw(int width, int height) {
 	m_shadow_map.Generate(kShadowMapSize, kShadowMapSize, [this]() {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		m_tumbler_gpu_mesh.Draw();
+		m_marble_gpu_mesh.Draw();
 	});
 
 	// Voxels
