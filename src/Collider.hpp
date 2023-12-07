@@ -71,27 +71,6 @@ struct Collider {
 	inline static void TestBoundary(Sphere<Derived> *p_sphere, Callback &&callback) {
 		std::optional<SphereHitType> opt_hit_type;
 
-		const auto test = [&](auto axis) {
-			auto a1 = (axis + 1) % 3, a2 = (a1 + 1) % 3;
-			if (p_sphere->center[axis] - Derived::kRadius < -1.f) {
-				p_sphere->center[axis] = -1.f + Derived::kRadius;
-				p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] + 1e-4f;
-				p_sphere->angular_velocity[a1] = -p_sphere->linear_velocity[a2] / Derived::kRadius;
-				p_sphere->angular_velocity[a2] = p_sphere->linear_velocity[a1] / Derived::kRadius;
-				opt_hit_type = static_cast<SphereHitType>(axis * 2);
-			} else if (p_sphere->center[axis] + Derived::kRadius > 1.f) {
-				p_sphere->center[axis] = 1.f - Derived::kRadius;
-				p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] - 1e-4f;
-				p_sphere->angular_velocity[a1] = p_sphere->linear_velocity[a2] / Derived::kRadius;
-				p_sphere->angular_velocity[a2] = -p_sphere->linear_velocity[a1] / Derived::kRadius;
-				opt_hit_type = static_cast<SphereHitType>(axis * 2 + 1);
-			}
-		};
-
-		test(0);
-		test(1);
-		test(2);
-
 		glm::vec3 light_diff = p_sphere->center - glm::vec3{.0f, kCornellLightHeight, .0f};
 		float light_dist = glm::length(light_diff);
 		if (light_dist < Derived::kRadius + kCornellLightRadius) {
@@ -99,6 +78,27 @@ struct Collider {
 			p_sphere->center += light_norm * (Derived::kRadius + kCornellLightRadius - light_dist);
 			p_sphere->linear_velocity = glm::reflect(p_sphere->linear_velocity, light_norm);
 			opt_hit_type = SphereHitType::kLight;
+		} else {
+			const auto test = [&](auto axis) {
+				auto a1 = (axis + 1) % 3, a2 = (a1 + 1) % 3;
+				if (p_sphere->center[axis] - Derived::kRadius < -1.f) {
+					p_sphere->center[axis] = -1.f + Derived::kRadius;
+					p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] + 1e-4f;
+					p_sphere->angular_velocity[a1] = -p_sphere->linear_velocity[a2] / Derived::kRadius;
+					p_sphere->angular_velocity[a2] = p_sphere->linear_velocity[a1] / Derived::kRadius;
+					opt_hit_type = static_cast<SphereHitType>(axis * 2);
+				} else if (p_sphere->center[axis] + Derived::kRadius > 1.f) {
+					p_sphere->center[axis] = 1.f - Derived::kRadius;
+					p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] - 1e-4f;
+					p_sphere->angular_velocity[a1] = p_sphere->linear_velocity[a2] / Derived::kRadius;
+					p_sphere->angular_velocity[a2] = -p_sphere->linear_velocity[a1] / Derived::kRadius;
+					opt_hit_type = static_cast<SphereHitType>(axis * 2 + 1);
+				}
+			};
+
+			test(0);
+			test(1);
+			test(2);
 		}
 
 		if (opt_hit_type)

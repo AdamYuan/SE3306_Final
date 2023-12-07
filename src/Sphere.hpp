@@ -30,6 +30,6 @@ struct Marble final : public Sphere<Marble> {
 };
 
 struct Fireball final : public Sphere<Fireball> {
-	inline static constexpr float kMass = 1.f;
+	inline static constexpr float kMass = 1.5f;
 	inline static constexpr float kRadius = .2f;
 };
