@@ -205,7 +205,7 @@ void Animation::Draw(int width, int height) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw();
-		m_marble_gpu_mesh.Draw();
+		// m_marble_gpu_mesh.Draw();
 		m_fireball_gpu_mesh.Draw();
 	});
 
