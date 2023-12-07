@@ -5,6 +5,7 @@
 #include "CameraBuffer.hpp"
 #include "GBuffer.hpp"
 #include "GPUMesh.hpp"
+#include "ParticleSystem.hpp"
 #include "Playground.hpp"
 #include "ShadowMap.hpp"
 #include "Voxel.hpp"
@@ -15,7 +16,7 @@
 class Animation {
 private:
 	// render objects
-	GPUMesh m_cornell_gpu_mesh, m_tumbler_gpu_mesh, m_marble_gpu_mesh, m_fireball_gpu_mesh;
+	GPUMesh m_cornell_gpu_mesh, m_tumbler_gpu_mesh, m_marble_gpu_mesh, m_fireball_gpu_mesh, m_particle_gpu_mesh;
 	mygl3::Shader m_final_shader;
 	mygl3::VertexArray m_quad_vao;
 	ShadowMap m_shadow_map;
@@ -25,6 +26,9 @@ private:
 
 	// playground
 	Playground m_playground;
+
+	// particles
+	ParticleSystem m_particle_system;
 
 	// drag & drop
 	struct DragInfo {

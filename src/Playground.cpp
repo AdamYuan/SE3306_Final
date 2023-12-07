@@ -67,6 +67,7 @@ template <typename Rand> inline static glm::vec3 gen_random_dir(Rand *p_rand) {
 
 void Playground::CreateMarbles(uint32_t marble_count, const glm::vec4 &initial_color, float min_speed,
                                float max_speed) {
+	m_marbles.clear();
 	m_marbles.resize(marble_count, {.color = initial_color, .alive = true});
 
 	std::uniform_real_distribution<float> dir_dis{-1.f, 1.f}, speed_dis{min_speed, max_speed};

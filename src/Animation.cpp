@@ -19,6 +19,8 @@ constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
 constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .05f} * 5.f;
 constexpr float kFireballSpeed = 2.f;
 
+constexpr uint32_t kMaxParticleCount = 1024;
+
 constexpr float kCameraFov = glm::pi<float>() / 3.f;
 constexpr glm::vec3 kCameraPos = {.0f, .0f, 1.f + 1.f / gcem::tan(kCameraFov * 0.5f)};
 
@@ -44,6 +46,10 @@ void Animation::Initialize() {
 	{
 		auto fireball_mesh = MeshLoader{}.MakeFireball(4, kFireballRadiance);
 		m_fireball_gpu_mesh.Initialize({&fireball_mesh, 1});
+	}
+	{
+		auto particle_mesh = MeshLoader{}.MakeSphere(1.f, 3, {});
+		m_particle_gpu_mesh.Initialize({&particle_mesh, 1}, {&kMaxParticleCount, 1});
 	}
 
 	// Load Shaders

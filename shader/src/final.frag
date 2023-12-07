@@ -37,7 +37,7 @@ float de_linearize_depth(in const float linear_depth) {
 	return (2.0 * Z_NEAR * Z_FAR / linear_depth - Z_FAR - Z_NEAR) / (Z_NEAR - Z_FAR);
 }
 
-float DirectLight(in const vec3 position, in const vec3 normal, in const vec3 light_dir) {
+float DirectVisibility(in const vec3 position, in const vec3 normal, in const vec3 light_dir) {
 	vec4 shadow_pos = uShadowViewProjection * vec4(position, 1);
 	shadow_pos /= shadow_pos.w;
 	shadow_pos.xyz = shadow_pos.xyz * 0.5 + 0.5;
@@ -60,7 +60,7 @@ float DirectLight(in const vec3 position, in const vec3 normal, in const vec3 li
 	SHADOW_SAMPLE_X(1);
 	SHADOW_SAMPLE_X(2);
 	shadow *= 0.04;
-	return smoothstep(0.02, 1.0, shadow) * (max(dot(light_dir, normal), 0) * .5 + .5);
+	return min(smoothstep(0.02, 1.0, shadow), max(dot(light_dir, normal), 0)) * .4 + .6;
 }
 
 const vec3 kConeDirections[6] = {vec3(0, 0, 1),
@@ -142,7 +142,6 @@ void main() {
 	bool emissive = any(greaterThan(albedo, vec3(1)));
 
 	vec3 color =
-	    emissive ? albedo
-	             : albedo * IndirectLight(position, normal) * (DirectLight(position, normal, light_dir) * 0.5 + 0.5);
+	    emissive ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal, light_dir);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
