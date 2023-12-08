@@ -80,10 +80,10 @@ void ParticleSystem::EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad) {
 	glm::mat3 tbn = normal_to_tbn(grad);
 
 	std::uniform_real_distribution<float> dir_dis{-1.f, 1.f};
-	std::normal_distribution<float> grad_v_dis{.8f, .5f};
+	std::normal_distribution<float> grad_v_dis{.8f, .5f}, life_dis{kSparkParticleLife, 0.05f};
 	while (count--) {
 		SparkParticle p = {};
-		p.life = kSparkParticleLife;
+		p.life = life_dis(m_rand);
 		glm::vec2 dir2;
 		do {
 			dir2 = {dir_dis(m_rand), dir_dis(m_rand)};
