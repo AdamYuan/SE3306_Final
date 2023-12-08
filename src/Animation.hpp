@@ -2,6 +2,7 @@
 
 #include "MeshLoader.hpp"
 
+#include "Bloom.hpp"
 #include "CameraBuffer.hpp"
 #include "GBuffer.hpp"
 #include "GPUMesh.hpp"
@@ -25,6 +26,7 @@ private:
 	GBuffer m_gbuffer;
 	CameraBuffer m_camera_buffer;
 	Voxel m_voxel;
+	Bloom m_bloom;
 
 	// playground
 	Playground m_playground;

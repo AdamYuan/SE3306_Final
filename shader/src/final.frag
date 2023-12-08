@@ -11,6 +11,7 @@ layout(binding = GBUFFER_DEPTH_TEXTURE) uniform sampler2D uDepth;
 layout(binding = SHADOW_MAP_TEXTURE) uniform sampler2DShadow uShadowMap;
 layout(binding = VOXEL_RADIANCE_TEXTURE) uniform sampler3D uVoxelRadiance;
 layout(binding = VOXEL_RADIANCE_MIPMAP_TEXTURE) uniform sampler3D uVoxelRadianceMipmaps[6];
+layout(binding = BLOOM_TEXTURE) uniform sampler2D uBloom;
 
 layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
 	mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection;
@@ -136,12 +137,15 @@ void main() {
 	vec3 albedo = texelFetch(uAlbedo, coord, 0).rgb;
 	vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
 	float depth = texelFetch(uDepth, coord, 0).r;
+	vec4 bloom = texelFetch(uBloom, coord, 0);
+
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
 	vec3 light_dir = normalize(vec3(0, kCornellLightHeight, 0) - position);
 
 	bool emissive = any(greaterThan(albedo, vec3(1)));
-
 	vec3 color =
 	    emissive ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal, light_dir);
-	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
+	color += bloom.rgb;
+
+	oColor = vec4(pow(vec3(1) - exp(-color * 1.4), vec3(1.0 / 1.5)), 1.0);
 }

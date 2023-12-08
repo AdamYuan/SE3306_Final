@@ -23,12 +23,12 @@ void GBuffer::initialize_target(int width, int height) {
 
 	m_albedo.Initialize();
 	m_albedo.Storage(m_width, m_height, GL_RGB16F, 1);
-	m_albedo.SetSizeFilter(GL_NEAREST, GL_NEAREST);
+	m_albedo.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_albedo.SetWrapFilter(GL_CLAMP_TO_BORDER);
 
 	m_normal.Initialize();
 	m_normal.Storage(m_width, m_height, GL_RG8_SNORM, 1);
-	m_normal.SetSizeFilter(GL_NEAREST, GL_NEAREST);
+	m_normal.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_normal.SetWrapFilter(GL_CLAMP_TO_BORDER);
 
 	m_depth.Initialize();

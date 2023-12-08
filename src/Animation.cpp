@@ -98,6 +98,7 @@ void Animation::Initialize() {
 	m_gbuffer.Initialize();
 	m_shadow_map.Initialize();
 	m_voxel.Initialize();
+	m_bloom.Initialize();
 
 	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
 	m_particle_system.Initialize(kMaxParticleCount);
@@ -262,6 +263,8 @@ void Animation::Draw(int width, int height) {
 	// Post Process
 	glDisable(GL_DEPTH_TEST);
 	m_quad_vao.Bind();
+
+	m_bloom.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 
 	{
 		mygl3::FrameBuffer::Unbind();

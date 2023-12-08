@@ -7,7 +7,7 @@ void FireParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {}
 float FireParticle::GetRadius() const {
 	return glm::log(life + 1.f) * .4f * glm::smoothstep(.0f, .02f, kFireParticleLife - life);
 }
-glm::vec3 FireParticle::GetColor() const { return glm::vec3{1.f, .4588f, .0f} * glm::max(life * 4.8f, 1.05f); }
+glm::vec3 FireParticle::GetColor() const { return glm::vec3{1.f, .4588f, .03f} * glm::max(life * 4.8f, 1.05f); }
 void ParticleSystem::SustainFire(const Fireball &fireball, float delta_t) {
 	delta_t += m_unused_fire_delta_t;
 	m_unused_fire_delta_t = 0.f;
@@ -39,10 +39,9 @@ void ParticleSystem::SustainFire(const Fireball &fireball, float delta_t) {
 constexpr float kAshParticleLife = 1.f;
 void AshParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {
 	std::normal_distribution<float> speed_dis(.0f, 8.f);
-	glm::vec3 delta_v = {speed_dis(*p_rand), speed_dis(*p_rand), speed_dis(*p_rand)};
-	delta_v.y -= Marble::kGravity;
-	delta_v *= delta_t;
-	this->velocity += delta_v;
+	glm::vec3 acc = {speed_dis(*p_rand), speed_dis(*p_rand), speed_dis(*p_rand)};
+	acc.y -= Marble::kGravity;
+	this->velocity += acc * delta_t;
 }
 glm::vec3 AshParticle::GetColor() const {
 	return glm::vec3{1.f, .4588f, .0f} * 2.f * glm::smoothstep(.005f, .01f, GetRadius());
@@ -56,7 +55,7 @@ void ParticleSystem::EmitAshes(const Marble &marble) {
 	std::normal_distribution<float> life_dis{kAshParticleLife, 0.05f};
 	while (count--) {
 		AshParticle p = {};
-		p.life = life_dis(m_rand);
+		p.life = std::max(life_dis(m_rand), .0f);
 		p.center = marble.center;
 		p.velocity = marble.linear_velocity * .3f;
 		m_ashes.push_back(p);
@@ -85,11 +84,12 @@ void ParticleSystem::EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad) {
 	std::normal_distribution<float> grad_v_dis{.8f, .5f}, life_dis{kSparkParticleLife, 0.05f};
 	while (count--) {
 		SparkParticle p = {};
-		p.life = life_dis(m_rand);
+		p.life = std::max(life_dis(m_rand), .0f);
 		glm::vec2 dir2;
 		do {
 			dir2 = {dir_dis(m_rand), dir_dis(m_rand)};
 		} while (glm::dot(dir2, dir2) > 1.f);
+		dir2 *= 2.f;
 		// dir2 = glm::normalize(dir2);
 		glm::vec3 dir = tbn * glm::vec3(dir2, grad_v_dis(m_rand));
 		p.velocity = dir;
