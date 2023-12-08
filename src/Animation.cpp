@@ -264,12 +264,11 @@ void Animation::Draw(int width, int height) {
 	glDisable(GL_DEPTH_TEST);
 	m_quad_vao.Bind();
 
+	// Bloom
 	m_bloom.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 
-	{
-		mygl3::FrameBuffer::Unbind();
-
-		m_final_shader.Use();
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-	}
+	// Final Pass
+	mygl3::FrameBuffer::Unbind();
+	m_final_shader.Use();
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
