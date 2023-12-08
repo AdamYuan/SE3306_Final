@@ -5,6 +5,7 @@
 #include "Sphere.hpp"
 #include "Tumbler.hpp"
 
+#include <algorithm>
 #include <array>
 #include <optional>
 #include <vector>
@@ -34,9 +35,10 @@ public:
 	void CreateFireball(float speed);
 	void DeleteFireball();
 
-	template <typename MarbleHitCallback, typename FireballHitCallback, typename FireballCallback>
-	void Update(float delta_t, MarbleHitCallback &&marble_hit_callback, FireballHitCallback &&fireball_hit_callback,
-	            FireballCallback &&fireball_callback) {
+	template <typename MarbleHitCallback, typename MarbleEmptyCallback, typename FireballHitCallback,
+	          typename FireballCallback>
+	void Update(float delta_t, MarbleHitCallback &&marble_hit_callback, MarbleEmptyCallback &&marble_empty_callback,
+	            FireballHitCallback &&fireball_hit_callback, FireballCallback &&fireball_callback) {
 		for (uint32_t i = 0; i < m_tumblers.size(); ++i)
 			for (uint32_t j = i + 1; j < m_tumblers.size(); ++j)
 				Collider::Test(&m_tumblers[i], &m_tumblers[j]);
@@ -54,8 +56,6 @@ public:
 			tumbler.Update(delta_t);
 		}
 		for (auto &marble : m_marbles) {
-			if (!marble.alive)
-				continue;
 			Collider::TestBoundary(&marble, marble_hit_callback);
 			for (auto &tumbler : m_tumblers)
 				Collider::Test(&marble, &tumbler, marble_hit_callback);
@@ -68,11 +68,15 @@ public:
 			for (auto &tumbler : m_tumblers)
 				Collider::Test(&fireball, &tumbler, fireball_hit_callback);
 			for (auto &marble : m_marbles)
-				if (marble.alive)
-					Collider::Test(&fireball, &marble, fireball_hit_callback, marble_hit_callback);
+				Collider::Test(&fireball, &marble, fireball_hit_callback, marble_hit_callback);
 			fireball.Update(delta_t);
 
 			fireball_callback(fireball);
 		}
+		// remove dead marbles
+		m_marbles.erase(std::remove_if(m_marbles.begin(), m_marbles.end(), [](const Marble &m) { return !m.alive; }),
+		                m_marbles.end());
+		if (m_marbles.empty())
+			marble_empty_callback();
 	}
 };

@@ -36,17 +36,14 @@ std::optional<Playground::RayCastInfo> Playground::RayCastTumbler(const glm::vec
 void Playground::PopTumblerMesh(GPUMesh *p_mesh) const {
 	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
 		p_mesh->SetModel(i, m_tumblers[i].GetModel());
+	p_mesh->SetMeshCount(m_tumblers.size());
 }
 void Playground::PopMarbleMesh(GPUMesh *p_mesh) const {
-	uint32_t cnt = 0;
-	for (const auto &marble : m_marbles) {
-		if (!marble.alive)
-			continue;
-		p_mesh->SetColor(cnt, marble.color);
-		p_mesh->SetModel(cnt, marble.GetModel());
-		++cnt;
+	for (uint32_t i = 0; i < m_marbles.size(); ++i) {
+		p_mesh->SetColor(i, m_marbles[i].color);
+		p_mesh->SetModel(i, m_marbles[i].GetModel());
 	}
-	p_mesh->SetMeshCount(cnt);
+	p_mesh->SetMeshCount(m_marbles.size());
 }
 void Playground::PopFireballMesh(GPUMesh *p_mesh) const {
 	if (m_fireball) {

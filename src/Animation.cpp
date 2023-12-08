@@ -22,7 +22,7 @@ constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
 constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .05f} * 5.f;
 constexpr float kFireballSpeed = 2.f;
 
-constexpr uint32_t kMaxParticleCount = 4096;
+constexpr uint32_t kMaxParticleCount = 2048;
 
 constexpr float kCameraFov = glm::pi<float>() / 3.f;
 constexpr glm::vec3 kCameraPos = {.0f, .0f, 1.f + 1.f / gcem::tan(kCameraFov * 0.5f)};
@@ -192,9 +192,6 @@ void Animation::Update(float delta_t) {
 		    case SphereHitType::kBottom:
 			    p_marble->color = {};
 			    return;
-		    case SphereHitType::kLight:
-			    p_marble->color = {kCornellLightRadiance, 1.0f};
-			    return;
 		    case SphereHitType::kTumbler:
 			    p_marble->color = {kTumblerColor, 1.0f};
 			    return;
@@ -207,6 +204,7 @@ void Animation::Update(float delta_t) {
 			    return;
 		    }
 	    },
+	    [this]() { m_marbles_flag = false; },
 	    [this](Fireball *p_fireball, SphereHitInfo hit_info) {
 		    if (hit_info.type != SphereHitType::kSphere)
 			    m_particle_system.EmitSparks(hit_info.position, hit_info.gradient);

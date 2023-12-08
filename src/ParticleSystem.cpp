@@ -75,7 +75,7 @@ void SparkParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {
 glm::vec3 SparkParticle::GetColor() const { return glm::vec3{1.f, .4588f, .2f} * (1.05f + life); }
 float SparkParticle::GetRadius() const { return 0.03f * life * life * life; }
 void ParticleSystem::EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad) {
-	std::uniform_int_distribution<uint32_t> count_dis{8u, 16u};
+	std::uniform_int_distribution<uint32_t> count_dis{16u, 24u};
 	uint32_t count = count_dis(m_rand);
 	count = std::min(count, GetUnusedParticleCount());
 	glm::mat3 tbn = normal_to_tbn(grad);
@@ -88,9 +88,8 @@ void ParticleSystem::EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad) {
 		glm::vec2 dir2;
 		do {
 			dir2 = {dir_dis(m_rand), dir_dis(m_rand)};
-		} while (glm::dot(dir2, dir2) > 1.f);
-		dir2 *= 2.f;
-		// dir2 = glm::normalize(dir2);
+		} while (glm::dot(dir2, dir2) >= 1.f);
+		dir2 *= glm::dot(dir2, dir2) * 2.5f;
 		glm::vec3 dir = tbn * glm::vec3(dir2, grad_v_dis(m_rand));
 		p.velocity = dir;
 		p.center = pos + glm::normalize(dir) * Fireball::kRadius * .2f;
