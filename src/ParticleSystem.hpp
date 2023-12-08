@@ -27,8 +27,8 @@ struct SparkParticle final : public Particle<SparkParticle> {
 	void UpdateVelocity(std::mt19937 *p_rand, float delta_t);
 };
 struct AshParticle final : public Particle<AshParticle> {
-	inline glm::vec3 GetColor() const { return glm::vec3{}; }
-	inline float GetRadius() const { return 0.01f; }
+	glm::vec3 GetColor() const;
+	float GetRadius() const;
 	void UpdateVelocity(std::mt19937 *p_rand, float delta_t);
 };
 

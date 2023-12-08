@@ -7,16 +7,28 @@ void FireParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {}
 float FireParticle::GetRadius() const {
 	return glm::log(life + 1.f) * .4f * glm::smoothstep(.0f, .02f, kFireParticleLife - life);
 }
-glm::vec3 FireParticle::GetColor() const { return glm::vec3{1.f, .4588f, .05f} * glm::max(life * 5.f, 1.05f); }
+glm::vec3 FireParticle::GetColor() const { return glm::vec3{1.f, .4588f, .0f} * glm::max(life * 4.8f, 1.05f); }
 
 void SparkParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {}
-void AshParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {}
+
+constexpr float kAshParticleLife = 1.f;
+void AshParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {
+	std::normal_distribution<float> speed_dis(.0f, 8.f);
+	glm::vec3 delta_v = {speed_dis(*p_rand), speed_dis(*p_rand), speed_dis(*p_rand)};
+	delta_v.y -= Marble::kGravity;
+	delta_v *= delta_t;
+	this->velocity += delta_v;
+}
+glm::vec3 AshParticle::GetColor() const {
+	return glm::vec3{1.f, .4588f, .0f} * 2.f * glm::smoothstep(.005f, .01f, GetRadius());
+}
+float AshParticle::GetRadius() const { return Marble::kRadius * glm::pow((life + 1.f) / 2.f, 10.f); }
 
 void ParticleSystem::SustainFire(const Fireball &fireball, float delta_t) {
 	delta_t += m_unused_fire_delta_t;
 	m_unused_fire_delta_t = 0.f;
 
-	constexpr float kFireParticlePerSec = 1024.0f;
+	constexpr float kFireParticlePerSec = 400.0f;
 	auto count = uint32_t(kFireParticlePerSec * delta_t);
 	m_unused_fire_delta_t += delta_t - float(count) / kFireParticlePerSec;
 
@@ -33,10 +45,23 @@ void ParticleSystem::SustainFire(const Fireball &fireball, float delta_t) {
 
 		FireParticle p = {};
 		p.life = kFireParticleLife;
-		p.center = fireball.center + bias * Fireball::kRadius * .9f;
+		p.center = fireball.center + bias * Fireball::kRadius * .95f;
 		glm::vec3 base_velocity = fireball.GetVelocity(p.center);
 		p.velocity = base_velocity * .1f + glm::vec3{xz_speed_dis(m_rand), y_speed_dis(m_rand), xz_speed_dis(m_rand)};
 		m_fires.push_back(p);
+	}
+}
+
+void ParticleSystem::EmitAshes(const Marble &marble) {
+	std::uniform_int_distribution<uint32_t> count_dis{2u, 5u};
+	uint32_t count = count_dis(m_rand);
+	count = std::min(count, GetUnusedParticleCount());
+	while (count--) {
+		AshParticle p = {};
+		p.life = kAshParticleLife;
+		p.center = marble.center;
+		p.velocity = marble.linear_velocity * .3f;
+		m_ashes.push_back(p);
 	}
 }
 

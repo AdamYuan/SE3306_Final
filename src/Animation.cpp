@@ -19,7 +19,7 @@ constexpr float kTumblerPlaceRadius = 0.6f;
 constexpr uint32_t kMarbleCount = 30;
 constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
 
-constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .05f} * 8.f;
+constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .05f} * 5.f;
 constexpr float kFireballSpeed = 2.f;
 
 constexpr uint32_t kMaxParticleCount = 4096;
@@ -178,7 +178,7 @@ void Animation::Update(float delta_t) {
 	m_particle_system.Update(delta_t);
 	m_playground.Update(
 	    delta_t,
-	    [](Marble *p_marble, SphereHitType hit_type) {
+	    [this](Marble *p_marble, SphereHitType hit_type) {
 		    switch (hit_type) {
 		    case SphereHitType::kFront:
 			    return;
@@ -198,6 +198,7 @@ void Animation::Update(float delta_t) {
 			    p_marble->color = {kTumblerColor, 1.0f};
 			    return;
 		    case SphereHitType::kSphere:
+			    m_particle_system.EmitAshes(*p_marble);
 			    p_marble->alive = false;
 			    return;
 		    default:
@@ -209,6 +210,7 @@ void Animation::Update(float delta_t) {
 
 	    },
 	    [this, delta_t](const Fireball &fireball) { m_particle_system.SustainFire(fireball, delta_t); });
+
 	m_playground.PopTumblerMesh(&m_tumbler_gpu_mesh);
 	m_playground.PopMarbleMesh(&m_marble_gpu_mesh);
 	m_playground.PopFireballMesh(&m_fireball_gpu_mesh);
@@ -237,6 +239,7 @@ void Animation::Draw(int width, int height) {
 		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw();
 		// m_marble_gpu_mesh.Draw();
+		// m_particle_gpu_mesh.Draw(); // TODO: what?
 		m_fireball_gpu_mesh.Draw();
 	});
 
