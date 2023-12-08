@@ -32,6 +32,21 @@ vec4 blur9_h(in const vec2 uv, in const vec2 inv_resolution) {
 	return color;
 }
 
+vec4 blur13_h(in const vec2 uv, in const vec2 inv_resolution) {
+	vec4 color = vec4(0.0);
+	vec2 off1 = vec2(1.411764705882353, 0) * inv_resolution;
+	vec2 off2 = vec2(3.2941176470588234, 0) * inv_resolution;
+	vec2 off3 = vec2(5.176470588235294, 0) * inv_resolution;
+	color += sample_color(uv) * 0.1964825501511404;
+	color += sample_color(uv + off1) * 0.2969069646728344;
+	color += sample_color(uv - off1) * 0.2969069646728344;
+	color += sample_color(uv + off2) * 0.09447039785044732;
+	color += sample_color(uv - off2) * 0.09447039785044732;
+	color += sample_color(uv + off3) * 0.010381362401148057;
+	color += sample_color(uv - off3) * 0.010381362401148057;
+	return color;
+}
+
 void main() {
 	vec2 resolution = vec2(textureSize(uAlbedo, 0));
 	vec2 inv_resolution = 1. / resolution;

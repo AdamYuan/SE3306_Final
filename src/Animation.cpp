@@ -19,7 +19,7 @@ constexpr float kTumblerPlaceRadius = 0.6f;
 constexpr uint32_t kMarbleCount = 30;
 constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
 
-constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .05f} * 5.f;
+constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .01f} * 7.f;
 constexpr float kFireballSpeed = 2.f;
 
 constexpr uint32_t kMaxParticleCount = 2048;
@@ -223,8 +223,6 @@ void Animation::Draw(int width, int height) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw();
-		// m_marble_gpu_mesh.Draw();
-		// m_particle_gpu_mesh.Draw();
 		m_fireball_gpu_mesh.Draw();
 	});
 

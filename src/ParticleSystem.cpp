@@ -44,9 +44,9 @@ void AshParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {
 	this->velocity += acc * delta_t;
 }
 glm::vec3 AshParticle::GetColor() const {
-	return glm::vec3{1.f, .4588f, .0f} * 2.f * glm::smoothstep(.005f, .01f, GetRadius());
+	return glm::vec3{1.f, .4588f, .0f} * 2.f * glm::smoothstep(.01f, .015f, GetRadius());
 }
-float AshParticle::GetRadius() const { return Marble::kRadius * glm::min(glm::pow((life + 1.f) / 2.f, 10.f), 1.f); }
+float AshParticle::GetRadius() const { return Marble::kRadius * glm::min(glm::pow((life + 1.f) / 2.f, 7.f), 1.f); }
 void ParticleSystem::EmitAshes(const Marble &marble) {
 	std::uniform_int_distribution<uint32_t> count_dis{2u, 5u};
 	uint32_t count = count_dis(m_rand);

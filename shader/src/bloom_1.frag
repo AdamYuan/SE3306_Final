@@ -27,6 +27,21 @@ vec4 blur9_v(in const vec2 uv, in const vec2 inv_resolution) {
 	return color;
 }
 
+vec4 blur13_v(in const vec2 uv, in const vec2 inv_resolution) {
+	vec4 color = vec4(0.0);
+	vec2 off1 = vec2(0, 1.411764705882353) * inv_resolution;
+	vec2 off2 = vec2(0, 3.2941176470588234) * inv_resolution;
+	vec2 off3 = vec2(0, 5.176470588235294) * inv_resolution;
+	color += texture(uBloom0, uv) * 0.1964825501511404;
+	color += texture(uBloom0, uv + off1) * 0.2969069646728344;
+	color += texture(uBloom0, uv - off1) * 0.2969069646728344;
+	color += texture(uBloom0, uv + off2) * 0.09447039785044732;
+	color += texture(uBloom0, uv - off2) * 0.09447039785044732;
+	color += texture(uBloom0, uv + off3) * 0.010381362401148057;
+	color += texture(uBloom0, uv - off3) * 0.010381362401148057;
+	return color;
+}
+
 void main() {
 	vec2 resolution = vec2(textureSize(uBloom0, 0));
 	vec2 inv_resolution = 1. / resolution;

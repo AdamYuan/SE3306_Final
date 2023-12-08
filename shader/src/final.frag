@@ -147,6 +147,6 @@ void main() {
 	    emissive ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal, light_dir);
 	color += bloom.rgb;
 
-	color = vec3(1) - exp(-color);
+	color = vec3(1) - exp(-color * 1.2);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
