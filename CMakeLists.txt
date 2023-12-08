@@ -28,6 +28,7 @@ add_executable(
         src/Animation.cpp
         src/GBuffer.cpp
         src/ShadowMap.cpp
+        src/Bloom.cpp
         src/Playground.cpp
         src/ParticleSystem.cpp
 )

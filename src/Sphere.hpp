@@ -18,6 +18,10 @@ template <typename Derived> struct Sphere : public RigidBody {
 };
 
 enum class SphereHitType { kLeft, kRight, kBottom, kTop, kBack, kFront, kLight, kTumbler, kSphere };
+struct SphereHitInfo {
+	SphereHitType type;
+	glm::vec3 position, gradient;
+};
 
 struct Marble final : public Sphere<Marble> {
 	inline static constexpr float kMass = .15f;

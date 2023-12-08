@@ -69,30 +69,40 @@ struct Collider {
 
 	template <typename Derived, typename Callback>
 	inline static void TestBoundary(Sphere<Derived> *p_sphere, Callback &&callback) {
-		std::optional<SphereHitType> opt_hit_type;
+		std::optional<SphereHitInfo> opt_hit_info;
 
-		glm::vec3 light_diff = p_sphere->center - glm::vec3{.0f, kCornellLightHeight, .0f};
+		glm::vec3 light_pos = glm::vec3{.0f, kCornellLightHeight, .0f};
+		glm::vec3 light_diff = p_sphere->center - light_pos;
 		float light_dist = glm::length(light_diff);
 		if (light_dist < Derived::kRadius + kCornellLightRadius) {
 			glm::vec3 light_norm = glm::normalize(light_diff);
 			p_sphere->center += light_norm * (Derived::kRadius + kCornellLightRadius - light_dist);
 			p_sphere->linear_velocity = glm::reflect(p_sphere->linear_velocity, light_norm);
-			opt_hit_type = SphereHitType::kLight;
+			opt_hit_info = {.type = SphereHitType::kLight,
+			                .position = light_pos + light_norm * kCornellLightRadius,
+			                .gradient = light_norm};
 		} else {
 			const auto test = [&](auto axis) {
 				auto a1 = (axis + 1) % 3, a2 = (a1 + 1) % 3;
+				glm::vec3 hit_pos = p_sphere->center, hit_grad = {};
 				if (p_sphere->center[axis] - Derived::kRadius < -1.f) {
 					p_sphere->center[axis] = -1.f + Derived::kRadius;
 					p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] + 1e-4f;
 					p_sphere->angular_velocity[a1] = -p_sphere->linear_velocity[a2] / Derived::kRadius;
 					p_sphere->angular_velocity[a2] = p_sphere->linear_velocity[a1] / Derived::kRadius;
-					opt_hit_type = static_cast<SphereHitType>(axis * 2);
+					hit_pos[axis] = -1.f;
+					hit_grad[axis] = 1.f;
+					opt_hit_info = {
+					    .type = static_cast<SphereHitType>(axis * 2), .position = hit_pos, .gradient = hit_grad};
 				} else if (p_sphere->center[axis] + Derived::kRadius > 1.f) {
 					p_sphere->center[axis] = 1.f - Derived::kRadius;
 					p_sphere->linear_velocity[axis] = -p_sphere->linear_velocity[axis] - 1e-4f;
 					p_sphere->angular_velocity[a1] = p_sphere->linear_velocity[a2] / Derived::kRadius;
 					p_sphere->angular_velocity[a2] = -p_sphere->linear_velocity[a1] / Derived::kRadius;
-					opt_hit_type = static_cast<SphereHitType>(axis * 2 + 1);
+					hit_pos[axis] = 1.f;
+					hit_grad[axis] = -1.f;
+					opt_hit_info = {
+					    .type = static_cast<SphereHitType>(axis * 2 + 1), .position = hit_pos, .gradient = hit_grad};
 				}
 			};
 
@@ -101,8 +111,8 @@ struct Collider {
 			test(2);
 		}
 
-		if (opt_hit_type)
-			callback((Derived *)(p_sphere), opt_hit_type.value());
+		if (opt_hit_info)
+			callback((Derived *)(p_sphere), opt_hit_info.value());
 	}
 
 	inline static constexpr float kTumblerRestitution = .3f;
@@ -162,19 +172,25 @@ struct Collider {
 
 		glm::vec3 dir = p_tumbler->GetSDFGradient(p_sphere->center);
 		p_sphere->center += dir * (Derived::kRadius - sdf);
+		glm::vec3 hit_pos = p_sphere->center - dir * Derived::kRadius;
 
 		glm::vec3 new_l_v = glm::reflect(p_sphere->linear_velocity, dir);
 		p_tumbler->ApplyMomentum(p_sphere->center, (p_sphere->linear_velocity - new_l_v) * Derived::kMass);
 		p_sphere->linear_velocity = new_l_v;
 
-		callback(static_cast<Derived *>(p_sphere), SphereHitType::kTumbler);
+		callback(static_cast<Derived *>(p_sphere),
+		         SphereHitInfo{.type = SphereHitType::kTumbler, .position = hit_pos, .gradient = dir});
 	}
 	template <typename FireballCallback, typename MarbleCallback>
 	inline static void Test(Fireball *p_fireball, Marble *p_marble, FireballCallback &&fireball_callback,
 	                        MarbleCallback &&marble_callback) {
-		if (glm::distance(p_fireball->center, p_marble->center) >= Fireball::kRadius)
+		glm::vec3 dist = p_fireball->center - p_marble->center;
+		if (glm::dot(dist, dist) >= Fireball::kRadius * Fireball::kRadius)
 			return;
-		marble_callback(p_marble, SphereHitType::kSphere);
-		fireball_callback(p_fireball, SphereHitType::kSphere);
+		glm::vec3 hit_pos = p_marble->center, hit_grad = glm::normalize(dist);
+		marble_callback(p_marble,
+		                SphereHitInfo{.type = SphereHitType::kSphere, .position = hit_pos, .gradient = -hit_grad});
+		fireball_callback(p_fireball,
+		                  SphereHitInfo{.type = SphereHitType::kSphere, .position = hit_pos, .gradient = hit_grad});
 	}
 };

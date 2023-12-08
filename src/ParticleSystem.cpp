@@ -8,22 +8,6 @@ float FireParticle::GetRadius() const {
 	return glm::log(life + 1.f) * .4f * glm::smoothstep(.0f, .02f, kFireParticleLife - life);
 }
 glm::vec3 FireParticle::GetColor() const { return glm::vec3{1.f, .4588f, .0f} * glm::max(life * 4.8f, 1.05f); }
-
-void SparkParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {}
-
-constexpr float kAshParticleLife = 1.f;
-void AshParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {
-	std::normal_distribution<float> speed_dis(.0f, 8.f);
-	glm::vec3 delta_v = {speed_dis(*p_rand), speed_dis(*p_rand), speed_dis(*p_rand)};
-	delta_v.y -= Marble::kGravity;
-	delta_v *= delta_t;
-	this->velocity += delta_v;
-}
-glm::vec3 AshParticle::GetColor() const {
-	return glm::vec3{1.f, .4588f, .0f} * 2.f * glm::smoothstep(.005f, .01f, GetRadius());
-}
-float AshParticle::GetRadius() const { return Marble::kRadius * glm::pow((life + 1.f) / 2.f, 10.f); }
-
 void ParticleSystem::SustainFire(const Fireball &fireball, float delta_t) {
 	delta_t += m_unused_fire_delta_t;
 	m_unused_fire_delta_t = 0.f;
@@ -52,6 +36,18 @@ void ParticleSystem::SustainFire(const Fireball &fireball, float delta_t) {
 	}
 }
 
+constexpr float kAshParticleLife = 1.f;
+void AshParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {
+	std::normal_distribution<float> speed_dis(.0f, 8.f);
+	glm::vec3 delta_v = {speed_dis(*p_rand), speed_dis(*p_rand), speed_dis(*p_rand)};
+	delta_v.y -= Marble::kGravity;
+	delta_v *= delta_t;
+	this->velocity += delta_v;
+}
+glm::vec3 AshParticle::GetColor() const {
+	return glm::vec3{1.f, .4588f, .0f} * 2.f * glm::smoothstep(.005f, .01f, GetRadius());
+}
+float AshParticle::GetRadius() const { return Marble::kRadius * glm::pow((life + 1.f) / 2.f, 10.f); }
 void ParticleSystem::EmitAshes(const Marble &marble) {
 	std::uniform_int_distribution<uint32_t> count_dis{2u, 5u};
 	uint32_t count = count_dis(m_rand);
@@ -62,6 +58,41 @@ void ParticleSystem::EmitAshes(const Marble &marble) {
 		p.center = marble.center;
 		p.velocity = marble.linear_velocity * .3f;
 		m_ashes.push_back(p);
+	}
+}
+
+inline static glm::mat3 normal_to_tbn(const glm::vec3 &normal) {
+	glm::vec3 v1 = cross(normal, glm::vec3(0, 0, 1)), v2 = cross(normal, glm::vec3(0, 1, 0));
+	glm::vec3 tangent = normalize(dot(v1, v1) > dot(v2, v2) ? v1 : v2);
+	return {tangent, cross(tangent, normal), normal};
+}
+
+constexpr float kSparkParticleLife = 1.f;
+void SparkParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {
+	velocity.y -= Marble::kGravity * delta_t * .5f;
+}
+glm::vec3 SparkParticle::GetColor() const { return glm::vec3{1.f, .4588f, .2f} * (1.05f + life); }
+float SparkParticle::GetRadius() const { return 0.03f * life * life * life; }
+void ParticleSystem::EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad) {
+	std::uniform_int_distribution<uint32_t> count_dis{8u, 16u};
+	uint32_t count = count_dis(m_rand);
+	count = std::min(count, GetUnusedParticleCount());
+	glm::mat3 tbn = normal_to_tbn(grad);
+
+	std::uniform_real_distribution<float> dir_dis{-1.f, 1.f};
+	std::normal_distribution<float> grad_v_dis{.8f, .5f};
+	while (count--) {
+		SparkParticle p = {};
+		p.life = kSparkParticleLife;
+		glm::vec2 dir2;
+		do {
+			dir2 = {dir_dis(m_rand), dir_dis(m_rand)};
+		} while (glm::dot(dir2, dir2) > 1.f);
+		// dir2 = glm::normalize(dir2);
+		glm::vec3 dir = tbn * glm::vec3(dir2, grad_v_dis(m_rand));
+		p.velocity = dir;
+		p.center = pos + glm::normalize(dir) * Fireball::kRadius * .2f;
+		m_sparks.push_back(p);
 	}
 }
 

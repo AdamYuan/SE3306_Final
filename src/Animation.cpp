@@ -178,8 +178,8 @@ void Animation::Update(float delta_t) {
 	m_particle_system.Update(delta_t);
 	m_playground.Update(
 	    delta_t,
-	    [this](Marble *p_marble, SphereHitType hit_type) {
-		    switch (hit_type) {
+	    [this](Marble *p_marble, SphereHitInfo info) {
+		    switch (info.type) {
 		    case SphereHitType::kFront:
 			    return;
 		    case SphereHitType::kLeft:
@@ -206,8 +206,9 @@ void Animation::Update(float delta_t) {
 			    return;
 		    }
 	    },
-	    [](Fireball *p_fireball, SphereHitType hit_type) {
-
+	    [this](Fireball *p_fireball, SphereHitInfo hit_info) {
+		    if (hit_info.type != SphereHitType::kSphere)
+			    m_particle_system.EmitSparks(hit_info.position, hit_info.gradient);
 	    },
 	    [this, delta_t](const Fireball &fireball) { m_particle_system.SustainFire(fireball, delta_t); });
 
@@ -239,7 +240,7 @@ void Animation::Draw(int width, int height) {
 		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw();
 		// m_marble_gpu_mesh.Draw();
-		// m_particle_gpu_mesh.Draw(); // TODO: what?
+		// m_particle_gpu_mesh.Draw();
 		m_fireball_gpu_mesh.Draw();
 	});
 
