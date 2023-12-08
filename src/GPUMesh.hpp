@@ -11,23 +11,23 @@
 class GPUMesh {
 private:
 	mygl3::VertexArray m_vertex_array;
-	mygl3::Buffer m_vertex_buffer, m_index_buffer, m_draw_cmd_buffer, m_instance_info_buffer;
+	mygl3::Buffer m_vertex_buffer, m_index_buffer, m_instance_info_buffer;
 	struct InstanceInfo {
 		glm::vec4 color;
 		glm::mat4 model;
 	};
 	std::vector<InstanceInfo> m_instance_infos;
-	uint32_t m_count = 0;
+	uint32_t m_instance_count = 0, m_index_count = 0;
 	bool m_changed = false;
 
 public:
-	void Initialize(std::span<const Mesh> meshes, std::span<const uint32_t> counts = {});
+	void Initialize(const Mesh &mesh, uint32_t max_instance_count = 1);
 	inline uint32_t GetMaxMeshCount() const { return m_instance_infos.size(); }
-	inline uint32_t GetCurrentMeshCount() const { return m_count; }
-	inline void SetMeshCount(uint32_t count) {
-		if (count == m_count)
+	inline uint32_t GetCurrentMeshCount() const { return m_instance_count; }
+	inline void SetInstanceCount(uint32_t instance_count) {
+		if (instance_count == m_instance_count)
 			return;
-		m_count = glm::clamp(count, 0u, GetMaxMeshCount());
+		m_instance_count = glm::clamp(instance_count, 0u, GetMaxMeshCount());
 		m_changed = true;
 	}
 	inline void SetModel(uint32_t mesh_id, const glm::mat4 &model) {

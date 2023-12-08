@@ -1,51 +1,25 @@
 #include "GPUMesh.hpp"
 
-struct DrawElementsIndirectCommand {
-	GLuint count;
-	GLuint instance_count;
-	GLuint first_index;
-	GLint base_vertex;
-	GLuint base_instance;
-};
-
-void GPUMesh::Initialize(std::span<const Mesh> meshes, std::span<const uint32_t> counts) {
+void GPUMesh::Initialize(const Mesh &mesh, uint32_t max_instance_count) {
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;
 
-	GLuint instance = 0;
-	std::vector<DrawElementsIndirectCommand> draw_commands;
-	for (std::size_t i = 0; i < meshes.size(); ++i) {
-		const auto &mesh = meshes[i];
-		GLuint count = i < counts.size() ? counts[i] : 1;
-
-		for (GLuint c = 0; c < count; ++c)
-			draw_commands.push_back({
-			    .count = GLuint(mesh.GetTriangles().size() * 3),
-			    .instance_count = 1,
-			    .first_index = GLuint(indices.size()),
-			    .base_vertex = GLint(vertices.size()),
-			    .base_instance = instance + c,
-			});
-
-		vertices.insert(vertices.end(), mesh.GetVertices().begin(), mesh.GetVertices().end());
-		for (const auto &tri : mesh.GetTriangles()) {
-			indices.push_back(tri[0]);
-			indices.push_back(tri[1]);
-			indices.push_back(tri[2]);
-		}
-
-		instance += count;
+	vertices.insert(vertices.end(), mesh.GetVertices().begin(), mesh.GetVertices().end());
+	for (const auto &tri : mesh.GetTriangles()) {
+		indices.push_back(tri[0]);
+		indices.push_back(tri[1]);
+		indices.push_back(tri[2]);
 	}
+
 	m_vertex_buffer.Initialize();
 	m_vertex_buffer.Storage(vertices.data(), vertices.data() + vertices.size(), 0);
 	m_index_buffer.Initialize();
 	m_index_buffer.Storage(indices.data(), indices.data() + indices.size(), 0);
-	m_draw_cmd_buffer.Initialize();
-	m_draw_cmd_buffer.Storage(draw_commands.data(), draw_commands.data() + draw_commands.size(), 0);
 
-	m_count = instance;
+	m_index_count = indices.size();
+	m_instance_count = max_instance_count;
 
-	m_instance_infos.resize(m_count, {.color = {}, .model = glm::identity<glm::mat4>()});
+	m_instance_infos.resize(max_instance_count, {.color = {}, .model = glm::identity<glm::mat4>()});
 	m_instance_info_buffer.Initialize();
 	m_instance_info_buffer.Storage(m_instance_infos.data(), m_instance_infos.data() + m_instance_infos.size(),
 	                               GL_DYNAMIC_STORAGE_BIT);
@@ -94,13 +68,12 @@ void GPUMesh::Initialize(std::span<const Mesh> meshes, std::span<const uint32_t>
 }
 
 void GPUMesh::Draw() {
-	if (m_count == 0)
+	if (m_instance_count == 0)
 		return;
 	if (m_changed) {
-		m_instance_info_buffer.SubData(0, m_instance_infos.data(), m_instance_infos.data() + m_count);
+		m_instance_info_buffer.SubData(0, m_instance_infos.data(), m_instance_infos.data() + m_instance_count);
 		m_changed = false;
 	}
 	m_vertex_array.Bind();
-	m_draw_cmd_buffer.Bind(GL_DRAW_INDIRECT_BUFFER);
-	glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr, (GLsizei)m_count, 0);
+	glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)m_index_count, GL_UNSIGNED_INT, nullptr, (GLsizei)m_instance_count);
 }

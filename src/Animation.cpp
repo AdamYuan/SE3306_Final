@@ -33,28 +33,13 @@ static const glm::mat4 kInvCameraViewProj = glm::inverse(kCameraViewProj);
 
 void Animation::Initialize() {
 	// Load Meshes
-	{
-		auto cornell_mesh = MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID,
-		                                                kCornellOtherColor, kCornellLightRadiance, kCornellLightHeight,
-		                                                kCornellLightRadius);
-		m_cornell_gpu_mesh.Initialize({&cornell_mesh, 1});
-	}
-	{
-		auto tumbler_mesh = MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID);
-		m_tumbler_gpu_mesh.Initialize({&tumbler_mesh, 1}, {&kTumblerCount, 1});
-	}
-	{
-		auto marble_mesh = MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID);
-		m_marble_gpu_mesh.Initialize({&marble_mesh, 1}, {&kMarbleCount, 1});
-	}
-	{
-		auto fireball_mesh = MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance);
-		m_fireball_gpu_mesh.Initialize({&fireball_mesh, 1});
-	}
-	{
-		auto particle_mesh = MeshLoader{}.MakeIcoSphere(1.f, 2, {});
-		m_particle_gpu_mesh.Initialize({&particle_mesh, 1}, {&kMaxParticleCount, 1});
-	}
+	m_cornell_gpu_mesh.Initialize(
+	    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID, kCornellOtherColor,
+	                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius));
+	m_tumbler_gpu_mesh.Initialize(MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID), kTumblerCount);
+	m_marble_gpu_mesh.Initialize(MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID), kMarbleCount);
+	m_fireball_gpu_mesh.Initialize(MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance));
+	m_particle_gpu_mesh.Initialize(MeshLoader{}.MakeIcoSphere(1.f, 2, {}), kMaxParticleCount);
 
 	// Load Textures
 	{
@@ -210,14 +195,14 @@ void Animation::Update(float delta_t) {
 			    m_particle_system.EmitSparks(hit_info.position, hit_info.gradient);
 	    },
 	    [this, delta_t](const Fireball &fireball) { m_particle_system.SustainFire(fireball, delta_t); });
+}
 
+void Animation::Draw(int width, int height) {
 	m_playground.PopTumblerMesh(&m_tumbler_gpu_mesh);
 	m_playground.PopMarbleMesh(&m_marble_gpu_mesh);
 	m_playground.PopFireballMesh(&m_fireball_gpu_mesh);
 	m_particle_system.PopMesh(&m_particle_gpu_mesh);
-}
 
-void Animation::Draw(int width, int height) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 

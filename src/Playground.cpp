@@ -36,21 +36,21 @@ std::optional<Playground::RayCastInfo> Playground::RayCastTumbler(const glm::vec
 void Playground::PopTumblerMesh(GPUMesh *p_mesh) const {
 	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
 		p_mesh->SetModel(i, m_tumblers[i].GetModel());
-	p_mesh->SetMeshCount(m_tumblers.size());
+	p_mesh->SetInstanceCount(m_tumblers.size());
 }
 void Playground::PopMarbleMesh(GPUMesh *p_mesh) const {
 	for (uint32_t i = 0; i < m_marbles.size(); ++i) {
 		p_mesh->SetColor(i, m_marbles[i].color);
 		p_mesh->SetModel(i, m_marbles[i].GetModel());
 	}
-	p_mesh->SetMeshCount(m_marbles.size());
+	p_mesh->SetInstanceCount(m_marbles.size());
 }
 void Playground::PopFireballMesh(GPUMesh *p_mesh) const {
 	if (m_fireball) {
-		p_mesh->SetMeshCount(1);
+		p_mesh->SetInstanceCount(1);
 		p_mesh->SetModel(0, m_fireball.value().GetModel());
 	} else
-		p_mesh->SetMeshCount(0);
+		p_mesh->SetInstanceCount(0);
 }
 
 template <typename Rand> inline static glm::vec3 gen_random_dir(Rand *p_rand) {

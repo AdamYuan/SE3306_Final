@@ -135,5 +135,5 @@ void ParticleSystem::PopMesh(GPUMesh *p_mesh) const {
 	pop_mesh(m_fires);
 	pop_mesh(m_sparks);
 	pop_mesh(m_ashes);
-	p_mesh->SetMeshCount(count);
+	p_mesh->SetInstanceCount(count);
 }
