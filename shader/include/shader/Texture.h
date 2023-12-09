@@ -4,13 +4,15 @@
 #include "Binding.h"
 
 layout(binding = TUMBLER_TEXTURE) uniform sampler2D uTumblerTexture;
+layout(binding = FLOOR_TEXTURE) uniform sampler2D uFloorTexture;
 
 #ifdef GLSL
 vec3 texture_func_1(in const vec2 coord) {
-	const vec3 color = vec3(.725, .71, .68);
+	return texture(uFloorTexture, -coord.yx * .5 + .5).rgb;
+	/* const vec3 color = vec3(.725, .71, .68);
 	const float coef[2] = {.9, .5};
 	ivec2 icoord = ivec2(floor(coord * 4));
-	return color * coef[(icoord.x + icoord.y) & 1];
+	return color * coef[(icoord.x + icoord.y) & 1]; */
 }
 vec3 texture_func_2(in const vec2 coord) {
 	const vec3 bg = vec3(.63, .065, .05);

@@ -19,7 +19,7 @@ constexpr float kTumblerPlaceRadius = 0.6f;
 constexpr uint32_t kMarbleCount = 30;
 constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
 
-constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .01f} * 7.f;
+constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .01f} * 10.f;
 constexpr float kFireballSpeed = 2.f;
 
 constexpr uint32_t kMaxParticleCount = 2048;
@@ -56,6 +56,21 @@ void Animation::Initialize() {
 		m_tumbler_texture.SetSizeFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 		m_tumbler_texture.GenerateMipmap();
 		m_tumbler_texture.Bind(TUMBLER_TEXTURE);
+	}
+	{
+		constexpr unsigned char kFloorPNG[] = {
+#include <texture/floor.png.u8>
+		};
+		int x, y, c;
+		stbi_uc *img = stbi_load_from_memory(kFloorPNG, sizeof(kFloorPNG), &x, &y, &c, 4);
+		m_floor_texture.Initialize();
+		m_floor_texture.Storage(x, y, GL_RGBA8, mygl3::Texture2D::GetLevelCount(x, y));
+		m_floor_texture.Data(img, x, y, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		stbi_image_free(img);
+		m_floor_texture.SetWrapFilter(GL_REPEAT);
+		m_floor_texture.SetSizeFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+		m_floor_texture.GenerateMipmap();
+		m_floor_texture.Bind(FLOOR_TEXTURE);
 	}
 
 	// Load Shaders

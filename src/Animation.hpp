@@ -21,7 +21,7 @@ private:
 	GPUMesh m_cornell_gpu_mesh, m_tumbler_gpu_mesh, m_marble_gpu_mesh, m_fireball_gpu_mesh, m_particle_gpu_mesh;
 	mygl3::Shader m_final_shader;
 	mygl3::VertexArray m_quad_vao;
-	mygl3::Texture2D m_tumbler_texture;
+	mygl3::Texture2D m_tumbler_texture, m_floor_texture;
 	ShadowMap m_shadow_map;
 	GBuffer m_gbuffer;
 	CameraBuffer m_camera_buffer;

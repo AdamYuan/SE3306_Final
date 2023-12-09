@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 project(SE3306_Final)
 
 set(TEXTURE_SRC
-	tumbler.png
+        tumbler.png
+        floor.png
 )
 
 set(TEXTURE_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/texture)
