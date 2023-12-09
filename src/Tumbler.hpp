@@ -3,6 +3,7 @@
 #include <gcem.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtx/matrix_cross_product.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
@@ -85,8 +86,8 @@ private:
 		static constexpr glm::mat3 kInvInertia =
 		    glm::mat3{1.0f / kI1, 0.0f, 0.0f, 0.0f, 1.0f / kI0, 0.0f, 0.0f, 0.0f, 1.0f / kI1};
 	};
-	inline static constexpr glm::mat3 get_inertia() { return Inertia::kInertia; }
-	inline static constexpr glm::mat3 get_inv_inertia() { return Inertia::kInvInertia; }
+	inline static constexpr glm::mat3 get_local_inertia() { return Inertia::kInertia; }
+	inline static constexpr glm::mat3 get_local_inv_inertia() { return Inertia::kInvInertia; }
 	friend class MeshLoader;
 	friend class Collider;
 
@@ -95,8 +96,8 @@ public:
 
 	inline float GetSDF(const glm::vec3 &p) const { return get_sdf(GetLocalPos(p)); }
 	inline glm::vec3 GetSDFGradient(const glm::vec3 &p) const { return rotate_mat * get_sdf_gradient(GetLocalPos(p)); }
-	inline glm::mat3 GetInertia() const { return rotate_mat * get_inertia() * inv_rotate_mat; }
-	inline glm::mat3 GetInvInertia() const { return rotate_mat * get_inv_inertia() * inv_rotate_mat; }
+	inline glm::mat3 GetInertia() const { return rotate_mat * get_local_inertia() * inv_rotate_mat; }
+	inline glm::mat3 GetInvInertia() const { return rotate_mat * get_local_inv_inertia() * inv_rotate_mat; }
 	/* inline void RotateGround(const glm::vec2 &xz_dir) {
 	    glm::vec3 dir = {xz_dir[0], 0.f, xz_dir[1]};
 	    glm::vec3 axis = {dir.z, 0.f, -dir.x};
@@ -145,11 +146,47 @@ public:
 		glm::vec3 fake_center = center;
 		fake_center.y += center_y_bias;
 		glm::vec3 l = glm::cross(origin - fake_center, momentum); // angular momentum
-		glm::vec3 delta_angular_velocity = get_inv_inertia() * l;
+		glm::vec3 delta_angular_velocity = GetInvInertia() * l;
 		angular_velocity += delta_angular_velocity;
 		linear_velocity +=
 		    glm::vec3{-delta_angular_velocity.z * kBottomRadius, .0f, delta_angular_velocity.x * kBottomRadius};
 	}
+
+	inline glm::mat3 GetInvK(const glm::vec3 &world_pos) const {
+		glm::vec3 r = world_pos - center;
+		glm::mat3 r_star = glm::matrixCross3(r);
+		glm::mat3 k = glm::identity<glm::mat3>() / kMass - r_star * GetInvInertia() * r_star;
+		return glm::inverse(k);
+	}
+
+	/* inline glm::vec3 GetHitImpulse(const glm::vec3 &hit_pos, const glm::vec3 &hit_norm, float mu_norm, float mu_tang)
+	const  {
+	    // From GAMES103
+	    glm::vec3 r = hit_pos - center;
+
+	    glm::vec3 v_i = linear_velocity + glm::cross(angular_velocity, r);
+	    float v_norm_scalar = glm::dot(v_i, hit_norm);
+	    if (v_norm_scalar < .0f)
+	        return {};
+	    glm::vec3 v_norm = v_norm_scalar * hit_norm;
+	    glm::vec3 v_tang = v_i - v_norm;
+	    float a = v_tang == glm::vec3{}
+	                  ? .0f
+	                  : glm::max(1.f - mu_tang * (1.f + mu_norm) * glm::length(v_norm) / glm::length(v_tang), .0f);
+	    glm::vec3 v_norm_new = -mu_norm * v_norm;
+	    glm::vec3 v_tang_new = a * v_tang;
+	    glm::vec3 v_new = v_norm_new + v_tang_new;
+
+	    glm::mat3 inv_inertia = GetInvInertia();
+
+	    glm::mat3 r_star = glm::matrixCross3(r);
+	    glm::mat3 k = glm::identity<glm::mat3>() / kMass - r_star * inv_inertia * r_star;
+	    glm::vec3 impulse = glm::inverse(k) * (v_new - v_i);
+
+	    printf("%s\n", glm::to_string(impulse).c_str());
+
+	    return impulse;
+	} */
 
 	inline glm::vec3 GetTopSpherePos() const { return center + kTopSphereY * rotate_mat[1]; }
 
@@ -159,7 +196,7 @@ public:
 		glm::vec3 r = glm::vec3{0.f, 1.f, 0.f};
 		glm::vec3 t = glm::cross(r, force); // torque
 		glm::vec3 l = t * delta_t;          // angular momentum
-		glm::vec3 delta_angular_velocity = get_inv_inertia() * l;
+		glm::vec3 delta_angular_velocity = GetInvInertia() * l;
 		angular_velocity += delta_angular_velocity;
 		linear_velocity +=
 		    glm::vec3{-delta_angular_velocity.z * kBottomRadius, .0f, delta_angular_velocity.x * kBottomRadius};
