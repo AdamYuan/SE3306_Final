@@ -142,10 +142,10 @@ public:
 		return std::nullopt;
 	}
 
-	inline void ApplyMomentum(const glm::vec3 &origin, const glm::vec3 &momentum, float center_y_bias = .0f) {
+	inline void ApplyHitImpulse(const glm::vec3 &origin, const glm::vec3 &impulse) {
 		glm::vec3 fake_center = center;
-		fake_center.y += center_y_bias;
-		glm::vec3 l = glm::cross(origin - fake_center, momentum); // angular momentum
+		fake_center.y -= kBottomRadius * .2f;
+		glm::vec3 l = glm::cross(origin - fake_center, impulse); // angular momentum
 		glm::vec3 delta_angular_velocity = GetInvInertia() * l;
 		angular_velocity += delta_angular_velocity;
 		linear_velocity +=

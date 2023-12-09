@@ -115,7 +115,7 @@ struct Collider {
 			callback((Derived *)(p_sphere), opt_hit_info.value());
 	}
 
-	inline static constexpr float kTumblerRestitution = .8f;
+	inline static constexpr float kTumblerRestitution = .9f;
 	inline static void Test(Tumbler *p_tumbler_0, Tumbler *p_tumbler_1) {
 		uint32_t hit_count = 0;
 		glm::vec3 hit_pos = {};
@@ -156,10 +156,8 @@ struct Collider {
 		float v = v0 - v1;
 		// v = glm::clamp(v, -1.f, 1.f);
 
-		p_tumbler_0->ApplyMomentum(hit_pos, p_tumbler_0->GetInvK(hit_pos) * -hit_dir * v * kTumblerRestitution,
-		                           -.2f * Tumbler::kBottomRadius);
-		p_tumbler_1->ApplyMomentum(hit_pos, p_tumbler_1->GetInvK(hit_pos) * hit_dir * v * kTumblerRestitution,
-		                           -.2f * Tumbler::kBottomRadius);
+		p_tumbler_0->ApplyHitImpulse(hit_pos, p_tumbler_0->GetInvK(hit_pos) * -hit_dir * v * kTumblerRestitution);
+		p_tumbler_1->ApplyHitImpulse(hit_pos, p_tumbler_1->GetInvK(hit_pos) * hit_dir * v * kTumblerRestitution);
 		// printf("v0=%f, v1=%f\n", v0, v1);
 	}
 
@@ -174,7 +172,7 @@ struct Collider {
 		glm::vec3 hit_pos = p_sphere->center - dir * Derived::kRadius;
 
 		glm::vec3 new_l_v = glm::reflect(p_sphere->linear_velocity, dir);
-		p_tumbler->ApplyMomentum(p_sphere->center, (p_sphere->linear_velocity - new_l_v) * Derived::kMass);
+		p_tumbler->ApplyHitImpulse(p_sphere->center, (p_sphere->linear_velocity - new_l_v) * Derived::kMass);
 		p_sphere->linear_velocity = new_l_v;
 
 		callback(static_cast<Derived *>(p_sphere),
