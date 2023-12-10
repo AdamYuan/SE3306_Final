@@ -141,7 +141,7 @@ struct Collider {
 			return;
 
 		hit_pos /= float(hit_count);
-		glm::vec3 hit_dir = (p_tumbler_0->GetSDFGradient(hit_pos) - p_tumbler_1->GetSDFGradient(hit_pos)) * .5f;
+		glm::vec3 hit_dir = p_tumbler_0->GetSDFGradient(hit_pos) - p_tumbler_1->GetSDFGradient(hit_pos);
 		hit_dir = glm::normalize(hit_dir);
 		float hit_depth = -(p_tumbler_0->GetSDF(hit_pos) + p_tumbler_1->GetSDF(hit_pos));
 		hit_depth = glm::max(.0f, hit_depth);

@@ -45,7 +45,7 @@ int main() {
 		}
 		auto cur_time = (float)glfwGetTime();
 		animation.Drag(drag);
-		animation.Update(cur_time - prev_time);
+		animation.Update(std::min(cur_time - prev_time, .1f));
 		animation.Draw(kWidth, kHeight);
 		glfwSwapBuffers(window);
 

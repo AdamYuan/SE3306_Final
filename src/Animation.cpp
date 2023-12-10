@@ -160,7 +160,7 @@ void Animation::Drag(const std::optional<glm::vec2> &opt_drag_pos) {
 
 void Animation::ToggleMarbles() {
 	if (!m_marbles_flag)
-		m_playground.CreateMarbles(kMarbleCount, glm::vec4{kCornellOtherColor, 1.0f}, kMarbleMinSpeed, kMarbleMaxSpeed);
+		m_playground.CreateMarbles(kMarbleCount, glm::vec4{1.0f}, kMarbleMinSpeed, kMarbleMaxSpeed);
 	else
 		m_playground.DeleteMarbles();
 
