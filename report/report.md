@@ -1,0 +1,266 @@
+# 考试大作业 报告
+
+521021910595 袁翊天
+
+mygl3是我远古时期造的OpenGL轮子
+
+gcem是拿来做constexpr的数学运算的，其实不用也没啥问题
+
+## 具体工作
+
+1. Cornell Box场景建模
+1. 不倒翁的建模
+1. 不倒翁与球体的有向距离场（SDF）计算
+1. 不倒翁、小球、Cornell Box边界的碰撞检测
+1. 物体碰撞后的物理响应
+1. 基于不倒翁SDF Ray Cast的鼠标选取与交互
+1. 火球、碰撞火花、灰烬的粒子效果
+1. GBuffer延迟渲染
+1. 通过Shadow Map实现阴影
+1. **使用Voxel Cone Tracing实现全局光照效果**
+1. 发光体的光晕效果
+
+## Cornell Box场景建模
+
+本次作业中首先构建了经典的Cornell Box场景，如下图所示：
+
+| 渲染效果                                        | 三角形网格                                           |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| <img src="img/cornell.png" style="zoom:67%;" /> | <img src="img/cornell_mesh.png" style="zoom:80%;" /> |
+
+其中左右的墙面分别设置为橙色和天蓝色；地面贴上木纹材质；天花板光源的半球面使用Icosphere生成（取Cornell Box内的三角形面片）。
+
+本次作业中Cornell Box的坐标范围为$[-1,1]^3$，这是对所有物体的坐标范围限制。
+
+## 不倒翁的建模
+
+### 数学表示
+
+**本次作业中使用数学方法对不倒翁进行建模**。这是由于不倒翁需要碰撞检测、物理响应、同时与鼠标交互，使用老师提供的不倒翁模型不够灵活高效（可能需要分析Mesh数据，很麻烦）。
+
+本次作业中使用上下两个球面和连接两个球面的圆锥面构建不倒翁。又由于不倒翁显然是一个旋转体，所以其数学表示只需考虑旋转曲线。
+
+这里设置三个参数：$b, t, \alpha$，其中$b$表示不倒翁下方球面半径、$t$表示不倒翁上方球面半径、$\alpha$为不倒翁侧面与旋转轴的夹角。其曲线如下所示：
+
+![](img/tumbler_curve.png)
+
+在不倒翁的Local space中指定$y$轴为旋转轴、设定不倒翁下方球面的球心为$(0,0,0)$，可以计算出上方球面的球心坐标为$(0, \frac{b-t}{\sin \alpha}, 0)$，设$y_t = \frac{b-t}{\sin \alpha}$，有旋转曲线的解析式如下：
+
+$R(y)=\begin{cases}\sqrt{b^2 - y^2}, & y \in [-b, b \sin \alpha) \\ -y\tan \alpha  + \frac{b}{\cos \alpha}, &y \in [b \sin \alpha, y_t + t \sin \alpha] \\ \sqrt{t^2 - (y - y_t)^2}, & y \in (y_t + t \sin \alpha, y_t + t]\end{cases}$
+
+在作业中取$b = 0.2, t = 0.1, \alpha = \frac{\pi}{9}$
+
+### 三角形网格生成
+
+不倒翁的三角形网格生成较为简单，即使用UV Sphere方法生成上下两个半球，并通过三角形面片连接两个半球，生成的网格如下：
+
+<img src="img/tumbler_mesh.png" style="zoom:50%;" />
+
+### SDF以及SDF梯度计算
+
+不倒翁的SDF以及SDF梯度可以用于鼠标交互、碰撞检测、碰撞反馈，以下是在不倒翁坐标系（Local space）中计算SDF和SDF梯度的过程：
+
+对于Local space中的坐标$\vec{p} = (x, y, z)$，记$r = \sqrt{x^2+z^2},r\ge 0$
+
+观察发现在$r-y$平面中，当$(y,r)$坐标在下图的蓝色范围内时，SDF的值为$(y,r)$到边界直线$r=-y \tan\alpha + \frac{b}{\cos \alpha}$的有向距离，否则为上半球或下半球的SDF值：
+
+![](img/tumbler_sdf_area.png)
+
+因此可以现将$(y,r)$坐标进行旋转变换，即$\begin{bmatrix}y' \\ r'\end{bmatrix} = R \begin{bmatrix}y \\ r\end{bmatrix}$，使变换后的边界直线为$r' = b$，即可方便地判断坐标点是否在蓝色区域内并求出有向距离。
+
+易得$R = \begin{bmatrix}\cos \alpha & -\sin \alpha \\ \sin \alpha & \cos \alpha\end{bmatrix}$
+
+从而有
+
+$\text{SDF}_{\text{local}}(\vec{p}) = \begin{cases}\sqrt{r^2 + y^2} - b, & y' < 0 \\ \sqrt{r^2 + (y - y_t)^2} - t, & y' >\frac{y_t}{\tan \alpha} \\ r' - b,  &\text{o.w.}\end{cases}, \\ \begin{bmatrix}y' \\ r'\end{bmatrix} = \begin{bmatrix}\cos \alpha & -\sin \alpha \\ \sin \alpha & \cos \alpha\end{bmatrix} \cdot \begin{bmatrix}y \\ r\end{bmatrix}, r = \sqrt{x^2+z^2}$
+
+$\grad \text{SDF}_{\text{local}}(\vec{p})$的计算方法类似，即分别在三种情况下计算垂直于不倒翁面、方向朝外的单位向量，这里不再赘述。
+
+本次作业中不倒翁会经过旋转和平移变换，World space中的$\text{SDF}_{\text{world}}$与$\grad\text{SDF}_{\text{world}}$可以通过将World space坐标变换回Local space来得到；SDF梯度还需要再通过旋转矩阵再变换到World space。
+
+### 转动惯量矩阵计算
+
+不倒翁的刚体物理模拟需要计算转动惯量。
+
+设不倒翁的质量为$m$，根据推导可得Local space的转动惯量：
+
+$V =\pi \int_{-b}^{y_t + t}R^2(y) \text{d}y,  \rho = \frac{m}{V}$
+
+$I_{xx} = I_{zz} = \rho\frac{\pi}{4}\int_{-b}^{y_t + t}[R^4(y) + 4 y^2R^2(y)]\text{d} y$
+
+$I_{yy} = \rho \frac{\pi}{2}\int_{-b}^{y_t + t}R^4(y) \text{d} y$
+
+$I_{\text{local}} = \rho \begin{bmatrix}I_{xx} & 0 & 0 \\ 0 & I_{yy} & 0 \\ 0 & 0 & I_{zz}\end{bmatrix} $
+
+这些积分可以通过数学工具计算，这里不再赘述。
+
+World space中的转动惯量$I_{\text{world}} = R I_{\text{local}} R^{-1} = R I_{\text{local}} R^{T}$，$R_{3\times3}$为不倒翁的旋转矩阵。
+
+## 物理模拟
+
+### 刚体运动参数
+
+刚体的运动参数包括线速度$\vec{v} = （v_x, v_y, v_z)$、角速度$\vec{\omega} = (\omega_x, \omega_y, \omega_z)$，位置$\vec{p} = (p_x, p_y, p_z)$。
+
+旋转通过四元数$q$和旋转矩阵$R_{3\times3}$（单位正交，$R^{-1} = R^T$）表示，两者可以转化
+
+每个时间戳$\Delta t$，$\vec{p}' = \vec{p} + \vec{v} \Delta t, q' = (1 +\frac{\Delta t}{2} q_\omega) \cdot q, q_\omega=\begin{pmatrix}0\\ R^{-1} \times \vec{\omega} \end{pmatrix}$
+
+刚体上任意一点$\vec{p}_i$的点速度$\vec{v}_i = \vec{v} + \vec{\omega}\cross (\vec{p}_i - \vec{p})$
+
+### Model矩阵
+
+Model变换矩阵$M$首先考虑旋转$R$；而后平移到位置$\vec{p}$，因此有
+
+$M = \begin{pmatrix}1 &  & &p_{x} \\  & 1 & & p_{y} \\  &  & 1 & p_{z} \\ & & & 1\end{pmatrix} \times  \begin{pmatrix}R_{3\times 3} & \\ & 1\end{pmatrix} =  \begin{pmatrix}R_{3\times 3} & \vec{p} \\ & 1\end{pmatrix}$
+
+### 基本假设
+
+在模拟不倒翁时，做以下假设：
+
+1. 假设不倒翁的重心为下半球的球心，即Local space的原点
+1. 假设不倒翁只在$x,z$轴有平移，$p_y \equiv -1 + b$，不会腾空
+2. 假设不倒翁在地面做纯滚动、无滑动，即$v_x = -b\cdot\omega_z, v_z = b\cdot\omega_x$
+
+在模拟球体（包括弹珠、火球）时，做以下假设：
+
+1. 球体质心的机械能（不考虑角速度，$\frac{1}{2}mv^2 + mgh$）不会衰减，这样可以一直保持运动状态
+2. 弹珠小球受重力影响；火球不受重力影响，可以自由飞行
+
+### 冲量
+
+设刚体的质量为$m$，转动惯量矩阵为$I$
+
+在$\vec{p_j}$位置对刚体施加冲量$\vec{j}$后，线速度$\vec{v}' = \vec{v} + \frac{\vec{j}}{m}$
+
+刚体的角速度$\vec{\omega}' = \vec{\omega} + I^{-1} \vec{r} \cross \vec{j}, \vec{r} = \vec{p_j} - \vec{p}$
+
+对于不倒翁，由于假设仅做纯滚动，所以线速度$\vec{v}' = (-b\Delta \omega_z, 0, b\Delta \omega_x), \Delta \vec{\omega} = \vec{\omega}' - \vec{\omega}$
+
+### 不倒翁的回复力与摩擦力
+
+本次作业中通过对不倒翁施加恢复力实现“不倒”效果。
+
+在每个时间戳$\Delta t$，设不倒翁的旋转轴方向为$\vec{d}$，在$\vec{p_j} = (p_x, p_y + 1, p_z)$位置施加$\vec{j} = -\Delta t \cdot \vec{d}$的冲量，即可实现回复效果。
+
+摩擦力能够实现摆动的衰减，若没有摩擦力，倾斜的不倒翁会永远摆动下去。
+
+施加摩擦力十分简单：设地面的摩擦系数为$\mu$，重力加速度为$g$。
+
+在每个时间戳$\Delta t$，
+
+$\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \hat{\omega}\cdot\max\{0, ||\omega|| - \frac{\mu g \Delta t}{b}\}$
+
+### 碰撞检测与响应
+
+#### 不倒翁与边界
+
+不倒翁与边界的碰撞检测较为简单，只需检查不倒翁的**上、下两个球体**是否与边界相交即可。又由于不倒翁处在地面，因此只需考虑与地面、前后左右边界的碰撞。
+
+当与前后左右边界碰撞时，首先将$\vec{p}$朝墙面法线方向修正以消除碰撞，而后将墙面方向的线速度和角速度反向（可以再乘以一个衰减系数）。
+
+当与地面碰撞时，发生碰撞的必然是不倒翁上面的球体，这时需要修正不倒翁的旋转，同时将角速度与线速度清零以模拟倒地并缓慢回复的效果。
+
+#### 球体与边界
+
+球体与边界的碰撞更为简单，只需测试球心与上下左右前后边界的距离是否小于半径，若发生碰撞则修正球体的位置，并反转相应的线速度（这里不能乘以衰减系数，不然会导致球体机械能减少，违反了假设），同时设置角速度为在墙面纯滚动的角速度。
+
+此外，本次作业也考虑了球体与Cornell Box顶部半球灯的碰撞。处理方法类似，即朝碰撞方向（即半球灯的法向）修正球体位置；并在碰撞方向反射线速度。
+
+#### 球体与不倒翁
+
+球体与不倒翁的碰撞需要借助不倒翁的SDF函数。
+
+设球体的球心坐标为$\vec{p}$，半径为$r$。
+
+球心与不倒翁表面的有向距离为$d = \text{SDF}_{\text{world}}(\vec{p})$。若$d < r$则认为球体与不倒翁发生碰撞。
+
+碰撞的方向$\vec{n} = \grad\text{SDF}_{\text{world}}(\vec{p}) $，以此可以求出碰撞点$\vec{h} = \vec{p} - d \cdot \vec{n}$
+
+在$\vec{n}$方向修正球体的位置，并将球体的线速度沿$\vec{n}$反向（这样球体的机械能不变）。
+
+记球体线速度的变化为$\Delta \vec{v}$，在$\vec{h}$位置对不倒翁施加$\vec{j} = -m\Delta \vec{v}$的冲量，$m$为球体的质量，以维持碰撞的动量守恒。
+
+#### 不倒翁与不倒翁
+
+直接求解不倒翁碰撞较为复杂，本次作业使用一个近似方法：即分别将一个不倒翁的上下两个球体对另一个不倒翁进行碰撞检测，进行四次球体与不倒翁的碰撞检测，求解出平均碰撞点$\bar{h}$。
+
+而后根据两个不倒翁在$\bar{h}$的SDF梯度$\vec{n}_1,\vec{n}_2$，算出平均碰撞方向$\bar{n} = \frac{\vec{n}_1 - \vec{n}_2}{||\vec{n}_1 - \vec{n}_2||}$。
+
+接下来需要根据两个不倒翁在$\bar{h}$的点速度$\vec{v}_1, \vec{v}_2$算出需要施加的冲量：
+
+1. 算出$\vec{v}_1, \vec{v}_2$在$\bar{n}$方向的投影$\vec{v}_{1,n} = \vec{v}_1 \cdot \bar{n}, \vec{v}_{2,n} = \vec{v}_2 \cdot \bar{n}$
+
+2. $\Delta \vec{v}_n = \vec{v}_{1,n} - \vec{v}_{2,n}$
+
+3. 计算出冲量$\vec{j}_1, \vec{j}_2$，使得两个刚体在$\bar{h}$的点速度分别变化$-e\Delta \vec{v}_n, e\Delta \vec{v}_n $，参数$e$用于控制动量的衰减
+
+
+冲量的计算过程如下：
+
+* 设$\Delta \vec{v}_i$为施加冲量$\vec{j}$后刚体$i$点的速度变化、刚体中心为$\vec{p}$、质量为$m$、转动惯量为$I$、施加冲量的位置为$\vec{p}_j$
+
+* $\Delta \vec{v}_i &= \frac{\vec{j}}{m}+ [I^{-1}\cdot (\vec{r}_j \cross \vec{j})] \cross \vec{r}_j, \vec{r}_j = \vec{p}_j - \vec{p} \\ & = \frac{\vec{j}}{m} -  [r_j]_\cross I^{-1}[r_j]_\cross \cdot\vec{j}$
+
+* （$[r_j]_\cross$为$\vec{r}_j$的反称矩阵，将向量叉乘变为矩阵运算）
+
+* 记$K_{3\times3} = \frac{1}{m} -  [r_j]_\cross I^{-1}[r_j]_\cross$，有$\Delta \vec{v}_i = K \vec{j}$
+
+* 从而所求的冲量$\vec{j}=K^{-1} \Delta \vec{v_i}$
+
+（这个碰撞响应不太物理，但效果还不错） 
+
+## 鼠标交互
+
+### 不倒翁选取
+
+不倒翁的选取通过SDF Ray Cast实现，即：
+
+* 通过View Projection矩阵的逆矩阵以及View Position从鼠标位置构造Ray
+* 遍历场景中五个不倒翁，分别做SDF Ray Cast
+  * 每次沿射线前进该点SDF值
+  * 直到SDF值小于某个阈值（相交）或者前进步数过多（不相交）
+* 存在不倒翁与射线相交，SDF Ray Cast前进距离最小的不倒翁为选取到的不倒翁
+
+### 平移
+
+### 旋转
+
+## 粒子系统
+
+### 火焰粒子
+
+### 碰撞火花粒子
+
+### 灰烬粒子
+
+## 渲染
+
+### 渲染管线概述
+
+
+
+### Direct Visibility
+
+#### Diffuse
+
+#### Shadow Mapping
+
+
+
+### 基于体素的全局光照
+
+#### 场景体素化
+
+#### 体素Mipmapping
+
+#### Voxel Cone Tracing
+
+
+
+### 泛光
+
+
+
+
+
