@@ -18,7 +18,7 @@ gcem是拿来做constexpr的数学运算的，其实不用也没啥问题
 1. GBuffer延迟渲染
 1. 通过Shadow Map实现阴影
 1. **使用Voxel Cone Tracing实现全局光照效果**
-1. 发光体的光晕效果
+1. 发光体的泛光效果
 
 ## Cornell Box场景建模
 
@@ -278,24 +278,49 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 本次作业的渲染管线如下图所示：
 
-![](img/pipeline.png)
+<img src="img/pipeline.png"  />
 
 * GBuffer Pass：绘制场景中的所有物体，将颜色、法线、深度存储到三个Texture中
 * Shadow Map Pass：从顶部光源的视角绘制场景中的遮挡物（不倒翁和弹珠，火球因为是发光体就不算在里面），将深度图存储到Texture
-* Voxelize Pass：绘制Cornell Box、不倒翁、火球，借助Shadow Map计算Direct Light，体素化存储到3D Texture中
+* Voxelize Pass：绘制Cornell Box、不倒翁、火球，借助Shadow Map计算Direct Light，体素化存储到3D Texture（$64^3$）中
 * Voxel Mipmap Pass：将Voxelize得到的3D Texture降采样，以便于Voxel Cone Tracing
 * Bloom Pass：截取GBuffer颜色中的高光部分做Gaussian Blur，存储到Textre
-* Final Pass：绘制最终的图像
+* Final Pass：绘制最终的图像到屏幕
 
-### Direct Visibility
+### Direct Light
 
 #### Diffuse
 
+本次作业中假设除了发光体，所有表面均为漫反射表面；场景中光源为Cornell Box顶部的半球灯，近似于点光源。使用$I_{\text{diff}}=k_d I_l \cos \theta$计算，效果如下：
+
+<img src="img/diffuse_only.png" style="zoom:50%;" />
+
 #### Shadow Mapping
 
+本次作业使用传统的Shadow Mapping。
 
+由于点光源（位置为Cornell Box顶部半球灯的球心）在$[-1,1]^3$外，一个Shadow Map Texture足够涵盖$[-1,1]^3$范围内的所有物体，无需使用Cubemap Texture。
+
+在Final Pass中使用$5 \times 5$ PCF采样实现软阴影，效果如下：
+
+<img src="img/diffuse_shadowmap.png" style="zoom:50%;" />
 
 ### 基于体素的全局光照
+
+（Cornell Box没有全局光照就如同西方没有耶路撒冷）
+
+#### Why Voxels？
+
+编写程序时考虑过以下方案：
+
+|          | Voxel Cone Tracing                                           | Path Tracing                                                 | SSDO                                                         |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **优点** | 1. 渲染结果平滑，无需降噪<br />2. 渲染结果不依赖Temporal Data，对动态物体支持较好<br />3. 作业场景只需很小的3D Texture，渲染性能较好 | 全局光照渲染结果准确                                         | 渲染性能较好                                                 |
+| **缺点** | 全局光照渲染的近似度一般                                     | 1. 采样和Denoise大概率有性能问题<br />2. 需要Temporal Filter + Denoise，对动态物体不友好，且容易产生画面波动<br /><br /> | 1. 全局光照渲染的近似度较差（大概率连天花板都照不亮）<br />2. Screen-Space技术对动态场景容易产生不稳定的结果 |
+
+最终选定了Voxel Cone Tracing。
+
+
 
 #### 场景体素化
 
