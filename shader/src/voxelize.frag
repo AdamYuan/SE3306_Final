@@ -30,7 +30,7 @@ void main() {
 
 	bool emissive = any(greaterThan(albedo, vec3(1)));
 	vec3 radiance = emissive ? albedo
-	                         : kCornellLightRadiance * albedo * max(dot(normal, light_dir), 0.0) *
-	                               textureProj(uShadowMap, vec4(gShadowPos, 1));
+	                         : kCornellLightRadiance * albedo *
+	                               min(max(dot(normal, light_dir), 0.0), textureProj(uShadowMap, vec4(gShadowPos, 1)));
 	imageStore(uVoxelRadiance, voxel_pos, vec4(radiance, 1.));
 }

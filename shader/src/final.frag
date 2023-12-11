@@ -119,17 +119,56 @@ vec3 cone_trace(in const vec3 origin,
 vec3 IndirectLight(in const vec3 position, in const vec3 normal) {
 	mat3 tbn = normal_to_tbn(normal);
 
-	float voxel_size = 2.0 * VOXEL_SCALE / textureSize(uVoxelRadiance, 0).x;
+	float voxel_size = 2.0 / (VOXEL_SCALE * textureSize(uVoxelRadiance, 0).x);
 
 	vec3 radiance = vec3(0);
-	radiance += kConeWeights[0] * cone_trace(position, tbn * kConeDirections[0], 0.57735, voxel_size, 0.2);
-	radiance += kConeWeights[1] * cone_trace(position, tbn * kConeDirections[1], 0.57735, voxel_size, 0.2);
-	radiance += kConeWeights[2] * cone_trace(position, tbn * kConeDirections[2], 0.57735, voxel_size, 0.2);
-	radiance += kConeWeights[3] * cone_trace(position, tbn * kConeDirections[3], 0.57735, voxel_size, 0.2);
-	radiance += kConeWeights[4] * cone_trace(position, tbn * kConeDirections[4], 0.57735, voxel_size, 0.2);
-	radiance += kConeWeights[5] * cone_trace(position, tbn * kConeDirections[5], 0.57735, voxel_size, 0.2);
+	radiance += kConeWeights[0] * cone_trace(position, tbn * kConeDirections[0], 0.57735, voxel_size, 0.16);
+	radiance += kConeWeights[1] * cone_trace(position, tbn * kConeDirections[1], 0.57735, voxel_size, 0.16);
+	radiance += kConeWeights[2] * cone_trace(position, tbn * kConeDirections[2], 0.57735, voxel_size, 0.16);
+	radiance += kConeWeights[3] * cone_trace(position, tbn * kConeDirections[3], 0.57735, voxel_size, 0.16);
+	radiance += kConeWeights[4] * cone_trace(position, tbn * kConeDirections[4], 0.57735, voxel_size, 0.16);
+	radiance += kConeWeights[5] * cone_trace(position, tbn * kConeDirections[5], 0.57735, voxel_size, 0.16);
 
 	return radiance;
+}
+
+// from https://www.shadertoy.com/view/7ltGz7, for presentation
+vec3 VoxelRayMarch(sampler3D voxels, in const int lod, in const vec3 origin, in const vec3 dir) {
+	ivec3 voxel_dim = textureSize(voxels, lod);
+	float voxel_size = 2.0 / (VOXEL_SCALE * voxel_dim.x);
+
+	vec3 position = (origin * VOXEL_SCALE * .5 + .5) * vec3(voxel_dim);
+	vec3 voxel_pos = floor(position);
+
+	vec3 step_dir = sign(dir);
+
+	vec3 delta = voxel_size / dir;
+
+	vec3 max_dist = vec3(step_dir.x > 0.0 ? voxel_pos.x + 1.0 - position.x : position.x - voxel_pos.x,
+	                     step_dir.y > 0.0 ? voxel_pos.y + 1.0 - position.y : position.y - voxel_pos.y,
+	                     step_dir.z > 0.0 ? voxel_pos.z + 1.0 - position.z : position.z - voxel_pos.z);
+
+	max_dist *= delta;
+
+	for (int i = 0; i < 256; i++) {
+		vec4 samp = texelFetch(voxels, clamp(ivec3(voxel_pos), ivec3(0), voxel_dim - 1), lod);
+		if (samp.a > 0)
+			return samp.rgb;
+
+		vec3 abs_max = abs(max_dist);
+
+		if (abs_max.x < abs_max.y && abs_max.x < abs_max.z) {
+			voxel_pos.x += step_dir.x;
+			max_dist.x += delta.x;
+		} else if (abs_max.y < abs_max.z) {
+			voxel_pos.y += step_dir.y;
+			max_dist.y += delta.y;
+		} else {
+			voxel_pos.z += step_dir.z;
+			max_dist.z += delta.z;
+		}
+	}
+	return vec3(0);
 }
 
 void main() {
@@ -138,9 +177,17 @@ void main() {
 	vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
 	float depth = texelFetch(uDepth, coord, 0).r;
 	vec4 bloom = texelFetch(uBloom, coord, 0);
-
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
 	vec3 light_dir = normalize(vec3(0, kCornellLightHeight, 0) - position);
+
+	/* {
+	    vec3 origin = vec3(0, 0, 1 + sqrt(3.));
+	    vec3 dir = normalize(position - origin);
+	    vec3 color = VoxelRayMarch(uVoxelRadiance, 0, origin, dir);
+	    color = vec3(1) - exp(-color * 1.2);
+	    oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
+	    return;
+	} */
 
 	bool emissive = any(greaterThan(albedo, vec3(1)));
 	vec3 color =
