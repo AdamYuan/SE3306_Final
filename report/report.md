@@ -336,16 +336,34 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 * 由于场景是动态的，每帧需要重新体素化，因此先将3D Texture清空
 * 对于几何法向量为$\vec{n}=(n_x, n_y, n_z)$的三角形，将其投影到$\text{axis} = \underset{a \in \{x, y, z\}}{\mathrm{argmin}}|n_a|$所对应的平面（在Geometry Shader完成）
 * 做光栅化，计算Direct Light作为Radiance（同样借助Shadow Map，但不做PCF采样），存储在Fragment对应的体素坐标
-* 由于靠近3D Texture边界的体素在Mipmap后会产生
 * 在体素化时使用低精度Mesh可以有效提升性能
+* 粒子等动态发光体也要体素化，以产生动态全局光照效果
 
-结果如下图所示：
+结果如下图所示（此图为Voxel Ray March得到的）：
 
 <img src="img/voxel_march.png" style="zoom:50%;" />
 
 #### 体素Mipmap生成
 
 Voxel Cone Tracing需要采样不同范围内体素的平均Radiance，在存储体素的3D Texture做Mipmap可以支持这一流程。
+
+传统的Mipmap仅计算$2^3$个像素的平均值，没有考虑Cone Tracing时不同Ray Direction的采样问题，可能导致采样时临近的体素权重过大以至于产生**自遮挡**。
+
+解决方法是从$-x,+x,-y,+y,-z,+z$六个方向做各向异性的Mipmap（在$2^3$个体素中增加方向上的$2^2$个体素的权重），存在六张3D Texture中，而后在采样时根据Ray Direction对$\pm x, \pm y, \pm z$方向的Mipmap做加权。
+
+> ![](img/aniso.png)
+>
+> 这张图很好地解释了各项异性Mipmap和采样的方法
+>
+> https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
+
+其效果如下：
+
+| 传统Mipmap                      | 各项异性Mipmap               |
+| ------------------------------- | ---------------------------- |
+| ![](img/voxel_mip_no_aniso.png) | ![](img/voxel_mip_aniso.png) |
+
+显然借助传统Mipmap渲染的图像物体自遮挡非常严重（天花板和右墙面很明显），导致整体偏暗；使用各向异性Mipmap明显地改善了这个问题。
 
 #### Voxel Cone Tracing
 

@@ -35,9 +35,7 @@ void Animation::Initialize() {
 	// Load Meshes
 	m_cornell_gpu_mesh.Initialize(std::initializer_list<Mesh>{
 	    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID, kCornellOtherColor,
-	                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius, 4),
-	    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID, kCornellOtherColor,
-	                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius, 2)});
+	                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius, 4)});
 	m_tumbler_gpu_mesh.Initialize(std::initializer_list<Mesh>{MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID),
 	                                                          MeshLoader{}.MakeTumbler(5, 16, kTumblerTextureID)},
 	                              kTumblerCount);
@@ -237,7 +235,6 @@ void Animation::Draw(int width, int height) {
 	m_shadow_map.Generate(kShadowMapSize, kShadowMapSize, [this]() {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		m_tumbler_gpu_mesh.Draw();
-		m_marble_gpu_mesh.Draw();
 	});
 
 	// Voxels
@@ -246,7 +243,7 @@ void Animation::Draw(int width, int height) {
 	glDisable(GL_CULL_FACE);
 	m_voxel.Generate(kVoxelResolution, kVoxelMipmaps, [this]() {
 		glClear(GL_COLOR_BUFFER_BIT);
-		m_cornell_gpu_mesh.Draw(1);
+		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw(1);
 		m_particle_gpu_mesh.Draw(1);
 		m_fireball_gpu_mesh.Draw(1);
@@ -254,6 +251,11 @@ void Animation::Draw(int width, int height) {
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+
+	// Draw Marbles to Shadow Map
+	glViewport(0, 0, kShadowMapSize, kShadowMapSize);
+	glCullFace(GL_FRONT);
+	m_shadow_map.Generate(kShadowMapSize, kShadowMapSize, [this]() { m_marble_gpu_mesh.Draw(); });
 
 	// G-Buffer
 	glViewport(0, 0, width, height);
