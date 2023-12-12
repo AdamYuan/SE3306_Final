@@ -2,6 +2,7 @@
 
 #include "Binding.h"
 #include "Config.h"
+#include "Texture.h"
 
 layout(location = 0) out vec4 oColor;
 
@@ -191,8 +192,8 @@ void main() {
 	    return;
 	} */
 
-	bool emissive = any(greaterThan(albedo, vec3(1)));
-	vec3 color = emissive ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
+	vec3 color =
+	    IsEmissive(albedo) ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
 	color += bloom.rgb;
 
 	color = vec3(1) - exp(-color * 1.2);

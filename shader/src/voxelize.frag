@@ -19,8 +19,8 @@ ivec3 GetVoxelPos() {
 	ivec3 u = ivec3(v);
 	ivec2 bound_min_2 = ivec2((-VOXEL_SCALE * .5 + .5) * voxel_resolution + 1, 0);
 	ivec2 bound_max_2 = ivec2((VOXEL_SCALE * .5 + .5) * voxel_resolution - 1, voxel_resolution - 1);
-	ivec3 bound_min = IsTexture(gColor) ? bound_min_2.xyx : bound_min_2.yyy;
-	ivec3 bound_max = IsTexture(gColor) ? bound_max_2.xyx : bound_max_2.yyy;
+	ivec3 bound_min = IsTexture(gColor) ? bound_min_2.xyx : (IsEmissive(gColor) ? bound_min_2.xxx : bound_min_2.yyy);
+	ivec3 bound_max = IsTexture(gColor) ? bound_max_2.xyx : (IsEmissive(gColor) ? bound_max_2.xxx : bound_max_2.yyy);
 	u = clamp(u, bound_min, bound_max);
 	return u;
 }
@@ -32,10 +32,9 @@ void main() {
 	vec3 light_dir = normalize(vec3(0, kCornellLightHeight, 0) - gWorldPos);
 	vec3 albedo = GetAlbedo(gColor);
 
-	bool emissive = any(greaterThan(albedo, vec3(1)));
-	float shadow = textureProj(uShadowMap, vec4(gShadowPos, 1));
-	vec3 radiance = emissive ? albedo
-	                         : kCornellLightRadiance * albedo *
-	                               GetCornellLightVisibility(normal, GetCornellLightDir(gWorldPos), shadow);
+	vec3 radiance = IsEmissive(albedo) ? albedo
+	                                   : kCornellLightRadiance * albedo *
+	                                         GetCornellLightVisibility(normal, GetCornellLightDir(gWorldPos),
+	                                                                   textureProj(uShadowMap, vec4(gShadowPos, 1)));
 	imageStore(uVoxelRadiance, voxel_pos, vec4(radiance, 1.));
 }

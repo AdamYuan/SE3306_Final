@@ -20,6 +20,7 @@ vec3 texture_func_2(in const vec2 coord) {
 	return mix(bg, samp.rgb, samp.a);
 }
 bool IsTexture(in const vec3 color) { return color.r < 0; }
+bool IsEmissive(in const vec3 color) { return any(greaterThan(color, vec3(1))); }
 vec3 GetAlbedo(in const vec3 color) {
 	return color.r >= .0 ? color : (color.r < -1.5 ? texture_func_2(color.yz) : texture_func_1(color.yz));
 }

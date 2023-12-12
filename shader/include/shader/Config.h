@@ -21,7 +21,7 @@ vec3 GetCornellLightDir(in const vec3 position) { return normalize(vec3(0, kCorn
 float GetCornellLightVisibility(in const vec3 normal, in const vec3 light_dir, in const float shadow) {
 	float diffuse = max(dot(normal, light_dir), 0.0);
 	float cosine_half_light = (kCornellLightHeight - 1) / kCornellLightRadius;
-	float light_edge = smoothstep(0.4, 0.6, dot(light_dir, vec3(0, 1, 0)));
+	float light_edge = smoothstep(0.45, 0.6, dot(light_dir, vec3(0, 1, 0)));
 	return min(diffuse, min(shadow, light_edge));
 }
 
