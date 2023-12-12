@@ -65,7 +65,7 @@ float DirectVisibility(in const vec3 position, in const vec3 normal) {
 	shadow *= 0.04;
 	shadow = smoothstep(0.02, 1.0, shadow);
 
-	return GetCornellLightVisibility(normal, light_dir, shadow) * .4 + .6;
+	return GetCornellLightVisibility(normal, light_dir, shadow) * .25 + .75;
 }
 
 const vec3 kConeDirections[6] = {vec3(0, 0, 1),
