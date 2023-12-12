@@ -337,6 +337,7 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 * 对于几何法向量为$\vec{n}=(n_x, n_y, n_z)$的三角形，将其投影到$\text{axis} = \underset{a \in \{x, y, z\}}{\mathrm{argmin}}|n_a|$所对应的平面（在Geometry Shader完成）
 * 做光栅化，计算Direct Light作为Radiance（同样借助Shadow Map，但不做PCF采样），存储在Fragment对应的体素坐标
 * 由于靠近3D Texture边界的体素在Mipmap后会产生
+* 在体素化时使用低精度Mesh可以有效提升性能
 
 结果如下图所示：
 
@@ -344,7 +345,7 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 #### 体素Mipmap生成
 
-Voxel Cone Tracing需要采样不同范围内体素的平均Radiance，在存储体素的3D Texture做Mipmap可以加速这一流程。
+Voxel Cone Tracing需要采样不同范围内体素的平均Radiance，在存储体素的3D Texture做Mipmap可以支持这一流程。
 
 #### Voxel Cone Tracing
 

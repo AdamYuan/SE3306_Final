@@ -33,13 +33,23 @@ static const glm::mat4 kInvCameraViewProj = glm::inverse(kCameraViewProj);
 
 void Animation::Initialize() {
 	// Load Meshes
-	m_cornell_gpu_mesh.Initialize(
+	m_cornell_gpu_mesh.Initialize(std::initializer_list<Mesh>{
 	    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID, kCornellOtherColor,
-	                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius));
-	m_tumbler_gpu_mesh.Initialize(MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID), kTumblerCount);
-	m_marble_gpu_mesh.Initialize(MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID), kMarbleCount);
-	m_fireball_gpu_mesh.Initialize(MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance));
-	m_particle_gpu_mesh.Initialize(MeshLoader{}.MakeIcoSphere(1.f, 2, {}), kMaxParticleCount);
+	                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius, 4),
+	    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID, kCornellOtherColor,
+	                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius, 2)});
+	m_tumbler_gpu_mesh.Initialize(std::initializer_list<Mesh>{MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID),
+	                                                          MeshLoader{}.MakeTumbler(5, 16, kTumblerTextureID)},
+	                              kTumblerCount);
+	m_marble_gpu_mesh.Initialize(
+	    std::initializer_list<Mesh>{MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID)},
+	    kMarbleCount);
+	m_fireball_gpu_mesh.Initialize(
+	    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance),
+	                                MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 2, kFireballRadiance)});
+	m_particle_gpu_mesh.Initialize(
+	    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(1.f, 2, {}), MeshLoader{}.MakeIcoSphere(1.f, 0, {})},
+	    kMaxParticleCount);
 
 	// Load Textures
 	{
@@ -236,9 +246,10 @@ void Animation::Draw(int width, int height) {
 	glDisable(GL_CULL_FACE);
 	m_voxel.Generate(kVoxelResolution, kVoxelMipmaps, [this]() {
 		glClear(GL_COLOR_BUFFER_BIT);
-		m_cornell_gpu_mesh.Draw();
-		m_tumbler_gpu_mesh.Draw();
-		m_fireball_gpu_mesh.Draw();
+		m_cornell_gpu_mesh.Draw(1);
+		m_tumbler_gpu_mesh.Draw(1);
+		m_particle_gpu_mesh.Draw(1);
+		m_fireball_gpu_mesh.Draw(1);
 	});
 
 	glEnable(GL_DEPTH_TEST);

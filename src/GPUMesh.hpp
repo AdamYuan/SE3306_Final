@@ -17,11 +17,16 @@ private:
 		glm::mat4 model;
 	};
 	std::vector<InstanceInfo> m_instance_infos;
-	uint32_t m_instance_count = 0, m_index_count = 0;
+	struct LodInfo {
+		GLsizei count, base_vertex;
+		void *base_index;
+	};
+	std::vector<LodInfo> m_lods;
+	uint32_t m_instance_count = 0;
 	bool m_changed = false;
 
 public:
-	void Initialize(const Mesh &mesh, uint32_t max_instance_count = 1);
+	void Initialize(std::span<const Mesh> mesh_lods, uint32_t max_instance_count = 1);
 	inline uint32_t GetMaxMeshCount() const { return m_instance_infos.size(); }
 	inline uint32_t GetCurrentMeshCount() const { return m_instance_count; }
 	inline void SetInstanceCount(uint32_t instance_count) {
@@ -38,5 +43,5 @@ public:
 		m_instance_infos[mesh_id].color = color;
 		m_changed = true;
 	}
-	void Draw();
+	void Draw(uint32_t lod = 0);
 };

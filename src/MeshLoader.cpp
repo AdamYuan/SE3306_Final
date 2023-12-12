@@ -154,7 +154,7 @@ Mesh MeshLoader::MakeUVSphere(float radius, uint32_t subdivisions, uint32_t text
 
 Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &right_color, uint32_t floor_texture,
                                 const glm::vec3 &other_color, const glm::vec3 &light_color, float light_height,
-                                float light_radius) {
+                                float light_radius, uint32_t light_ico_subdivision) {
 	m_triangles = {{
 	                   glm::vec3{-1.f, -1.f, -1.f},
 	                   glm::vec3{+1.f, -1.f, +1.f},
@@ -216,7 +216,7 @@ Mesh MeshLoader::MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &ri
 	               }};
 	mesh.Combine(generate_mesh(right_color)); // right
 
-	make_sphere_triangles(light_radius, 4);
+	make_sphere_triangles(light_radius, light_ico_subdivision);
 	for (auto &tri : m_triangles) {
 		tri[0].y += light_height;
 		tri[1].y += light_height;

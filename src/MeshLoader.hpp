@@ -32,6 +32,6 @@ public:
 	Mesh MakeUVSphere(float radius, uint32_t subdivisions, uint32_t texture);
 	Mesh MakeCornellBox(const glm::vec3 &left_color, const glm::vec3 &right_color, uint32_t floor_texture,
 	                    const glm::vec3 &other_color, const glm::vec3 &light_color, float light_height,
-	                    float light_radius);
+	                    float light_radius, uint32_t light_ico_subdivision);
 	Mesh MakeTumbler(uint32_t y_subdivisions, uint32_t xz_subdivisions, uint32_t texture);
 };

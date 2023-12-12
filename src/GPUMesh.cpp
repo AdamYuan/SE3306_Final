@@ -1,14 +1,21 @@
 #include "GPUMesh.hpp"
 
-void GPUMesh::Initialize(const Mesh &mesh, uint32_t max_instance_count) {
+void GPUMesh::Initialize(std::span<const Mesh> mesh_lods, uint32_t max_instance_count) {
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;
 
-	vertices.insert(vertices.end(), mesh.GetVertices().begin(), mesh.GetVertices().end());
-	for (const auto &tri : mesh.GetTriangles()) {
-		indices.push_back(tri[0]);
-		indices.push_back(tri[1]);
-		indices.push_back(tri[2]);
+	for (const Mesh &mesh : mesh_lods) {
+		LodInfo lod = {.count = (GLsizei)mesh.GetTriangles().size() * 3,
+		               .base_vertex = (GLsizei)vertices.size(),
+		               .base_index = (void *)intptr_t(indices.size() * sizeof(GLuint))};
+		m_lods.push_back(lod);
+
+		vertices.insert(vertices.end(), mesh.GetVertices().begin(), mesh.GetVertices().end());
+		for (const auto &tri : mesh.GetTriangles()) {
+			indices.push_back(tri[0]);
+			indices.push_back(tri[1]);
+			indices.push_back(tri[2]);
+		}
 	}
 
 	m_vertex_buffer.Initialize();
@@ -16,7 +23,6 @@ void GPUMesh::Initialize(const Mesh &mesh, uint32_t max_instance_count) {
 	m_index_buffer.Initialize();
 	m_index_buffer.Storage(indices.data(), indices.data() + indices.size(), 0);
 
-	m_index_count = indices.size();
 	m_instance_count = max_instance_count;
 
 	m_instance_infos.resize(max_instance_count, {.color = {}, .model = glm::identity<glm::mat4>()});
@@ -67,7 +73,7 @@ void GPUMesh::Initialize(const Mesh &mesh, uint32_t max_instance_count) {
 	}
 }
 
-void GPUMesh::Draw() {
+void GPUMesh::Draw(uint32_t lod) {
 	if (m_instance_count == 0)
 		return;
 	if (m_changed) {
@@ -75,5 +81,6 @@ void GPUMesh::Draw() {
 		m_changed = false;
 	}
 	m_vertex_array.Bind();
-	glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)m_index_count, GL_UNSIGNED_INT, nullptr, (GLsizei)m_instance_count);
+	glDrawElementsInstancedBaseVertex(GL_TRIANGLES, m_lods[lod].count, GL_UNSIGNED_INT, m_lods[lod].base_index,
+	                                  (GLsizei)m_instance_count, m_lods[lod].base_vertex);
 }
