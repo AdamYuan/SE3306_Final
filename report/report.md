@@ -17,7 +17,7 @@ gcem是拿来做constexpr的数学运算的，其实不用也没啥问题
 1. 火球、碰撞火花、灰烬的粒子效果
 1. GBuffer延迟渲染
 1. 通过Shadow Map实现阴影
-1. **使用Voxel Cone Tracing实现全局光照效果**
+1. 使用Voxel Cone Tracing实现全局光照效果
 1. 发光体的泛光效果
 
 ## Cornell Box场景建模
@@ -367,9 +367,27 @@ Voxel Cone Tracing需要采样不同范围内体素的平均Radiance，在存储
 
 #### Voxel Cone Tracing
 
+Voxel Cone Tracing即在一个圆锥体中进行体素采样（四线性插值：3D + Mipmap）以获得圆锥体内的Radiance给该点的光照，如下图所示：
 
+> <img src="img/cone_trace.png" style="zoom: 50%;" />
+>
+> https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
+
+本次作业中对每个表面做6个Cone Trace，以实现Diffuse Global Illumination的效果，如下图所示：
+
+| 6个Diffuse Cone                                              | Indirect Light                   |
+| ------------------------------------------------------------ | -------------------------------- |
+| ![](img/cone_6.svg)<br />https://github.com/jose-villegas/VCTRenderer | ![](img/cone_trace_indirect.png) |
+
+此外，Voxel Cone Tracing还能实现镜面反射、Multiple Bounce GI等效果，但这些效果的Computational Cost较大，且对渲染效果的提升一般，因此本次作业没有实现。
 
 ### 泛光
+
+
+
+## 性能分析
+
+
 
 
 
