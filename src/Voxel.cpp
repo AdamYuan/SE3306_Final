@@ -79,8 +79,8 @@ void Voxel::initialize_target(int resolution, int mipmaps) {
 	m_normal.SetWrapFilter(GL_CLAMP_TO_BORDER); */
 
 	m_radiance.Initialize();
-	m_radiance.Storage(resolution, resolution, resolution, GL_RGBA16F, 1);
-	m_radiance.SetSizeFilter(GL_LINEAR, GL_LINEAR);
+	m_radiance.Storage(resolution, resolution, resolution, GL_RGBA16F, mipmaps);
+	m_radiance.SetSizeFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 	m_radiance.SetWrapFilter(GL_CLAMP_TO_BORDER);
 
 	for (auto &m : m_radiance_mipmaps) {

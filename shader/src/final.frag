@@ -83,6 +83,7 @@ mat3 normal_to_tbn(in const vec3 normal) {
 
 vec4 sample_voxel(in const vec3 position, in const float lod, in const ivec3 axis_indices, in const vec3 axis_weights) {
 	vec3 voxel_pos = position * VOXEL_SCALE * .5 + .5;
+	return textureLod(uVoxelRadiance, voxel_pos, lod);
 	vec4 mipmap_acc = vec4(0);
 	float mipmap_lod = max(lod - 1.0, 0.0);
 	mipmap_acc += axis_weights.x > 0.0

@@ -26,6 +26,7 @@ public:
 		m_voxelize_shader.Use();
 		draw_func();
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-		generate_mipmap();
+		m_radiance.GenerateMipmap();
+		// generate_mipmap();
 	}
 };
