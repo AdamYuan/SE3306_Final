@@ -363,7 +363,7 @@ Voxel Cone Tracing需要采样不同范围内体素的平均Radiance，在存储
 | ------------------------------- | ---------------------------- |
 | ![](img/voxel_mip_no_aniso.png) | ![](img/voxel_mip_aniso.png) |
 
-显然借助传统Mipmap渲染的图像物体自遮挡非常严重（天花板和右墙面很明显），导致整体偏暗；使用各向异性Mipmap明显地改善了这个问题。
+显然借助传统Mipmap渲染的图像物体自遮挡非常严重（天花板和右墙面很明显），导致整体偏暗；使用各向异性Mipmap完美地改善了这个问题。
 
 #### Voxel Cone Tracing
 
@@ -383,13 +383,21 @@ Voxel Cone Tracing即在一个圆锥体中进行体素采样（四线性插值�
 
 ### 泛光
 
+本次作业的场景中有大量的发光体（Cornell Box灯、火球、粒子），实现泛光效果能够增强其表现力。
 
+泛光的实现比较简单，提取GBuffer颜色中的高光部分做$9\times 9$ Gaussian Blur即可，效果如下：
+
+| Gaussian Blur结果       | 混合                     |
+| ----------------------- | ------------------------ |
+| ![](img/bloom_blur.png) | ![](img/bloom_final.png) |
 
 ## 性能分析
 
+分别在RTX 3060独显和Radeon Graphics （Ryzen 9 5900HX）的集成显卡上进行测试（窗口大小为$720\times720$）：
 
+| RTX 3060        | ![](img/rtx3060_frame.png) |
+| --------------- | -------------------------- |
+| Radeon Graphics | ![](img/radeon_frame.png)  |
 
-
-
-
-
+* 可见即使在集成显卡，Frame Time也在$10 \text{ms}$以内，基本没有性能问题
+* 每帧$80\%$以上的时间都消耗在Final Pass，这是由于Voxel Cone Tracing计算量较大
