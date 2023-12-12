@@ -295,6 +295,12 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 <img src="img/diffuse_only.png" style="zoom:50%;" />
 
+#### Directional Light
+
+理论上（？）Cornell Box中的光源不是点光源（因为球体的大部分是被遮挡的），因此墙壁上方应该有一定的阴影，类似Direction Light。作业中从光源方向与$(0,1,0)$的夹角计算一个衰减量来模拟这个效果，如下：
+
+<img src="img/diffuse_directional.png" style="zoom:50%;" />
+
 #### Shadow Mapping
 
 本次作业使用传统的Shadow Mapping。
@@ -329,10 +335,12 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 * 由于场景是动态的，每帧需要重新体素化，因此先将3D Texture清空
 * 对于几何法向量为$\vec{n}=(n_x, n_y, n_z)$的三角形，将其投影到$\text{axis} = \underset{a \in \{x, y, z\}}{\mathrm{argmin}}|n_a|$所对应的平面（在Geometry Shader完成）
-* 做光栅化，计算Direct Light作为Radiance（同样借助Shadow Map，但不做PCF），存储在Fragment对应的体素坐标
+* 做光栅化，计算Direct Light作为Radiance（同样借助Shadow Map，但不做PCF采样），存储在Fragment对应的体素坐标
 * 由于靠近3D Texture边界的体素在Mipmap后会产生
 
 结果如下图所示：
+
+<img src="img/voxel_march.png" style="zoom:50%;" />
 
 #### 体素Mipmap生成
 

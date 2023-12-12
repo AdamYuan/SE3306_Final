@@ -19,6 +19,7 @@ vec3 texture_func_2(in const vec2 coord) {
 	vec4 samp = texture(uTumblerTexture, vec2(coord.x * 1.5, 1. - coord.y));
 	return mix(bg, samp.rgb, samp.a);
 }
+bool IsTexture(in const vec3 color) { return color.r < 0; }
 vec3 GetAlbedo(in const vec3 color) {
 	return color.r >= .0 ? color : (color.r < -1.5 ? texture_func_2(color.yz) : texture_func_1(color.yz));
 }

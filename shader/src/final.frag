@@ -38,7 +38,8 @@ float de_linearize_depth(in const float linear_depth) {
 	return (2.0 * Z_NEAR * Z_FAR / linear_depth - Z_FAR - Z_NEAR) / (Z_NEAR - Z_FAR);
 }
 
-float DirectVisibility(in const vec3 position, in const vec3 normal, in const vec3 light_dir) {
+float DirectVisibility(in const vec3 position, in const vec3 normal) {
+	vec3 light_dir = GetCornellLightDir(position);
 	vec4 shadow_pos = uShadowViewProjection * vec4(position, 1);
 	shadow_pos /= shadow_pos.w;
 	shadow_pos.xyz = shadow_pos.xyz * 0.5 + 0.5;
@@ -61,7 +62,9 @@ float DirectVisibility(in const vec3 position, in const vec3 normal, in const ve
 	SHADOW_SAMPLE_X(1);
 	SHADOW_SAMPLE_X(2);
 	shadow *= 0.04;
-	return min(smoothstep(0.02, 1.0, shadow), max(dot(light_dir, normal), 0)) * .4 + .6;
+	shadow = smoothstep(0.02, 1.0, shadow);
+
+	return GetCornellLightVisibility(normal, light_dir, shadow) * .4 + .6;
 }
 
 const vec3 kConeDirections[6] = {vec3(0, 0, 1),
@@ -178,7 +181,6 @@ void main() {
 	float depth = texelFetch(uDepth, coord, 0).r;
 	vec4 bloom = texelFetch(uBloom, coord, 0);
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
-	vec3 light_dir = normalize(vec3(0, kCornellLightHeight, 0) - position);
 
 	/* {
 	    vec3 origin = vec3(0, 0, 1 + sqrt(3.));
@@ -190,8 +192,7 @@ void main() {
 	} */
 
 	bool emissive = any(greaterThan(albedo, vec3(1)));
-	vec3 color =
-	    emissive ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal, light_dir);
+	vec3 color = emissive ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
 	color += bloom.rgb;
 
 	color = vec3(1) - exp(-color * 1.2);

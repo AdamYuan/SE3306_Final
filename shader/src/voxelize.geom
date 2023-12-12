@@ -16,8 +16,6 @@ layout(location = 1) out vec3 gColor;
 layout(location = 2) out vec3 gWorldPos;
 layout(location = 3) out vec3 gShadowPos;
 
-layout(location = 4) flat out uint gAxis;
-
 vec3 Project(vec3 v, in const uint axis) {
 	v *= VOXEL_SCALE;
 	return axis == 0 ? v.yzx : (axis == 1 ? v.zxy : v.xyz);
@@ -32,8 +30,6 @@ void main() {
 	uint axis = (axis_weight.x > axis_weight.y && axis_weight.x > axis_weight.z)
 	                ? 0
 	                : ((axis_weight.y > axis_weight.z) ? 1 : 2);
-
-	gAxis = axis;
 
 	gNormal = vNormal[0];
 	gColor = vColor[0];
