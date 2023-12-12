@@ -47,8 +47,6 @@ float DirectVisibility(in const vec3 position, in const vec3 normal) {
 
 	shadow_pos.z = de_linearize_depth(linearize_depth(shadow_pos.z) + clamp(0.1 * dot(normal, light_dir), -0.02, 0.05));
 
-	float shadow_size = 1. / textureSize(uShadowMap, 0).x; // square shadow map ensured
-
 	float shadow = 0;
 #define SHADOW_SAMPLE(OFFSET) shadow += textureProjOffset(uShadowMap, shadow_pos, OFFSET)
 #define SHADOW_SAMPLE_X(X_OFFSET) \
