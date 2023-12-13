@@ -7,13 +7,13 @@ void Bloom::Initialize() {
 #include <shader/quad.vert.str>
 	    ;
 	{
-		m_fetch_shader.Initialize();
+		m_down_0_shader.Initialize();
 		constexpr const char *kFrag =
-#include <shader/bloom_fetch.frag.str>
+#include <shader/bloom_down_0.frag.str>
 		    ;
-		m_fetch_shader.Load(kQuadVert, GL_VERTEX_SHADER);
-		m_fetch_shader.Load(kFrag, GL_FRAGMENT_SHADER);
-		m_fetch_shader.Finalize();
+		m_down_0_shader.Load(kQuadVert, GL_VERTEX_SHADER);
+		m_down_0_shader.Load(kFrag, GL_FRAGMENT_SHADER);
+		m_down_0_shader.Finalize();
 	}
 	{
 		m_down_shader.Initialize();
