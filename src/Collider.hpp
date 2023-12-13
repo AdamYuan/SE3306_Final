@@ -169,6 +169,10 @@ struct Collider {
 
 		glm::vec3 dir = p_tumbler->GetSDFGradient(p_sphere->center);
 		p_sphere->center += dir * (Derived::kRadius - sdf);
+
+		if (glm::dot(dir, p_sphere->linear_velocity) >= .0f)
+			return;
+
 		glm::vec3 hit_pos = p_sphere->center - dir * Derived::kRadius;
 
 		glm::vec3 new_l_v = glm::reflect(p_sphere->linear_velocity, dir);
