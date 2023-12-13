@@ -54,6 +54,7 @@ void Voxel::generate_mipmap() {
 			glBindImageTexture(VOXEL_RADIANCE_MIPMAP_IMAGE + i, m_radiance_mipmaps[i].Get(), l - 1, GL_TRUE, 0,
 			                   GL_WRITE_ONLY, GL_RGBA16F);
 		m_mipmap_shader.Use();
+		m_mipmap_shader.SetInt(0, l - 2);
 		dispatch(m_resolution >> l, m_resolution >> l, 6 * (m_resolution >> l));
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}

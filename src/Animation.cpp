@@ -279,7 +279,10 @@ void Animation::Draw(int width, int height) {
 	m_quad_vao.Bind();
 
 	// Bloom
-	m_bloom.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+	/* m_bloom.Generate(width, height, 5, [](int w, int h) {
+		glViewport(0, 0, w, h);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}); */
 
 	// Final Pass
 	mygl3::FrameBuffer::Unbind();

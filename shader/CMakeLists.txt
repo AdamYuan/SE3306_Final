@@ -19,8 +19,9 @@ set(SHADER_SRC
         voxel_mipmap.comp
         quad.vert
         final.frag
-        bloom_0.frag
-        bloom_1.frag
+        bloom_fetch.frag
+        bloom_down.frag
+        bloom_up.frag
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)
