@@ -21,13 +21,13 @@ public:
 
 		m_fbos[1].Bind();
 		m_down_0_shader.Use();
-		quad_draw_func(std::max(width >> 1, 1), std::max(height >> 1, 1));
+		quad_draw_func(width >> 1, height >> 1);
 
 		m_down_shader.Use();
 		for (int m = 2; m < mipmap; ++m) {
 			m_fbos[m].Bind();
 			m_down_shader.SetInt(0, m - 1);
-			quad_draw_func(std::max(width >> m, 1), std::max(height >> m, 1));
+			quad_draw_func(width >> m, height >> m);
 		}
 
 		glEnable(GL_BLEND);
@@ -40,7 +40,7 @@ public:
 				glDisable(GL_BLEND);
 			m_fbos[m].Bind();
 			m_up_shader.SetInt(0, m + 1);
-			quad_draw_func(std::max(width >> m, 1), std::max(height >> m, 1));
+			quad_draw_func(width >> m, height >> m);
 		}
 	}
 };
