@@ -33,21 +33,26 @@ static const glm::mat4 kInvCameraViewProj = glm::inverse(kCameraViewProj);
 
 void Animation::Initialize() {
 	// Load Meshes
-	m_cornell_gpu_mesh.Initialize(std::initializer_list<Mesh>{
-	    MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID, kCornellOtherColor,
-	                                kCornellLightRadiance, kCornellLightHeight, kCornellLightRadius, 4)});
-	m_tumbler_gpu_mesh.Initialize(std::initializer_list<Mesh>{MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID),
-	                                                          MeshLoader{}.MakeTumbler(5, 16, kTumblerTextureID)},
-	                              kTumblerCount);
-	m_marble_gpu_mesh.Initialize(
-	    std::initializer_list<Mesh>{MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID)},
-	    kMarbleCount);
-	m_fireball_gpu_mesh.Initialize(
-	    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance),
-	                                MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 2, kFireballRadiance)});
-	m_particle_gpu_mesh.Initialize(
-	    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(1.f, 2, {}), MeshLoader{}.MakeIcoSphere(1.f, 0, {})},
-	    kMaxParticleCount);
+	{
+		const auto make_cornell = [](uint32_t ico_subdivision) {
+			return MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID,
+			                                   kCornellOtherColor, kCornellLightRadiance, kCornellLightHeight,
+			                                   kCornellLightRadius, ico_subdivision);
+		};
+		m_cornell_gpu_mesh.Initialize(std::initializer_list<Mesh>{make_cornell(4), make_cornell(2)});
+		m_tumbler_gpu_mesh.Initialize(std::initializer_list<Mesh>{MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID),
+		                                                          MeshLoader{}.MakeTumbler(3, 16, kTumblerTextureID)},
+		                              kTumblerCount);
+		m_marble_gpu_mesh.Initialize(
+		    std::initializer_list<Mesh>{MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID)},
+		    kMarbleCount);
+		m_fireball_gpu_mesh.Initialize(
+		    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance),
+		                                MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 1, kFireballRadiance)});
+		m_particle_gpu_mesh.Initialize(
+		    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(1.f, 2, {}), MeshLoader{}.MakeIcoSphere(1.f, 0, {})},
+		    kMaxParticleCount);
+	}
 
 	// Load Textures
 	{
@@ -243,7 +248,7 @@ void Animation::Draw(int width, int height) {
 	glDisable(GL_CULL_FACE);
 	m_voxel.Generate(kVoxelResolution, kVoxelMipmaps, [this]() {
 		glClear(GL_COLOR_BUFFER_BIT);
-		m_cornell_gpu_mesh.Draw();
+		m_cornell_gpu_mesh.Draw(1);
 		m_tumbler_gpu_mesh.Draw(1);
 		m_particle_gpu_mesh.Draw(1);
 		m_fireball_gpu_mesh.Draw(1);
