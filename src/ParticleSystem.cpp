@@ -7,7 +7,7 @@ void FireParticle::UpdateVelocity(std::mt19937 *p_rand, float delta_t) {}
 float FireParticle::GetRadius() const {
 	return glm::log(life + 1.f) * .4f * glm::smoothstep(.0f, .02f, kFireParticleLife - life);
 }
-glm::vec3 FireParticle::GetColor() const { return glm::vec3{1.f, .4588f, .03f} * glm::max(life * 4.8f, 1.05f); }
+glm::vec3 FireParticle::GetColor() const { return glm::vec3{1.f, .4588f, .03f} * glm::max(life * 5.f, 1.05f); }
 void ParticleSystem::SustainFire(const Fireball &fireball, float delta_t) {
 	delta_t += m_unused_fire_delta_t;
 	m_unused_fire_delta_t = 0.f;

@@ -1,4 +1,6 @@
 #version 450
+
+// https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
 //
 // This shader performs downsampling on a texture,
 // as taken from Call Of Duty method, presented at ACM Siggraph 2014.

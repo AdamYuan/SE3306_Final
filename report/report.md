@@ -2,6 +2,9 @@
 
 521021910595 袁翊天
 
+| ![](img/screenshot0.png) | ![](img/screenshot1.png) | ![](img/screenshot2.png) |
+| ------------------------ | ------------------------ | ------------------------ |
+
 ## Libraries
 
 * mygl3：我远古时期造的OpenGL轮子
@@ -18,6 +21,7 @@
 * 不倒翁可以拖动：
   * 若鼠标在重心下则平移
   * 若鼠标在重心上则旋转
+* **（建议用独立显卡运行，集成显卡有可能出现神奇的Driver Bug）**
 
 ## 具体工作
 
@@ -31,7 +35,7 @@
 1. GBuffer延迟渲染
 1. 通过Shadow Map实现阴影
 1. 使用Voxel Cone Tracing实现全局光照效果
-1. 发光体的泛光效果
+1. Physically Based Bloom高质量泛光
 
 ## Cornell Box场景建模
 
@@ -394,15 +398,36 @@ Voxel Cone Tracing即在一个圆锥体中进行体素采样（四线性插值�
 
 此外，Voxel Cone Tracing还能实现镜面反射、Multiple Bounce GI等效果，但这些效果的Computational Cost较大，且对渲染效果的提升一般，因此本次作业没有实现。
 
-### 泛光
+### 基于物理的泛光
 
 本次作业的场景中有大量的发光体（Cornell Box灯、火球、粒子），实现泛光效果能够增强其表现力。
 
-泛光的实现比较简单，提取GBuffer颜色中的高光部分做$9\times 9$ Gaussian Blur即可，效果如下：
+程序实现了https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/中的泛光技术。
 
-| Gaussian Blur结果       | 混合                     |
-| ----------------------- | ------------------------ |
-| ![](img/bloom_blur.png) | ![](img/bloom_final.png) |
+> 该方法分为Downsample和Upsample两步：
+>
+> ![](img/bloom_pipeline.png)
+>
+> https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
+>
+> * Downsample步骤使用如下图所示的kernel，这样能够避免出现不自然的方形光晕：<img src="img/bloom_downsample.png" style="zoom:50%;" />
+>
+> * Upsample步骤则使用一个$3\times3$ Tent Filter向上采样相加到上层图像上（注意不是采样9个临近像素，而是9个指定UV-space偏移量的三线性过滤样本），以实现更好的模糊效果：![](img/bloom_upsample.png)
+>
+>   
+
+生成的Bloom材质在Final Pass的混合方法如下：
+
+$\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f$为控制泛光程度的参数，通常设定为接近$0$（$f$较小时，发光体的实际轮廓突出，效果较为真实；程序中取$f = 0.2$）
+
+实现出的效果如下（对比了之前写的$9\times9$ Gaussian Blur）：
+
+| 方法                                       | Bloom Pass                                 | Final Pass                                  |
+| ------------------------------------------ | ------------------------------------------ | ------------------------------------------- |
+| **Physically Based Bloom<br />(作业采用)** | ![](img/bloom_blur.png)                    | ![](img/bloom_final.png)                    |
+| Gaussian Blur                              | <img src="img/bloom_gaussian_blur.png"  /> | <img src="img/bloom_gaussian_final.png"  /> |
+
+可见Physically Based Bloom比Guassian Blur效果好很多。
 
 ## 性能分析
 
@@ -414,4 +439,5 @@ Voxel Cone Tracing即在一个圆锥体中进行体素采样（四线性插值�
 | RTX 3060        | ![](img/rtx3060_frame.png) |
 
 * 可见即使在集成显卡，Frame Time也在$10 \text{ms}$以内，基本没有性能问题
+  * 不过集成显卡的驱动似乎都会有些问题，导致容易产生artifacts
 * 每帧$80\%$以上的时间都消耗在Final Pass，这是由于Voxel Cone Tracing计算量较大
