@@ -7,7 +7,7 @@
 layout(location = 0) in vec3 gNormal;
 layout(location = 1) in vec3 gColor;
 layout(location = 2) in vec3 gWorldPos;
-layout(location = 3) in vec3 gShadowPos;
+layout(location = 3) in vec4 gShadowPos;
 
 layout(rgba16f, binding = VOXEL_RADIANCE_IMAGE) uniform writeonly image3D uVoxelRadiance;
 layout(binding = SHADOW_MAP_TEXTURE) uniform sampler2DShadow uShadowMap;
@@ -32,9 +32,11 @@ void main() {
 	vec3 light_dir = normalize(vec3(0, kCornellLightHeight, 0) - gWorldPos);
 	vec3 albedo = GetAlbedo(gColor);
 
+	vec3 shadow_pos = gShadowPos.xyz / gShadowPos.w * .5 + .5;
+
 	vec3 radiance = IsEmissive(albedo) ? albedo
 	                                   : kCornellLightRadiance * albedo *
 	                                         GetCornellLightVisibility(normal, GetCornellLightDir(gWorldPos),
-	                                                                   textureProj(uShadowMap, vec4(gShadowPos, 1)));
+	                                                                   textureProj(uShadowMap, vec4(shadow_pos, 1)));
 	imageStore(uVoxelRadiance, voxel_pos, vec4(radiance, 1.));
 }

@@ -10,7 +10,7 @@ layout(location = 4) in mat4 aModel;
 
 layout(location = 0) out vec3 vNormal;
 layout(location = 1) out vec3 vColor;
-layout(location = 2) out vec3 vShadowPos;
+layout(location = 2) out vec4 vShadowPos;
 
 layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
 	mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection;
@@ -20,6 +20,5 @@ void main() {
 	vNormal = mat3(aModel) * aNormal;
 	vColor = mix(aColor, aInstanceColor.rgb, aInstanceColor.a);
 	gl_Position = aModel * vec4(aPosition, 1.0);
-	vec4 shadow_pos_4 = uShadowViewProjection * gl_Position;
-	vShadowPos = shadow_pos_4.xyz / shadow_pos_4.w * .5 + .5;
+	vShadowPos = uShadowViewProjection * gl_Position;
 }

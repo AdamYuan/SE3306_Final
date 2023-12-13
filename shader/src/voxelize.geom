@@ -7,14 +7,14 @@ layout(triangle_strip, max_vertices = 3) out;
 
 layout(location = 0) in vec3 vNormal[];
 layout(location = 1) in vec3 vColor[];
-layout(location = 2) in vec3 vShadowPos[];
+layout(location = 2) in vec4 vShadowPos[];
 
 layout(location = 0) out vec3 gNormal;
 layout(location = 1) out vec3 gColor;
 
 // for direct light calculation
 layout(location = 2) out vec3 gWorldPos;
-layout(location = 3) out vec3 gShadowPos;
+layout(location = 3) out vec4 gShadowPos;
 
 vec3 Project(vec3 v, in const uint axis) {
 	v *= VOXEL_SCALE;
