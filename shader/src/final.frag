@@ -63,7 +63,7 @@ float DirectVisibility(in const vec3 position, in const vec3 normal) {
 	shadow *= 0.04;
 	shadow = smoothstep(0.02, 1.0, shadow);
 
-	return GetCornellLightVisibility(normal, light_dir, shadow) * .25 + .75;
+	return GetCornellLightVisibility(normal, light_dir, shadow) * .2 + .8;
 }
 
 const vec3 kConeDirections[6] = {vec3(0, 0, 1),
@@ -190,10 +190,10 @@ void main() {
 	} */
 
 	bool emissive = IsEmissive(albedo);
+	vec3 bloom = texelFetch(uBloom, coord, 0).rgb + (emissive ? albedo : vec3(0));
 	vec3 color = emissive ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
-	vec3 bloom = texelFetch(uBloom, coord, 0).rgb + float(emissive) * albedo;
-	color = mix(color, bloom, 0.2);
+	color = mix(color, bloom, 0.1);
 
-	color = vec3(1) - exp(-color * 1.5);
+	color = vec3(1) - exp(-color * 1.3);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

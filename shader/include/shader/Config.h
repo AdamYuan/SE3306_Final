@@ -12,7 +12,7 @@
 #endif
 
 const float kCornellLightHeight = 1.5f, kCornellLightRadius = 0.6f;
-const vec3 kCornellLightRadiance = vec3(2.5);
+const vec3 kCornellLightRadiance = vec3(3.5);
 
 #ifdef GLSL
 
