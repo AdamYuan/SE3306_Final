@@ -418,7 +418,7 @@ Voxel Cone Tracing即在一个圆锥体中进行体素采样（四线性插值�
 
 生成的Bloom材质在Final Pass的混合方法如下：
 
-$\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f$为控制泛光程度的参数，通常设定为接近$0$（$f$较小时，发光体的实际轮廓突出，效果较为真实；程序中取$f = 0.2$）
+$\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f$为控制泛光程度的参数，通常设定为接近$0$（$f$较小时，发光体的实际轮廓突出，效果较为真实；程序中取$f = 0.1$）
 
 实现出的效果如下（对比了之前写的$9\times9$ Gaussian Blur）：
 
