@@ -5,7 +5,7 @@
 #include <shader/Config.h>
 #include <stb_image.h>
 
-constexpr int kShadowMapSize = 480, kVoxelResolution = 64, kVoxelMipmaps = 5;
+constexpr int kShadowMapSize = 480, kVoxelResolution = 64, kVoxelMipmaps = 7;
 
 constexpr glm::vec3 kCornellLeftColor = {.953f, .357f, .212f}, kCornellRightColor = {.486f, .631f, .663},
                     kCornellOtherColor = {.725f, .71f, .68f};
@@ -19,7 +19,7 @@ constexpr float kTumblerPlaceRadius = 0.6f;
 constexpr uint32_t kMarbleCount = 30;
 constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
 
-constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .01f} * 16.f;
+constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .01f} * 20.f;
 constexpr float kFireballSpeed = 2.f;
 
 constexpr uint32_t kMaxParticleCount = 2048;
@@ -46,9 +46,14 @@ void Animation::Initialize() {
 		m_marble_gpu_mesh.Initialize(
 		    std::initializer_list<Mesh>{MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID)},
 		    kMarbleCount);
-		m_fireball_gpu_mesh.Initialize(
-		    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance),
-		                                MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 1, kFireballRadiance)});
+		Mesh solid_lod_fireball = MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 1, kFireballRadiance);
+		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.9f, 0, kFireballRadiance));
+		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.8f, 0, kFireballRadiance));
+		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.7f, 0, kFireballRadiance));
+		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.5f, 0, kFireballRadiance));
+		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.3f, 0, kFireballRadiance));
+		m_fireball_gpu_mesh.Initialize(std::initializer_list<Mesh>{
+		    MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance), std::move(solid_lod_fireball)});
 		m_particle_gpu_mesh.Initialize(
 		    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(1.f, 2, {}), MeshLoader{}.MakeIcoSphere(1.f, 0, {})},
 		    kMaxParticleCount);
@@ -279,7 +284,7 @@ void Animation::Draw(int width, int height) {
 	m_quad_vao.Bind();
 
 	// Bloom
-	m_bloom.Generate(width, height, 5, 0.005f, [](int w, int h) {
+	m_bloom.Generate(width, height, 6, 0.005f, [](int w, int h) {
 		glViewport(0, 0, w, h);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	});
