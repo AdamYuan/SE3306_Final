@@ -178,7 +178,6 @@ void main() {
 	vec3 albedo = texelFetch(uAlbedo, coord, 0).rgb;
 	vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
 	float depth = texelFetch(uDepth, coord, 0).r;
-	vec3 bloom = texelFetch(uBloom, coord, 0).rgb;
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
 
 	/* {
@@ -190,12 +189,11 @@ void main() {
 	    return;
 	} */
 
-	vec3 color =
-	    IsEmissive(albedo) ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
-	color += bloom;
+	bool emissive = IsEmissive(albedo);
+	vec3 color = emissive ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
+	vec3 bloom = texelFetch(uBloom, coord, 0).rgb + float(emissive) * albedo;
+	color = mix(color, bloom, 0.2);
 
-	// color = bloom;
-
-	color = vec3(1) - exp(-color * 1.2);
+	color = vec3(1) - exp(-color * 1.5);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

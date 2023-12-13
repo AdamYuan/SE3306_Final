@@ -44,7 +44,7 @@ void Bloom::initialize_target(int width, int height, int mipmap) {
 
 	m_bloom.Initialize();
 	m_bloom.Storage(width, height, GL_RGB16F, mipmap);
-	m_bloom.SetSizeFilter(GL_LINEAR, GL_LINEAR);
+	m_bloom.SetSizeFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 	m_bloom.SetWrapFilter(GL_CLAMP_TO_EDGE);
 
 	m_fbos.resize(mipmap);

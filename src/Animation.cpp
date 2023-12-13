@@ -19,7 +19,7 @@ constexpr float kTumblerPlaceRadius = 0.6f;
 constexpr uint32_t kMarbleCount = 30;
 constexpr float kMarbleMinSpeed = 2.f, kMarbleMaxSpeed = 4.f;
 
-constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .01f} * 10.f;
+constexpr glm::vec3 kFireballRadiance = glm::vec3{1.f, .4588f, .01f} * 16.f;
 constexpr float kFireballSpeed = 2.f;
 
 constexpr uint32_t kMaxParticleCount = 2048;
@@ -279,12 +279,13 @@ void Animation::Draw(int width, int height) {
 	m_quad_vao.Bind();
 
 	// Bloom
-	m_bloom.Generate(width, height, 5, [](int w, int h) {
+	m_bloom.Generate(width, height, 5, 0.005f, [](int w, int h) {
 		glViewport(0, 0, w, h);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	});
 
 	// Final Pass
+	glViewport(0, 0, width, height);
 	mygl3::FrameBuffer::Unbind();
 	m_final_shader.Use();
 	glDrawArrays(GL_TRIANGLES, 0, 3);
