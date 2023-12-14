@@ -77,7 +77,8 @@ struct Collider {
 		if (light_dist < Derived::kRadius + kCornellLightRadius) {
 			glm::vec3 light_norm = glm::normalize(light_diff);
 			p_sphere->center += light_norm * (Derived::kRadius + kCornellLightRadius - light_dist);
-			p_sphere->linear_velocity = glm::reflect(p_sphere->linear_velocity, light_norm);
+			if (glm::dot(light_norm, p_sphere->linear_velocity) < .0f)
+				p_sphere->linear_velocity = glm::reflect(p_sphere->linear_velocity, light_norm);
 			opt_hit_info = {.type = SphereHitType::kLight,
 			                .position = light_pos + light_norm * kCornellLightRadius,
 			                .gradient = light_norm};
@@ -169,15 +170,13 @@ struct Collider {
 
 		glm::vec3 dir = p_tumbler->GetSDFGradient(p_sphere->center);
 		p_sphere->center += dir * (Derived::kRadius - sdf);
-
-		if (glm::dot(dir, p_sphere->linear_velocity) >= .0f)
-			return;
-
 		glm::vec3 hit_pos = p_sphere->center - dir * Derived::kRadius;
 
-		glm::vec3 new_l_v = glm::reflect(p_sphere->linear_velocity, dir);
-		p_tumbler->ApplyHitImpulse(p_sphere->center, (p_sphere->linear_velocity - new_l_v) * Derived::kMass);
-		p_sphere->linear_velocity = new_l_v;
+		if (glm::dot(dir, p_sphere->linear_velocity) < .0f) {
+			glm::vec3 new_l_v = glm::reflect(p_sphere->linear_velocity, dir);
+			p_tumbler->ApplyHitImpulse(p_sphere->center, (p_sphere->linear_velocity - new_l_v) * Derived::kMass);
+			p_sphere->linear_velocity = new_l_v;
+		}
 
 		callback(static_cast<Derived *>(p_sphere),
 		         SphereHitInfo{.type = SphereHitType::kTumbler, .position = hit_pos, .gradient = dir});
