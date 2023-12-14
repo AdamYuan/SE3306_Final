@@ -412,7 +412,7 @@ Voxel Cone Tracing即在一个圆锥体中进行体素采样（四线性插值�
 >
 > * Downsample步骤使用如下图所示的kernel，这样能够避免出现不自然的方形光晕：<img src="img/bloom_downsample.png" style="zoom:50%;" />
 >
-> * Upsample步骤则使用一个$3\times3$ Tent Filter向上采样相加到上层图像上（注意不是采样9个临近像素，而是9个指定UV-space偏移量的三线性过滤样本），以实现更好的模糊效果：![](img/bloom_upsample.png)
+> * Upsample步骤则使用一个$3\times3$ Tent Filter向上采样相加到上层图像上（注意不是采样9个临近像素，而是9个指定UV-space偏移量的双线性过滤样本），以实现更好的模糊效果：![](img/bloom_upsample.png)
 >
 >   
 
