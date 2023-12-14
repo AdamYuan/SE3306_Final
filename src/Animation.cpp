@@ -76,11 +76,11 @@ void Animation::Initialize() {
 		m_tumbler_texture.Bind(TUMBLER_TEXTURE);
 	}
 	{
-		constexpr unsigned char kFloorPNG[] = {
-#include <texture/floor.png.u8>
+		constexpr unsigned char kFloorJPG[] = {
+#include <texture/floor.jpg.u8>
 		};
 		int x, y, c;
-		stbi_uc *img = stbi_load_from_memory(kFloorPNG, sizeof(kFloorPNG), &x, &y, &c, 4);
+		stbi_uc *img = stbi_load_from_memory(kFloorJPG, sizeof(kFloorJPG), &x, &y, &c, 4);
 		m_floor_texture.Initialize();
 		m_floor_texture.Storage(x, y, GL_RGBA8, mygl3::Texture2D::GetLevelCount(x, y));
 		m_floor_texture.Data(img, x, y, GL_RGBA, GL_UNSIGNED_BYTE, 0);

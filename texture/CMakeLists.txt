@@ -3,7 +3,7 @@ project(SE3306_Final)
 
 set(TEXTURE_SRC
         tumbler.png
-        floor.png
+        floor.jpg
 )
 
 set(TEXTURE_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/texture)
