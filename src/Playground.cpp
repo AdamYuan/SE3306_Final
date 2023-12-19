@@ -33,6 +33,26 @@ std::optional<Playground::RayCastInfo> Playground::RayCastTumbler(const glm::vec
 	return p_tumbler ? std::optional<RayCastInfo>({.t = min_t, .p_tumbler = p_tumbler}) : std::nullopt;
 }
 
+void Playground::PopTumblerMesh(GPUMesh *p_mesh) const {
+	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
+		p_mesh->SetModel(i, m_tumblers[i].GetModel());
+	p_mesh->SetInstanceCount(m_tumblers.size());
+}
+void Playground::PopMarbleMesh(GPUMesh *p_mesh) const {
+	for (uint32_t i = 0; i < m_marbles.size(); ++i) {
+		p_mesh->SetColor(i, m_marbles[i].color);
+		p_mesh->SetModel(i, m_marbles[i].GetModel());
+	}
+	p_mesh->SetInstanceCount(m_marbles.size());
+}
+void Playground::PopFireballMesh(GPUMesh *p_mesh) const {
+	if (m_fireball) {
+		p_mesh->SetInstanceCount(1);
+		p_mesh->SetModel(0, m_fireball.value().GetModel());
+	} else
+		p_mesh->SetInstanceCount(0);
+}
+
 template <typename Rand> inline static glm::vec3 gen_random_dir(Rand *p_rand) {
 	std::uniform_real_distribution<float> dir_dis{-1.f, 1.f};
 	glm::vec3 dir;
@@ -60,32 +80,3 @@ void Playground::CreateFireball(float speed) {
 	fireball.linear_velocity = gen_random_dir(&m_rand) * speed;
 }
 void Playground::DeleteFireball() { m_fireball = std::nullopt; }
-
-void Playground::pop_mesh_prev(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const {
-	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
-		p_tumbler_mesh->SetPrevModel(i, m_tumblers[i].GetModel());
-	p_tumbler_mesh->SetInstanceCount(m_tumblers.size());
-
-	for (uint32_t i = 0; i < m_marbles.size(); ++i)
-		p_marble_mesh->SetPrevModel(i, m_marbles[i].GetModel());
-	p_marble_mesh->SetInstanceCount(m_marbles.size());
-
-	if (m_fireball) {
-		p_fireball_mesh->SetInstanceCount(1);
-		p_fireball_mesh->SetPrevModel(0, m_fireball.value().GetModel());
-	} else
-		p_fireball_mesh->SetInstanceCount(0);
-}
-
-void Playground::pop_mesh(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const {
-	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
-		p_tumbler_mesh->SetModel(i, m_tumblers[i].GetModel());
-
-	for (uint32_t i = 0; i < m_marbles.size(); ++i) {
-		p_marble_mesh->SetColor(i, m_marbles[i].color);
-		p_marble_mesh->SetModel(i, m_marbles[i].GetModel());
-	}
-
-	if (m_fireball)
-		p_fireball_mesh->SetModel(0, m_fireball.value().GetModel());
-}

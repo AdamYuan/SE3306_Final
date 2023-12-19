@@ -18,36 +18,27 @@ private:
 	std::vector<Marble> m_marbles;
 	std::optional<Fireball> m_fireball;
 
-	void pop_mesh_prev(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const;
-	void pop_mesh(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const;
-
 public:
 	struct RayCastInfo {
 		float t;
 		Tumbler *p_tumbler;
 	};
 	void Initialize(uint32_t tumbler_count, float place_radius);
+	void PopTumblerMesh(GPUMesh *p_mesh) const;
 	std::optional<RayCastInfo> RayCastTumbler(const glm::vec3 &origin, const glm::vec3 &dir);
 
+	void PopMarbleMesh(GPUMesh *p_mesh) const;
 	void CreateMarbles(uint32_t marble_count, const glm::vec4 &initial_color, float min_speed, float max_speed);
 	void DeleteMarbles();
 
+	void PopFireballMesh(GPUMesh *p_mesh) const;
 	void CreateFireball(float speed);
 	void DeleteFireball();
 
 	template <typename MarbleHitCallback, typename MarbleEmptyCallback, typename FireballHitCallback,
 	          typename FireballCallback>
-	void Update(float delta_t, GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh,
-	            MarbleHitCallback &&marble_hit_callback, MarbleEmptyCallback &&marble_empty_callback,
+	void Update(float delta_t, MarbleHitCallback &&marble_hit_callback, MarbleEmptyCallback &&marble_empty_callback,
 	            FireballHitCallback &&fireball_hit_callback, FireballCallback &&fireball_callback) {
-		// remove dead marbles
-		m_marbles.erase(std::remove_if(m_marbles.begin(), m_marbles.end(), [](const Marble &m) { return !m.alive; }),
-		                m_marbles.end());
-		if (m_marbles.empty())
-			marble_empty_callback();
-
-		pop_mesh_prev(p_tumbler_mesh, p_marble_mesh, p_fireball_mesh);
-
 		for (uint32_t i = 0; i < m_tumblers.size(); ++i)
 			for (uint32_t j = i + 1; j < m_tumblers.size(); ++j)
 				Collider::Test(&m_tumblers[i], &m_tumblers[j]);
@@ -82,7 +73,10 @@ public:
 
 			fireball_callback(fireball);
 		}
-
-		pop_mesh(p_tumbler_mesh, p_marble_mesh, p_fireball_mesh);
+		// remove dead marbles
+		m_marbles.erase(std::remove_if(m_marbles.begin(), m_marbles.end(), [](const Marble &m) { return !m.alive; }),
+		                m_marbles.end());
+		if (m_marbles.empty())
+			marble_empty_callback();
 	}
 };

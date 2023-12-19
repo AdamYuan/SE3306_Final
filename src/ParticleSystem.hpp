@@ -43,9 +43,6 @@ private:
 
 	float m_unused_fire_delta_t = 0.f;
 
-	void pop_mesh_prev(GPUMesh *p_mesh) const;
-	void pop_mesh(GPUMesh *p_mesh) const;
-
 public:
 	inline void Initialize(uint32_t max_particles) { m_max_particles = max_particles; }
 
@@ -59,5 +56,7 @@ public:
 	void EmitAshes(const Marble &marble);
 	void EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad);
 
-	void Update(float delta_t, GPUMesh *p_mesh);
+	void PopMesh(GPUMesh *p_mesh) const;
+
+	void Update(float delta_t);
 };
