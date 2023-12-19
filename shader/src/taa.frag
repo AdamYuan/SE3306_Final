@@ -26,6 +26,9 @@ vec3 clip_aabb(in const vec3 aabb_min, // cn_min
 	return ma_unit > 1.0 ? p_clip + v_clip / ma_unit : q;
 }
 
+const mat3 kRGB2YCoCg = mat3(0.25, 0.5, -0.25, 0.5, 0.0, 0.5, 0.25, -0.5, -0.25);
+const mat3 kYCoCg2RGB = mat3(1.0, 1.0, 1.0, 1.0, 0.0, -1.0, -1.0, 1.0, -1.0);
+
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy), resolution = textureSize(uLight, 0);
 	vec2 inv_resolution = 1.0 / resolution;
@@ -37,19 +40,21 @@ void main() {
 		oColor = light;
 	else {
 		vec2 prev_uv = texelFetch(uPrevUV, coord, 0).rg + uJitter * .5;
-		vec3 prev_light = texture(uPrevLight, prev_uv).rgb;
+		vec3 prev_light = kRGB2YCoCg * texture(uPrevLight, prev_uv).rgb;
 
-		vec3 l0 = texture(uLight, vec2(uv_unjitter.x - inv_resolution.x, uv_unjitter.y)).rgb;
-		vec3 l1 = texture(uLight, vec2(uv_unjitter.x + inv_resolution.x, uv_unjitter.y)).rgb;
-		vec3 l2 = texture(uLight, vec2(uv_unjitter.x, uv_unjitter.y - inv_resolution.y)).rgb;
-		vec3 l3 = texture(uLight, vec2(uv_unjitter.x, uv_unjitter.y + inv_resolution.y)).rgb;
+		float dx = inv_resolution.x, dy = inv_resolution.y;
+		vec3 l0 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x - dx, uv_unjitter.y)).rgb;
+		vec3 l1 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x + dx, uv_unjitter.y)).rgb;
+		vec3 l2 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x, uv_unjitter.y - dy)).rgb;
+		vec3 l3 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x, uv_unjitter.y + dy)).rgb;
 
+		light = kRGB2YCoCg * light;
 		vec3 l_min = min(min(l0, l1), min(l2, min(l3, light)));
 		vec3 l_max = max(max(l0, l1), max(l2, max(l3, light)));
 
-		prev_light = clamp(prev_light, l_min, l_max);
-		// prev_light = clip_aabb(l_min, l_max, light, prev_light);
+		// prev_light = clamp(prev_light, l_min, l_max);
+		prev_light = clip_aabb(l_min, l_max, light, prev_light);
 
-		oColor = mix(light, prev_light, 0.65);
+		oColor = kYCoCg2RGB * mix(light, prev_light, 0.65);
 	}
 }
