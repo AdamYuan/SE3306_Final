@@ -194,9 +194,9 @@ void Animation::ToggleFireball() {
 }
 
 void Animation::Update(float delta_t) {
-	m_particle_system.Update(delta_t);
+	m_particle_system.Update(delta_t, &m_particle_gpu_mesh);
 	m_playground.Update(
-	    delta_t,
+	    delta_t, &m_tumbler_gpu_mesh, &m_marble_gpu_mesh, &m_fireball_gpu_mesh,
 	    [this](Marble *p_marble, SphereHitInfo info) {
 		    switch (info.type) {
 		    case SphereHitType::kFront:
@@ -231,11 +231,6 @@ void Animation::Update(float delta_t) {
 }
 
 void Animation::Draw(int width, int height) {
-	m_playground.PopTumblerMesh(&m_tumbler_gpu_mesh);
-	m_playground.PopMarbleMesh(&m_marble_gpu_mesh);
-	m_playground.PopFireballMesh(&m_fireball_gpu_mesh);
-	m_particle_system.PopMesh(&m_particle_gpu_mesh);
-
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
