@@ -22,6 +22,7 @@ set(SHADER_SRC
         bloom_down_0.frag
         bloom_down.frag
         bloom_up.frag
+        taa_light.frag
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)

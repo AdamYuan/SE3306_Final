@@ -42,6 +42,7 @@ add_executable(
         src/Bloom.cpp
         src/Playground.cpp
         src/ParticleSystem.cpp
+        src/TAALight.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 

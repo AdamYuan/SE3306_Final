@@ -117,12 +117,13 @@ void Animation::Initialize() {
 	m_shadow_map.Initialize();
 	m_voxel.Initialize();
 	m_bloom.Initialize(kQuadVert);
+	m_taa_light.Initialize(kQuadVert);
 
 	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
 	m_particle_system.Initialize(kMaxParticleCount);
 }
 
-void Animation::Drag(const std::optional<glm::vec2> &opt_drag_pos) {
+void Animation::drag(const std::optional<glm::vec2> &opt_drag_pos) {
 	if (!opt_drag_pos) {
 		if (m_opt_drag && m_opt_drag.value().p_tumbler)
 			m_opt_drag.value().p_tumbler->locked = false;
@@ -193,10 +194,11 @@ void Animation::ToggleFireball() {
 	m_fire_ball_flag ^= 1;
 }
 
-void Animation::Update(float delta_t) {
+void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_pos) {
 	m_particle_system.Update(delta_t, &m_particle_gpu_mesh);
 	m_playground.Update(
 	    delta_t, &m_tumbler_gpu_mesh, &m_marble_gpu_mesh, &m_fireball_gpu_mesh,
+	    [this, &opt_drag_pos]() { drag(opt_drag_pos); },
 	    [this](Marble *p_marble, SphereHitInfo info) {
 		    switch (info.type) {
 		    case SphereHitType::kFront:
@@ -283,6 +285,10 @@ void Animation::Draw(int width, int height) {
 		glViewport(0, 0, w, h);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	});
+
+	glViewport(0, 0, width, height);
+	// Light + TAA
+	m_taa_light.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 
 	// Final Pass
 	glViewport(0, 0, width, height);

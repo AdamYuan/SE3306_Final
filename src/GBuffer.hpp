@@ -8,7 +8,7 @@ class GBuffer {
 private:
 	mygl3::Shader m_shader;
 
-	mygl3::Texture2D m_depth, m_albedo, m_normal;
+	mygl3::Texture2D m_depth, m_albedo, m_normal, m_prev_uv;
 	mygl3::FrameBuffer m_fbo;
 	int m_width{-1}, m_height{-1};
 

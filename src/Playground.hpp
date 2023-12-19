@@ -35,11 +35,12 @@ public:
 	void CreateFireball(float speed);
 	void DeleteFireball();
 
-	template <typename MarbleHitCallback, typename MarbleEmptyCallback, typename FireballHitCallback,
-	          typename FireballCallback>
+	template <typename TumblerDragFunc, typename MarbleHitCallback, typename MarbleEmptyCallback,
+	          typename FireballHitCallback, typename FireballCallback>
 	void Update(float delta_t, GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh,
-	            MarbleHitCallback &&marble_hit_callback, MarbleEmptyCallback &&marble_empty_callback,
-	            FireballHitCallback &&fireball_hit_callback, FireballCallback &&fireball_callback) {
+	            TumblerDragFunc &&tumbler_drag_func, MarbleHitCallback &&marble_hit_callback,
+	            MarbleEmptyCallback &&marble_empty_callback, FireballHitCallback &&fireball_hit_callback,
+	            FireballCallback &&fireball_callback) {
 		// remove dead marbles
 		m_marbles.erase(std::remove_if(m_marbles.begin(), m_marbles.end(), [](const Marble &m) { return !m.alive; }),
 		                m_marbles.end());
@@ -47,6 +48,8 @@ public:
 			marble_empty_callback();
 
 		pop_mesh_prev(p_tumbler_mesh, p_marble_mesh, p_fireball_mesh);
+
+		tumbler_drag_func();
 
 		for (uint32_t i = 0; i < m_tumblers.size(); ++i)
 			for (uint32_t j = i + 1; j < m_tumblers.size(); ++j)
