@@ -14,7 +14,7 @@ private:
 	void initialize_target(int width, int height, int mipmap);
 
 public:
-	void Initialize();
+	void Initialize(const char *quad_vert_str);
 	template <typename QuadDrawFunc>
 	void Generate(int width, int height, int mipmap, float filter_radius, QuadDrawFunc &&quad_draw_func) {
 		initialize_target(width, height, mipmap);
