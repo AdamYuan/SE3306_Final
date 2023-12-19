@@ -116,7 +116,7 @@ void Animation::Initialize() {
 	m_gbuffer.Initialize();
 	m_shadow_map.Initialize();
 	m_voxel.Initialize();
-	m_bloom.Initialize();
+	m_bloom.Initialize(kQuadVert);
 
 	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
 	m_particle_system.Initialize(kMaxParticleCount);

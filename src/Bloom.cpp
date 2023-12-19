@@ -2,16 +2,13 @@
 
 #include <shader/Binding.h>
 
-void Bloom::Initialize() {
-	constexpr const char *kQuadVert =
-#include <shader/quad.vert.str>
-	    ;
+void Bloom::Initialize(const char *quad_vert_str) {
 	{
 		m_down_0_shader.Initialize();
 		constexpr const char *kFrag =
 #include <shader/bloom_down_0.frag.str>
 		    ;
-		m_down_0_shader.Load(kQuadVert, GL_VERTEX_SHADER);
+		m_down_0_shader.Load(quad_vert_str, GL_VERTEX_SHADER);
 		m_down_0_shader.Load(kFrag, GL_FRAGMENT_SHADER);
 		m_down_0_shader.Finalize();
 	}
@@ -20,7 +17,7 @@ void Bloom::Initialize() {
 		constexpr const char *kFrag =
 #include <shader/bloom_down.frag.str>
 		    ;
-		m_down_shader.Load(kQuadVert, GL_VERTEX_SHADER);
+		m_down_shader.Load(quad_vert_str, GL_VERTEX_SHADER);
 		m_down_shader.Load(kFrag, GL_FRAGMENT_SHADER);
 		m_down_shader.Finalize();
 	}
@@ -29,7 +26,7 @@ void Bloom::Initialize() {
 		constexpr const char *kFrag =
 #include <shader/bloom_up.frag.str>
 		    ;
-		m_up_shader.Load(kQuadVert, GL_VERTEX_SHADER);
+		m_up_shader.Load(quad_vert_str, GL_VERTEX_SHADER);
 		m_up_shader.Load(kFrag, GL_FRAGMENT_SHADER);
 		m_up_shader.Finalize();
 	}
