@@ -1,15 +1,15 @@
 #pragma once
 
-#include "MeshLoader.hpp"
-
 #include "Bloom.hpp"
 #include "CameraBuffer.hpp"
 #include "GBuffer.hpp"
 #include "GPUMesh.hpp"
+#include "LightPass.hpp"
+#include "MeshLoader.hpp"
 #include "ParticleSystem.hpp"
 #include "Playground.hpp"
 #include "ShadowMap.hpp"
-#include "TAALight.hpp"
+#include "TemporalAA.hpp"
 #include "Voxel.hpp"
 
 #include <mygl3/shader.hpp>
@@ -30,7 +30,8 @@ private:
 	CameraBuffer m_camera_buffer;
 	Voxel m_voxel;
 	Bloom m_bloom;
-	TAALight m_taa_light;
+	LightPass m_light_pass;
+	TemporalAA m_taa;
 
 	// playground
 	Playground m_playground;
@@ -46,7 +47,7 @@ private:
 		float plane_y;
 	};
 	std::optional<DragInfo> m_opt_drag;
-	void drag(const std::optional<glm::vec2> &opt_drag_pos);
+	void drag(float delta_t, const std::optional<glm::vec2> &opt_drag_pos);
 
 	// control flags
 	bool m_marbles_flag, m_fire_ball_flag;

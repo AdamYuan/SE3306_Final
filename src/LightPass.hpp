@@ -1,28 +1,25 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <mygl3/framebuffer.hpp>
 #include <mygl3/shader.hpp>
 #include <mygl3/texture.hpp>
 
-class GBuffer {
+class LightPass {
 private:
 	mygl3::Shader m_shader;
-
-	mygl3::Texture2D m_depth, m_albedo, m_normal, m_prev_uv;
+	mygl3::Texture2D m_light;
 	mygl3::FrameBuffer m_fbo;
 	int m_width{-1}, m_height{-1};
 
 	void initialize_target(int width, int height);
 
 public:
-	void Initialize();
-	template <typename DrawFunc> void Generate(int width, int height, const glm::vec2 &jitter, DrawFunc &&draw_func) {
+	void Initialize(const char *quad_vert_str);
+
+	template <typename QuadDrawFunc> void Generate(int width, int height, QuadDrawFunc &&quad_draw_func) {
 		initialize_target(width, height);
 		m_fbo.Bind();
-		m_shader.SetVec2(0, glm::value_ptr(jitter));
 		m_shader.Use();
-		draw_func();
+		quad_draw_func();
 	}
 };

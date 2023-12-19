@@ -13,6 +13,8 @@ layout(location = 0) out vec3 vNormal;
 layout(location = 1) out vec3 vColor;
 layout(location = 2) out vec4 vPrevPos;
 
+layout(location = 0) uniform vec2 uJitter;
+
 layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
 	mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection;
 };
@@ -22,4 +24,5 @@ void main() {
 	vColor = mix(aColor, aInstanceColor.rgb, aInstanceColor.a);
 	vPrevPos = uViewProjection * aPrevModel * vec4(aPosition, 1.0);
 	gl_Position = uViewProjection * aModel * vec4(aPosition, 1.0);
+	gl_Position.xy += uJitter * gl_Position.w;
 }

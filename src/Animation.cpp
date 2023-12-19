@@ -117,13 +117,14 @@ void Animation::Initialize() {
 	m_shadow_map.Initialize();
 	m_voxel.Initialize();
 	m_bloom.Initialize(kQuadVert);
-	m_taa_light.Initialize(kQuadVert);
+	m_light_pass.Initialize(kQuadVert);
+	m_taa.Initialize(kQuadVert);
 
 	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
 	m_particle_system.Initialize(kMaxParticleCount);
 }
 
-void Animation::drag(const std::optional<glm::vec2> &opt_drag_pos) {
+void Animation::drag(float delta_t, const std::optional<glm::vec2> &opt_drag_pos) {
 	if (!opt_drag_pos) {
 		if (m_opt_drag && m_opt_drag.value().p_tumbler)
 			m_opt_drag.value().p_tumbler->locked = false;
@@ -153,7 +154,7 @@ void Animation::drag(const std::optional<glm::vec2> &opt_drag_pos) {
 			}
 		} else {
 			glm::vec2 pos = opt_drag_pos.value();
-			drag.p_tumbler->RotateLocked(pos - drag.xz, 0.015f);
+			drag.p_tumbler->RotateLocked(pos - drag.xz, 3.5f * delta_t);
 			drag.xz = pos;
 		}
 	} else if (!m_opt_drag) {
@@ -198,7 +199,7 @@ void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_p
 	m_particle_system.Update(delta_t, &m_particle_gpu_mesh);
 	m_playground.Update(
 	    delta_t, &m_tumbler_gpu_mesh, &m_marble_gpu_mesh, &m_fireball_gpu_mesh,
-	    [this, &opt_drag_pos]() { drag(opt_drag_pos); },
+	    [this, delta_t, &opt_drag_pos]() { drag(delta_t, opt_drag_pos); },
 	    [this](Marble *p_marble, SphereHitInfo info) {
 		    switch (info.type) {
 		    case SphereHitType::kFront:
@@ -267,7 +268,7 @@ void Animation::Draw(int width, int height) {
 	// G-Buffer
 	glViewport(0, 0, width, height);
 	glCullFace(GL_BACK);
-	m_gbuffer.Generate(width, height, [this]() {
+	m_gbuffer.Generate(width, height, m_taa.GetJitter(width, height), [this]() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw();
@@ -287,11 +288,13 @@ void Animation::Draw(int width, int height) {
 	});
 
 	glViewport(0, 0, width, height);
-	// Light + TAA
-	m_taa_light.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+
+	// Light Pass
+	m_light_pass.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+	// TAA
+	m_taa.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 
 	// Final Pass
-	glViewport(0, 0, width, height);
 	mygl3::FrameBuffer::Unbind();
 	m_final_shader.Use();
 	glDrawArrays(GL_TRIANGLES, 0, 3);

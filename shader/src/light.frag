@@ -4,9 +4,7 @@
 #include "Config.h"
 #include "Texture.h"
 
-layout(location = 0) uniform int uFirst;
-
-layout(location = 0) out vec3 oColor;
+layout(location = 0) out vec3 oLight;
 
 layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
 layout(binding = GBUFFER_NORMAL_TEXTURE) uniform sampler2D uNormal;
@@ -15,8 +13,6 @@ layout(binding = GBUFFER_PREV_UV_TEXTURE) uniform sampler2D uPrevUV;
 layout(binding = SHADOW_MAP_TEXTURE) uniform sampler2DShadow uShadowMap;
 layout(binding = VOXEL_RADIANCE_TEXTURE) uniform sampler3D uVoxelRadiance;
 layout(binding = VOXEL_RADIANCE_MIPMAP_TEXTURE) uniform sampler3D uVoxelRadianceMipmaps[6];
-
-layout(binding = LIGHT_TEXTURE) uniform sampler2D uPrevLight;
 
 layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
 	mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection;
@@ -149,11 +145,5 @@ void main() {
 	    IsEmissive(albedo) ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
 	light /= (light + 1);
 
-	if (uFirst == 1)
-		oColor = light;
-	else {
-		vec2 prev_uv = texelFetch(uPrevUV, coord, 0).rg;
-		vec3 prev_light = texture(uPrevLight, prev_uv).rgb;
-		oColor = mix(prev_light, light, 0.1);
-	}
+	oLight = light;
 }
