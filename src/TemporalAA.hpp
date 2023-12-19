@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <mygl3/framebuffer.hpp>
 #include <mygl3/shader.hpp>
 #include <mygl3/texture.hpp>
@@ -19,14 +20,18 @@ private:
 public:
 	void Initialize(const char *quad_vert_str);
 	glm::vec2 GetJitter(int width, int height);
-	template <typename QuadDrawFunc> void Generate(int width, int height, QuadDrawFunc &&quad_draw_func) {
+	template <typename QuadDrawFunc>
+	void Generate(int width, int height, const glm::vec2 &jitter, QuadDrawFunc &&quad_draw_func) {
 		initialize_target(width, height);
 
 		bool cur = m_tick & 1u, prev = !cur;
 		m_textures[prev].Bind(TAA_TEXTURE);
+
 		m_fbos[cur].Bind();
 		m_shader.Use();
 		m_shader.SetInt(0, m_tick == 0);
+		m_shader.SetVec2(1, glm::value_ptr(jitter));
+
 		quad_draw_func();
 		m_textures[cur].Bind(TAA_TEXTURE);
 

@@ -20,7 +20,7 @@ void LightPass::initialize_target(int width, int height) {
 
 	m_light.Initialize();
 	m_light.Storage(m_width, m_height, GL_RGB16, 1);
-	m_light.SetSizeFilter(GL_NEAREST, GL_NEAREST);
+	m_light.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_light.SetWrapFilter(GL_CLAMP_TO_EDGE);
 	m_light.Bind(LIGHT_TEXTURE);
 

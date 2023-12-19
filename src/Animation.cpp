@@ -265,10 +265,12 @@ void Animation::Draw(int width, int height) {
 	glCullFace(GL_FRONT);
 	m_shadow_map.Generate(kShadowMapSize, kShadowMapSize, [this]() { m_marble_gpu_mesh.Draw(); });
 
+	glm::vec2 jitter = m_taa.GetJitter(width, height);
+
 	// G-Buffer
 	glViewport(0, 0, width, height);
 	glCullFace(GL_BACK);
-	m_gbuffer.Generate(width, height, m_taa.GetJitter(width, height), [this]() {
+	m_gbuffer.Generate(width, height, jitter, [this]() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		m_cornell_gpu_mesh.Draw();
 		m_tumbler_gpu_mesh.Draw();
@@ -292,7 +294,7 @@ void Animation::Draw(int width, int height) {
 	// Light Pass
 	m_light_pass.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 	// TAA
-	m_taa.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+	m_taa.Generate(width, height, jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 
 	// Final Pass
 	mygl3::FrameBuffer::Unbind();
