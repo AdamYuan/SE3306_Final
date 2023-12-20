@@ -1,19 +1,15 @@
 #version 450
 
 #include "Binding.h"
-#include "Texture.h"
 
 layout(location = 0) out vec4 oColor;
 
-layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
 layout(binding = BLOOM_TEXTURE) uniform sampler2D uBloom;
 layout(binding = TAA_TEXTURE) uniform sampler2D uTAALight;
 
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
-	vec3 albedo = texelFetch(uAlbedo, coord, 0).rgb;
-	bool emissive = IsEmissive(albedo);
-	vec3 bloom = texelFetch(uBloom, coord, 0).rgb + (emissive ? albedo : vec3(0));
+	vec3 bloom = texelFetch(uBloom, coord, 0).rgb;
 	vec3 light = texelFetch(uTAALight, coord, 0).rgb;
 	light /= 1. - light; // Inverse tone mapping
 

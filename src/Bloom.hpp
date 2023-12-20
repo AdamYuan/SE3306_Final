@@ -35,9 +35,12 @@ public:
 		glBlendEquation(GL_FUNC_ADD);
 		m_up_shader.Use();
 		m_up_shader.SetFloat(1, filter_radius);
+		m_up_shader.SetInt(2, false); // not level 0
 		for (int m = mipmap - 2; m >= 0; --m) {
-			if (m == 0)
+			if (m == 0) {
 				glDisable(GL_BLEND);
+				m_up_shader.SetInt(2, true); // level 0
+			}
 			m_fbos[m].Bind();
 			m_up_shader.SetInt(0, m + 1);
 			quad_draw_func(width >> m, height >> m);

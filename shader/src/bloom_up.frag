@@ -15,8 +15,16 @@ layout(binding = BLOOM_TEXTURE) uniform sampler2D uBloom;
 
 layout(location = 0) uniform int uSourceLod;
 layout(location = 1) uniform float uFilterRadius;
+layout(location = 2) uniform int uLevel0;
 
 layout(location = 0) out vec3 oUpSample;
+
+#include "Texture.h"
+layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
+vec3 sample_emissive(in const vec2 uv) {
+	vec3 color = texture(uAlbedo, uv).rgb;
+	return IsEmissive(color) ? color : vec3(0);
+}
 
 void main() {
 	ivec2 dst_resolution = textureSize(uBloom, uSourceLod - 1);
@@ -51,4 +59,6 @@ void main() {
 	oUpSample += (b + d + f + h) * 2.0;
 	oUpSample += (a + c + g + i);
 	oUpSample *= 1.0 / 16.0;
+	if (uLevel0 == 1)
+		oUpSample += sample_emissive(texcoord);
 }
