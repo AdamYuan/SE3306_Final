@@ -4,6 +4,7 @@
 #define VOXEL_SCALE 0.75f
 #define Z_NEAR 0.1f
 #define Z_FAR 4.0f
+#define MOTION_BLUR_TILE 16
 
 #ifndef GLSL
 #include <glm/glm.hpp>

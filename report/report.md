@@ -36,6 +36,8 @@
 1. 通过Shadow Map实现阴影
 1. 使用Voxel Cone Tracing实现全局光照效果
 1. Physically Based Bloom高质量泛光
+1. Temporal Anti-Aliasing抗锯齿
+1. Motion Blur
 
 ## Cornell Box场景建模
 

@@ -46,6 +46,7 @@ add_executable(
         src/TemporalAA.cpp
         src/Texture.cpp
         src/ScreenPass.cpp
+        src/MotionBlur.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 
