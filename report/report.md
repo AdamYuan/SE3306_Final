@@ -494,7 +494,7 @@ $\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f
   >
   > https://www.gdcvault.com/play/1022970/Temporal-Reprojection-Anti-Aliasing-in
 
-* 此外，本次作业根据Unreal Engine的建议在YCoCg而非RGB Color Space中进行Clipping
+* 此外，本次作业根据High Quality Temporal Supersampling的建议在YCoCg而非RGB Color Space中进行Clipping
 
 #### 效果
 
