@@ -306,6 +306,8 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 * **TAA Pass**：对Light Pass的输出做Temporal Anti-Aliasing
 * **Screen Pass**：将TAA Pass的输出与Bloom Pass输出做混合，并做Tone Mapping + Gamma Correction，绘制最终的图像到屏幕
 
+（要是允许用我的Vulkan Render Graph，能用Resource Aliasing节省好多显存，用OpenGL就没办法了>.<）
+
 ### Direct Light
 
 #### Diffuse
@@ -431,9 +433,78 @@ $\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f
 
 可见Physically Based Bloom比Guassian Blur效果好很多。
 
-### Temporal AA
+### Temporal Anti-Aliasing
 
+本次作业采用Temporal Anti-Aliasing的原因如下：
 
+1. 由于设置的Viewport较小，导致锯齿较为严重，实现抗锯齿能够较好地改善画面质量
+2. 由于采用了延迟渲染技术，不适合使用MSAA
+3. FXAA、SMAA等技术会产生大量Artifacts，且画面容易模糊
+4. 总不能用DLSS吧。。
+5. TAA效果好，Artifacts较少（集中在运动物体边缘，不明显），开销也不大
+
+实现TAA对渲染管线的改动较大，主要有以下几个方面：
+
+* GBuffer Pass每帧需要施加一个Subpixel Jitter，同时需要结合上一帧的Model矩阵计算每个Fragment的Screen Space Velocity，输出到Velocity Buffer
+* 泛光的混合需要在TAA之后执行，否则容易产生闪烁
+* TAA Pass的输入输出需要是Tone Mapping后的图像，否则无法对HDR的高光部分抗锯齿
+* Screen Pass得到TAA的输出后还要做Inverse Tone Mapping才能继续混合泛光
+
+> TAA实现参考了以下资料：
+>
+> * Temporal Reprojection Anti-Aliasing in INSIDE
+>
+>   https://www.gdcvault.com/play/1022970/Temporal-Reprojection-Anti-Aliasing-in
+>
+> * High Quality Temporal Supersampling
+>
+>   https://de45xmedrsdbp.cloudfront.net/Resources/files/TemporalAA_small-59732822.pdf
+
+#### Subpixel Jittering
+
+本次作业使用长度为16的Halton(2, 3)序列做Subpixel Jittering，如下图所示：
+
+> <img src="img/halton_2_3x16.png" style="zoom: 33%;" />
+>
+> https://www.gdcvault.com/play/1022970/Temporal-Reprojection-Anti-Aliasing-in
+
+此外，在TAA Pass和Screen Pass中采样当前帧的GBuffer材质时，需要对采样的UV做Unjitter，否则会使场景模糊。
+
+#### Color Clipping
+
+假设当前像素颜色为$c$，借助Velocity Buffer获取的上一帧TAA颜色为$c_{\text{hist}}$，则有混合的颜色$c' = c_{\text{hist}} \times f + c \times (1 - f)$，$f$为接近$1$的常数
+
+然而直接使用$c_{\text{hist}}$容易将错误的颜色带入计算，产生Ghosting，如下：
+
+![](img/taa_ghosting.png)
+
+因此需要根据当前像素的值对$c_{\text{hist}}$进行约束，得到$c_{\text{hist}}'$，再有$c' = c_{\text{hist}}’ \times f + c \times (1 - f)$
+
+作业采用的约束方法如下：
+
+* 在当前像素&周围采样5个像素颜色，如下：
+
+  > <img src="img/taa_5tap.png" style="zoom: 33%;" />
+  >
+  > https://www.gdcvault.com/play/1022970/Temporal-Reprojection-Anti-Aliasing-in
+
+* 而后计算这些颜色的平均值$\bar{c}$和标准差$\sigma_c$，将$c_{\text{hist}}$ Clip到AABB包围盒$(\bar{c} - \sigma_c, \bar{c} + \sigma_c)$中得到颜色$c_\text{hist}'$，Clip相比Clamp能够防止结果堆积在AABB的边角，如下图所示：
+
+  > ![](img/taa_clip.png)
+  >
+  > https://www.gdcvault.com/play/1022970/Temporal-Reprojection-Anti-Aliasing-in
+
+* 此外，本次作业根据Unreal Engine的建议在YCoCg而非RGB Color Space中进行Clipping
+
+#### 效果
+
+| TAA  | 无TAA |
+| ---- | ----- |
+|      |       |
+
+### Motion Blur
+
+（既然为了TAA都把Velocity Buffer画出来了，那肯定得做Motion Blur）
 
 ## 性能分析
 

@@ -67,6 +67,6 @@ void main() {
 
 		prev_light = VarianceClip(prev_light, mean, stddev);
 
-		oColor = YCoCg2RGB(mix(light, prev_light, 0.7));
+		oColor = YCoCg2RGB(mix(light, prev_light, 0.8));
 	}
 }
