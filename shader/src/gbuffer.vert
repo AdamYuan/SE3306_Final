@@ -20,7 +20,7 @@ layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
 };
 
 void main() {
-	vNormal = mat3(aPrevModel) * aNormal;
+	vNormal = mat3(aModel) * aNormal;
 	vColor = mix(aColor, aInstanceColor.rgb, aInstanceColor.a);
 	vPrevPos = uViewProjection * aPrevModel * vec4(aPosition, 1.0);
 	gl_Position = uViewProjection * aModel * vec4(aPosition, 1.0);
