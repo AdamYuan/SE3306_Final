@@ -11,6 +11,7 @@
 #include "ShadowMap.hpp"
 #include "TemporalAA.hpp"
 #include "Voxel.hpp"
+#include "Texture.hpp"
 
 #include <mygl3/shader.hpp>
 #include <mygl3/texture.hpp>
@@ -20,8 +21,8 @@ class Animation {
 private:
 	// render resources
 	GPUMesh m_cornell_gpu_mesh, m_tumbler_gpu_mesh, m_marble_gpu_mesh, m_fireball_gpu_mesh, m_particle_gpu_mesh;
-	mygl3::Texture2D m_tumbler_texture, m_floor_texture;
 	mygl3::VertexArray m_quad_vao;
+	Texture m_texture;
 
 	// passes
 	mygl3::Shader m_final_shader;
