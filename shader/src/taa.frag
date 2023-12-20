@@ -7,7 +7,6 @@ layout(location = 1) uniform vec2 uJitter;
 
 layout(location = 0) out vec3 oColor;
 
-layout(binding = GBUFFER_PREV_UV_TEXTURE) uniform sampler2D uPrevUV;
 layout(binding = TAA_TEXTURE) uniform sampler2D uPrevLight;
 layout(binding = LIGHT_TEXTURE) uniform sampler2D uLight;
 
@@ -39,8 +38,7 @@ void main() {
 	if (uFirst == 1)
 		oColor = light;
 	else {
-		vec2 prev_uv = texelFetch(uPrevUV, coord, 0).rg + uJitter * .5;
-		vec3 prev_light = kRGB2YCoCg * texture(uPrevLight, prev_uv).rgb;
+		vec3 prev_light = kRGB2YCoCg * texture(uPrevLight, uv).rgb;
 
 		float dx = inv_resolution.x, dy = inv_resolution.y;
 		vec3 l0 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x - dx, uv_unjitter.y)).rgb;
@@ -55,6 +53,6 @@ void main() {
 		// prev_light = clamp(prev_light, l_min, l_max);
 		prev_light = clip_aabb(l_min, l_max, light, prev_light);
 
-		oColor = kYCoCg2RGB * mix(light, prev_light, 0.65);
+		oColor = kYCoCg2RGB * mix(light, prev_light, 0.8);
 	}
 }

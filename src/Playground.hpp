@@ -18,7 +18,6 @@ private:
 	std::vector<Marble> m_marbles;
 	std::optional<Fireball> m_fireball;
 
-	void pop_mesh_prev(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const;
 	void pop_mesh(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const;
 
 public:
@@ -46,8 +45,6 @@ public:
 		                m_marbles.end());
 		if (m_marbles.empty())
 			marble_empty_callback();
-
-		pop_mesh_prev(p_tumbler_mesh, p_marble_mesh, p_fireball_mesh);
 
 		tumbler_drag_func();
 

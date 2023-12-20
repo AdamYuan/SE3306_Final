@@ -25,16 +25,14 @@ void GPUMesh::Initialize(std::span<const Mesh> mesh_lods, uint32_t max_instance_
 
 	m_instance_count = max_instance_count;
 
-	m_instance_infos.resize(
-	    max_instance_count,
-	    {.color = {}, .model = glm::identity<glm::mat4>(), .prev_model = glm::identity<glm::mat4>()});
+	m_instance_infos.resize(max_instance_count, {.color = {}, .model = glm::identity<glm::mat4>()});
 	m_instance_info_buffer.Initialize();
 	m_instance_info_buffer.Storage(m_instance_infos.data(), m_instance_infos.data() + m_instance_infos.size(),
 	                               GL_DYNAMIC_STORAGE_BIT);
 
 	m_vertex_array.Initialize();
 	{
-		constexpr GLuint kPos = 0, kNormal = 1, kColor = 2, kInstanceColor = 3, kModel = 4, kPrevModel = 8;
+		constexpr GLuint kPos = 0, kNormal = 1, kColor = 2, kInstanceColor = 3, kModel = 4;
 		constexpr GLuint kVbo0 = 0, kVbo1 = 1;
 		glEnableVertexArrayAttrib(m_vertex_array.Get(), kPos);
 		glVertexArrayAttribFormat(m_vertex_array.Get(), kPos, 3, GL_FLOAT, GL_FALSE, 0);
@@ -66,19 +64,6 @@ void GPUMesh::Initialize(std::span<const Mesh> mesh_lods, uint32_t max_instance_
 		glEnableVertexArrayAttrib(m_vertex_array.Get(), kModel + 3);
 		glVertexArrayAttribFormat(m_vertex_array.Get(), kModel + 3, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(GLfloat));
 		glVertexArrayAttribBinding(m_vertex_array.Get(), kModel + 3, kVbo1);
-
-		glEnableVertexArrayAttrib(m_vertex_array.Get(), kPrevModel);
-		glVertexArrayAttribFormat(m_vertex_array.Get(), kPrevModel, 4, GL_FLOAT, GL_FALSE, 20 * sizeof(GLfloat));
-		glVertexArrayAttribBinding(m_vertex_array.Get(), kPrevModel, kVbo1);
-		glEnableVertexArrayAttrib(m_vertex_array.Get(), kPrevModel + 1);
-		glVertexArrayAttribFormat(m_vertex_array.Get(), kPrevModel + 1, 4, GL_FLOAT, GL_FALSE, 24 * sizeof(GLfloat));
-		glVertexArrayAttribBinding(m_vertex_array.Get(), kPrevModel + 1, kVbo1);
-		glEnableVertexArrayAttrib(m_vertex_array.Get(), kPrevModel + 2);
-		glVertexArrayAttribFormat(m_vertex_array.Get(), kPrevModel + 2, 4, GL_FLOAT, GL_FALSE, 28 * sizeof(GLfloat));
-		glVertexArrayAttribBinding(m_vertex_array.Get(), kPrevModel + 2, kVbo1);
-		glEnableVertexArrayAttrib(m_vertex_array.Get(), kPrevModel + 3);
-		glVertexArrayAttribFormat(m_vertex_array.Get(), kPrevModel + 3, 4, GL_FLOAT, GL_FALSE, 32 * sizeof(GLfloat));
-		glVertexArrayAttribBinding(m_vertex_array.Get(), kPrevModel + 3, kVbo1);
 
 		GLuint buffers[2] = {m_vertex_buffer.Get(), m_instance_info_buffer.Get()};
 		GLintptr offsets[2] = {0, 0};

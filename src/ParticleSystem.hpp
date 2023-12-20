@@ -43,7 +43,6 @@ private:
 
 	float m_unused_fire_delta_t = 0.f;
 
-	void pop_mesh_prev(GPUMesh *p_mesh) const;
 	void pop_mesh(GPUMesh *p_mesh) const;
 
 public:

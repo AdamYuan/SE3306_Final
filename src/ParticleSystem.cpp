@@ -111,7 +111,6 @@ void ParticleSystem::Update(float delta_t, GPUMesh *p_mesh) {
 	update_life(m_sparks);
 	update_life(m_ashes);
 
-	pop_mesh_prev(p_mesh);
 	const auto update = [&](auto &particles) {
 		for (auto &p : particles)
 			p.Update(&m_rand, delta_t);
@@ -120,25 +119,6 @@ void ParticleSystem::Update(float delta_t, GPUMesh *p_mesh) {
 	update(m_sparks);
 	update(m_ashes);
 	pop_mesh(p_mesh);
-}
-
-void ParticleSystem::pop_mesh_prev(GPUMesh *p_mesh) const {
-	uint32_t count = 0;
-	const auto pop_mesh_vec_prev = [&](auto &particles) {
-		for (const auto &p : particles) {
-			if (count >= m_max_particles)
-				return;
-			auto model = glm::identity<glm::mat4>();
-			model[0][0] = model[1][1] = model[2][2] = p.GetRadius();
-			model[3] = glm::vec4(p.center, 1.f);
-			p_mesh->SetPrevModel(count, model);
-			++count;
-		}
-	};
-	pop_mesh_vec_prev(m_fires);
-	pop_mesh_vec_prev(m_sparks);
-	pop_mesh_vec_prev(m_ashes);
-	p_mesh->SetInstanceCount(count);
 }
 void ParticleSystem::pop_mesh(GPUMesh *p_mesh) const {
 	uint32_t count = 0;
@@ -157,4 +137,5 @@ void ParticleSystem::pop_mesh(GPUMesh *p_mesh) const {
 	pop_mesh_vec(m_fires);
 	pop_mesh_vec(m_sparks);
 	pop_mesh_vec(m_ashes);
+	p_mesh->SetInstanceCount(count);
 }

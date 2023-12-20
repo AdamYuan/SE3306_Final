@@ -14,7 +14,7 @@ private:
 	mygl3::Buffer m_vertex_buffer, m_index_buffer, m_instance_info_buffer;
 	struct InstanceInfo {
 		glm::vec4 color;
-		glm::mat4 model, prev_model;
+		glm::mat4 model;
 	};
 	std::vector<InstanceInfo> m_instance_infos;
 	struct LodInfo {
@@ -37,10 +37,6 @@ public:
 	}
 	inline void SetModel(uint32_t mesh_id, const glm::mat4 &model) {
 		m_instance_infos[mesh_id].model = model;
-		m_changed = true;
-	}
-	inline void SetPrevModel(uint32_t mesh_id, const glm::mat4 &prev_model) {
-		m_instance_infos[mesh_id].prev_model = prev_model;
 		m_changed = true;
 	}
 	inline void SetColor(uint32_t mesh_id, const glm::vec4 &color) {
