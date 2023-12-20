@@ -55,6 +55,6 @@ void main() {
 		// prev_light = clamp(prev_light, l_min, l_max);
 		prev_light = clip_aabb(l_min, l_max, light, prev_light);
 
-		oColor = kYCoCg2RGB * mix(light, prev_light, 0.65);
+		oColor = kYCoCg2RGB * mix(light, prev_light, 0.8);
 	}
 }
