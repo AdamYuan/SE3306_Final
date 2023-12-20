@@ -295,14 +295,16 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 本次作业的渲染管线如下图所示：
 
-<img src="img/pipeline.png"  />
+<img src="img/pipeline.svg"  />
 
-* GBuffer Pass：绘制场景中的所有物体，将颜色、法线、深度存储到三个Texture中
-* Shadow Map Pass：从顶部光源的视角绘制场景中的遮挡物（不倒翁和弹珠，火球因为是发光体就不算在里面），将深度图存储到Texture
-* Voxelize Pass：绘制Cornell Box、不倒翁、火球，借助Shadow Map计算Direct Light，体素化存储到3D Texture（$64^3$）中
-* Voxel Mipmap Pass：将Voxelize得到的3D Texture降采样，以便于Voxel Cone Tracing
-* Bloom Pass：截取GBuffer颜色中的高光部分做Gaussian Blur，存储到Textre
-* Final Pass：绘制最终的图像到屏幕
+* **GBuffer Pass**：绘制场景中的所有物体，将颜色、法线、深度、速度存储到四个Texture中
+* **Shadow Map Pass**：从顶部光源的视角绘制场景中的遮挡物（不倒翁和弹珠，火球因为是发光体就不算在里面），将深度图存储到Texture
+* **Voxelize Pass**：绘制Cornell Box、不倒翁、火球，借助Shadow Map计算Direct Light，体素化存储到3D Texture（$64^3$）中
+* **Voxel Mipmap Pass**：将Voxelize得到的3D Texture降采样，以便于Voxel Cone Tracing
+* **Bloom Pass**：截取GBuffer颜色中的高光部分做Gaussian Blur，存储到Textre
+* **Light Pass**：计算屏幕空间的光照，输出到材质
+* **TAA Pass**：对Light Pass的输出做Temporal Anti-Aliasing
+* **Screen Pass**：将TAA Pass的输出与Bloom Pass输出做混合，并做Tone Mapping + Gamma Correction，绘制最终的图像到屏幕
 
 ### Direct Light
 
@@ -324,7 +326,7 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 由于点光源（位置为Cornell Box顶部半球灯的球心）在$[-1,1]^3$外，一个Shadow Map Texture足够涵盖$[-1,1]^3$范围内的所有物体，无需使用Cubemap Texture。
 
-在Final Pass中使用$5 \times 5$ PCF采样实现软阴影，效果如下：
+在Light Pass中使用$5 \times 5$ PCF采样实现软阴影，效果如下：
 
 <img src="img/diffuse_shadowmap.png" style="zoom:50%;" />
 
@@ -416,18 +418,22 @@ Voxel Cone Tracing即在一个圆锥体中进行体素采样（四线性插值�
 >
 >   
 
-生成的Bloom材质在Final Pass的混合方法如下：
+生成的Bloom材质在Screen Pass的混合方法如下：
 
 $\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f$为控制泛光程度的参数，通常设定为接近$0$（$f$较小时，发光体的实际轮廓突出，效果较为真实；程序中取$f = 0.1$）
 
 实现出的效果如下（对比了之前写的$9\times9$ Gaussian Blur）：
 
-| 方法                                       | Bloom Pass                                 | Final Pass                                  |
+| 方法                                       | Bloom Pass                                 | Screen Pass                                 |
 | ------------------------------------------ | ------------------------------------------ | ------------------------------------------- |
 | **Physically Based Bloom<br />(作业采用)** | ![](img/bloom_blur.png)                    | ![](img/bloom_final.png)                    |
 | Gaussian Blur                              | <img src="img/bloom_gaussian_blur.png"  /> | <img src="img/bloom_gaussian_final.png"  /> |
 
 可见Physically Based Bloom比Guassian Blur效果好很多。
+
+### Temporal AA
+
+
 
 ## 性能分析
 
@@ -440,4 +446,4 @@ $\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f
 
 * 可见即使在集成显卡，Frame Time也在$10 \text{ms}$以内，基本没有性能问题
   * 不过集成显卡的驱动似乎都会有些问题，导致容易产生artifacts
-* 每帧$80\%$以上的时间都消耗在Final Pass，这是由于Voxel Cone Tracing计算量较大
+* 每帧$80\%$以上的时间都消耗在Light Pass，这是由于Voxel Cone Tracing计算量较大
