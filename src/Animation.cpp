@@ -58,19 +58,6 @@ void Animation::Initialize() {
 	}
 
 	// Load Shaders
-	constexpr const char *kQuadVert =
-#include <shader/quad.vert.str>
-	    ;
-	{
-		m_final_shader.Initialize();
-		constexpr const char *kFinalFrag =
-#include <shader/final.frag.str>
-		    ;
-		m_final_shader.Load(kQuadVert, GL_VERTEX_SHADER);
-		m_final_shader.Load(kFinalFrag, GL_FRAGMENT_SHADER);
-		m_final_shader.Finalize();
-	}
-
 	m_quad_vao.Initialize();
 
 	m_camera_buffer.Initialize();
@@ -83,9 +70,13 @@ void Animation::Initialize() {
 	m_gbuffer.Initialize();
 	m_shadow_map.Initialize();
 	m_voxel.Initialize();
+	constexpr const char *kQuadVert =
+#include <shader/quad.vert.str>
+	    ;
 	m_bloom.Initialize(kQuadVert);
 	m_light_pass.Initialize(kQuadVert);
 	m_taa.Initialize(kQuadVert);
+	m_screen_pass.Initialize(kQuadVert);
 
 	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
 	m_particle_system.Initialize(kMaxParticleCount);
@@ -246,11 +237,11 @@ void Animation::Draw(int width, int height) {
 		m_particle_gpu_mesh.Draw();
 	});
 
-	// Post Process
+	// Quad
 	glDisable(GL_DEPTH_TEST);
 	m_quad_vao.Bind();
 
-	// Bloom
+	// Generate Bloom
 	m_bloom.Generate(width, height, 5, 0.005f, [](int w, int h) {
 		glViewport(0, 0, w, h);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -263,8 +254,6 @@ void Animation::Draw(int width, int height) {
 	// TAA
 	m_taa.Generate(width, height, jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 
-	// Final Pass
-	mygl3::FrameBuffer::Unbind();
-	m_final_shader.Use();
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	// Screen Pass
+	m_screen_pass.Generate(jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 }

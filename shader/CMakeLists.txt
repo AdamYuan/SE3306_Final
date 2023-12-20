@@ -18,7 +18,7 @@ set(SHADER_SRC
         voxel_mipmap_0.comp
         voxel_mipmap.comp
         quad.vert
-        final.frag
+        screen.frag
         bloom_down_0.frag
         bloom_down.frag
         bloom_up.frag

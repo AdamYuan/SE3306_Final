@@ -45,6 +45,7 @@ add_executable(
         src/LightPass.cpp
         src/TemporalAA.cpp
         src/Texture.cpp
+        src/ScreenPass.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 

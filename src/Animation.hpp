@@ -8,10 +8,11 @@
 #include "MeshLoader.hpp"
 #include "ParticleSystem.hpp"
 #include "Playground.hpp"
+#include "ScreenPass.hpp"
 #include "ShadowMap.hpp"
 #include "TemporalAA.hpp"
-#include "Voxel.hpp"
 #include "Texture.hpp"
+#include "Voxel.hpp"
 
 #include <mygl3/shader.hpp>
 #include <mygl3/texture.hpp>
@@ -25,7 +26,6 @@ private:
 	Texture m_texture;
 
 	// passes
-	mygl3::Shader m_final_shader;
 	ShadowMap m_shadow_map;
 	GBuffer m_gbuffer;
 	CameraBuffer m_camera_buffer;
@@ -33,6 +33,7 @@ private:
 	Bloom m_bloom;
 	LightPass m_light_pass;
 	TemporalAA m_taa;
+	ScreenPass m_screen_pass;
 
 	// playground
 	Playground m_playground;

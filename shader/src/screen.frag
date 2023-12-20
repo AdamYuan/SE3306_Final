@@ -2,6 +2,8 @@
 
 #include "Binding.h"
 
+layout(location = 0) uniform vec2 uJitter;
+
 layout(location = 0) out vec4 oColor;
 
 layout(binding = BLOOM_TEXTURE) uniform sampler2D uBloom;
@@ -16,9 +18,12 @@ vec3 ToneMapFilmic_Hejl2015(in const vec3 hdr, in const float white_pt) {
 
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
-	vec3 bloom = texelFetch(uBloom, coord, 0).rgb;
 	vec3 light = texelFetch(uTAALight, coord, 0).rgb;
 	light /= 1. - light; // Inverse tone mapping
+
+	vec2 inv_resolution = 1.0 / textureSize(uBloom, 0);
+	vec2 uv = gl_FragCoord.xy * inv_resolution, uv_unjitter = uv + uJitter * .5;
+	vec3 bloom = textureLod(uBloom, uv_unjitter, 0).rgb;
 
 	vec3 color = mix(light, bloom, 0.1);
 	color = ToneMapFilmic_Hejl2015(color, 3.2);
