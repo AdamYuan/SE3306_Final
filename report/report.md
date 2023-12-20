@@ -498,9 +498,9 @@ $\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f
 
 #### 效果
 
-| TAA  | 无TAA |
-| ---- | ----- |
-|      |       |
+| TAA                         | 无TAA                        |
+| --------------------------- | ---------------------------- |
+| ![](img/taa_after_crop.png) | ![](img/taa_before_crop.png) |
 
 ### Motion Blur
 
