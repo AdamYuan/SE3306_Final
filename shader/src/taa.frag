@@ -11,7 +11,6 @@ layout(binding = GBUFFER_VELOCITY_TEXTURE) uniform sampler2D uVelocity;
 layout(binding = TAA_TEXTURE) uniform sampler2D uPrevLight;
 layout(binding = LIGHT_TEXTURE) uniform sampler2D uLight;
 
-// note: clips towards aabb center
 vec3 VarianceClip(in const vec3 q, in const vec3 mean, in const vec3 stddev) {
 	vec3 v_clip = q - mean;
 	vec3 v_unit = v_clip / stddev;
@@ -63,7 +62,7 @@ void main() {
 		ACC(vec2(uv_unjitter.x, uv_unjitter.y - dy));
 		ACC(vec2(uv_unjitter.x, uv_unjitter.y + dy));
 		mean *= 0.2;
-		stddev = sqrt(max(stddev * 0.2 - mean * mean, 0));
+		stddev = sqrt(max(stddev * 0.2 - mean * mean, 1e-6));
 
 		prev_light = VarianceClip(prev_light, mean, stddev);
 
