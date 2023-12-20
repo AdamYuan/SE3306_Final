@@ -12,22 +12,29 @@ layout(binding = TAA_TEXTURE) uniform sampler2D uPrevLight;
 layout(binding = LIGHT_TEXTURE) uniform sampler2D uLight;
 
 // note: clips towards aabb center
-vec3 clip_aabb(in const vec3 aabb_min, // cn_min
-               in const vec3 aabb_max, // cn_max
-               in const vec3 p,        // c_in’
-               in const vec3 q)        // c_hist
-{
-	vec3 p_clip = 0.5 * (aabb_max + aabb_min);
-	vec3 e_clip = 0.5 * (aabb_max - aabb_min);
-	vec3 v_clip = q - p_clip;
-	vec3 v_unit = v_clip / e_clip;
+vec3 VarianceClip(in const vec3 q, in const vec3 mean, in const vec3 stddev) {
+	vec3 v_clip = q - mean;
+	vec3 v_unit = v_clip / stddev;
 	vec3 a_unit = abs(v_unit);
 	float ma_unit = max(a_unit.x, max(a_unit.y, a_unit.z));
-	return ma_unit > 1.0 ? p_clip + v_clip / ma_unit : q;
+	return ma_unit > 1.0 ? mean + v_clip / ma_unit : q;
 }
 
-const mat3 kRGB2YCoCg = mat3(0.25, 0.5, -0.25, 0.5, 0.0, 0.5, 0.25, -0.5, -0.25);
-const mat3 kYCoCg2RGB = mat3(1.0, 1.0, 1.0, 1.0, 0.0, -1.0, -1.0, 1.0, -1.0);
+vec3 RGB2YCoCg(in const vec3 rgb) {
+	float co = rgb.r - rgb.b;
+	float t = rgb.b + co / 2.0;
+	float cg = rgb.g - t;
+	float y = t + cg / 2.0;
+	return vec3(y, co, cg);
+}
+
+vec3 YCoCg2RGB(in const vec3 ycocg) {
+	float t = ycocg.r - ycocg.b / 2.0;
+	float g = ycocg.b + t;
+	float b = t - ycocg.g / 2.0;
+	float r = ycocg.g + b;
+	return vec3(r, g, b);
+}
 
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy), resolution = textureSize(uLight, 0);
@@ -40,21 +47,26 @@ void main() {
 		oColor = light;
 	else {
 		vec2 velocity = texelFetch(uVelocity, coord, 0).rg - .5;
-		vec3 prev_light = kRGB2YCoCg * texture(uPrevLight, uv - velocity).rgb;
+		vec3 prev_light = RGB2YCoCg(texture(uPrevLight, uv - velocity).rgb);
 
+		light = RGB2YCoCg(light);
+		vec3 mean = light, stddev = light * light;
 		float dx = inv_resolution.x, dy = inv_resolution.y;
-		vec3 l0 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x - dx, uv_unjitter.y)).rgb;
-		vec3 l1 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x + dx, uv_unjitter.y)).rgb;
-		vec3 l2 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x, uv_unjitter.y - dy)).rgb;
-		vec3 l3 = kRGB2YCoCg * texture(uLight, vec2(uv_unjitter.x, uv_unjitter.y + dy)).rgb;
+#define ACC(UV) \
+	{ \
+		vec3 l = RGB2YCoCg(texture(uLight, UV).rgb); \
+		mean += l; \
+		stddev += l * l; \
+	}
+		ACC(vec2(uv_unjitter.x - dx, uv_unjitter.y));
+		ACC(vec2(uv_unjitter.x + dx, uv_unjitter.y));
+		ACC(vec2(uv_unjitter.x, uv_unjitter.y - dy));
+		ACC(vec2(uv_unjitter.x, uv_unjitter.y + dy));
+		mean *= 0.2;
+		stddev = sqrt(max(stddev * 0.2 - mean * mean, 0));
 
-		light = kRGB2YCoCg * light;
-		vec3 l_min = min(min(l0, l1), min(l2, min(l3, light)));
-		vec3 l_max = max(max(l0, l1), max(l2, max(l3, light)));
+		prev_light = VarianceClip(prev_light, mean, stddev);
 
-		// prev_light = clamp(prev_light, l_min, l_max);
-		prev_light = clip_aabb(l_min, l_max, light, prev_light);
-
-		oColor = kYCoCg2RGB * mix(light, prev_light, 0.8);
+		oColor = YCoCg2RGB(mix(light, prev_light, 0.7));
 	}
 }
