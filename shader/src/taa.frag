@@ -61,8 +61,9 @@ void main() {
 		ACC(vec2(uv_unjitter.x + dx, uv_unjitter.y));
 		ACC(vec2(uv_unjitter.x, uv_unjitter.y - dy));
 		ACC(vec2(uv_unjitter.x, uv_unjitter.y + dy));
+
 		mean *= 0.2;
-		stddev = sqrt(max(stddev * 0.2 - mean * mean, 1e-6));
+		stddev = sqrt(max(stddev * 0.2 - mean * mean, 1e-12));
 
 		prev_light = VarianceClip(prev_light, mean, stddev);
 
