@@ -43,7 +43,7 @@ add_executable(
         src/Playground.cpp
         src/ParticleSystem.cpp
         src/LightPass.cpp
-        src/TemporalAA.cpp
+        src/SMAA.cpp
         src/Texture.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
