@@ -11,7 +11,8 @@ layout(location = 8) in mat4 aPrevModel;
 
 layout(location = 0) out vec3 vNormal;
 layout(location = 1) out vec3 vColor;
-layout(location = 2) out vec4 vPrevPos;
+layout(location = 2) out vec4 vClip;
+layout(location = 3) out vec4 vPrevClip;
 
 layout(location = 0) uniform vec2 uJitter;
 
@@ -22,7 +23,7 @@ layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
 void main() {
 	vNormal = mat3(aModel) * aNormal;
 	vColor = mix(aColor, aInstanceColor.rgb, aInstanceColor.a);
-	vPrevPos = uViewProjection * aPrevModel * vec4(aPosition, 1.0);
-	gl_Position = uViewProjection * aModel * vec4(aPosition, 1.0);
-	gl_Position.xy += uJitter * gl_Position.w;
+	vPrevClip = uViewProjection * aPrevModel * vec4(aPosition, 1.0);
+	vClip = uViewProjection * aModel * vec4(aPosition, 1.0);
+	gl_Position = vec4(vClip.xy + uJitter * vClip.w, vClip.zw);
 }

@@ -9,7 +9,6 @@ layout(location = 0) out vec3 oLight;
 layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
 layout(binding = GBUFFER_NORMAL_TEXTURE) uniform sampler2D uNormal;
 layout(binding = GBUFFER_DEPTH_TEXTURE) uniform sampler2D uDepth;
-layout(binding = GBUFFER_PREV_UV_TEXTURE) uniform sampler2D uPrevUV;
 layout(binding = SHADOW_MAP_TEXTURE) uniform sampler2DShadow uShadowMap;
 layout(binding = VOXEL_RADIANCE_TEXTURE) uniform sampler3D uVoxelRadiance;
 layout(binding = VOXEL_RADIANCE_MIPMAP_TEXTURE) uniform sampler3D uVoxelRadianceMipmaps[6];

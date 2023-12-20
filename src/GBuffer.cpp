@@ -36,15 +36,15 @@ void GBuffer::initialize_target(int width, int height) {
 	m_depth.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_depth.SetWrapFilter(GL_CLAMP_TO_EDGE);
 
-	m_prev_uv.Initialize();
-	m_prev_uv.Storage(m_width, m_height, GL_RG16, 1);
-	m_prev_uv.SetSizeFilter(GL_LINEAR, GL_LINEAR);
-	m_prev_uv.SetWrapFilter(GL_CLAMP_TO_EDGE);
+	m_velocity.Initialize();
+	m_velocity.Storage(m_width, m_height, GL_RG16, 1);
+	m_velocity.SetSizeFilter(GL_LINEAR, GL_LINEAR);
+	m_velocity.SetWrapFilter(GL_CLAMP_TO_EDGE);
 
 	m_fbo.Initialize();
 	m_fbo.AttachTexture2D(m_albedo, GL_COLOR_ATTACHMENT0);
 	m_fbo.AttachTexture2D(m_normal, GL_COLOR_ATTACHMENT1);
-	m_fbo.AttachTexture2D(m_prev_uv, GL_COLOR_ATTACHMENT2);
+	m_fbo.AttachTexture2D(m_velocity, GL_COLOR_ATTACHMENT2);
 	m_fbo.AttachTexture2D(m_depth, GL_DEPTH_ATTACHMENT);
 
 	GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
@@ -52,6 +52,6 @@ void GBuffer::initialize_target(int width, int height) {
 
 	m_albedo.Bind(GBUFFER_ALBEDO_TEXTURE);
 	m_normal.Bind(GBUFFER_NORMAL_TEXTURE);
-	m_prev_uv.Bind(GBUFFER_PREV_UV_TEXTURE);
+	m_velocity.Bind(GBUFFER_VELOCITY_TEXTURE);
 	m_depth.Bind(GBUFFER_DEPTH_TEXTURE);
 }
