@@ -3,8 +3,7 @@
 #include "Binding.h"
 
 layout(location = 0) uniform vec2 uJitter;
-layout(location = 1) uniform float uInvDeltaT;
-layout(location = 2) uniform int uMotionBlurFlag;
+layout(location = 1) uniform int uMotionBlurFlag;
 
 layout(location = 0) out vec4 oColor;
 

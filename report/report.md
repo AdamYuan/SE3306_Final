@@ -16,6 +16,7 @@
 
 ## 操作方法
 
+* **按键M：切换Motion Blur**
 * 按键S：切换弹珠
 * 按键F：切换火球
 * 不倒翁可以拖动：
@@ -506,7 +507,7 @@ $\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f
 
 ### Motion Blur
 
-（既然为了TAA都把Velocity Buffer画出来了，那肯定得做Motion Blur）
+（既然为了TAA都把Velocity Buffer画出来了，那肯定得试下Motion Blur）
 
 ## 性能分析
 
