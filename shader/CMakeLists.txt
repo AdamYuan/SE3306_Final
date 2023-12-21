@@ -24,6 +24,7 @@ set(SHADER_SRC
         bloom_up.frag
         taa.frag
         light.frag
+        mb_tile_max.comp
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)

@@ -6,6 +6,7 @@
 #include "GPUMesh.hpp"
 #include "LightPass.hpp"
 #include "MeshLoader.hpp"
+#include "MotionBlur.hpp"
 #include "ParticleSystem.hpp"
 #include "Playground.hpp"
 #include "ScreenPass.hpp"
@@ -31,6 +32,7 @@ private:
 	CameraBuffer m_camera_buffer;
 	Voxel m_voxel;
 	Bloom m_bloom;
+	MotionBlur m_motion_blur;
 	LightPass m_light_pass;
 	TemporalAA m_taa;
 	ScreenPass m_screen_pass;

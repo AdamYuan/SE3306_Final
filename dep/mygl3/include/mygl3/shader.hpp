@@ -56,7 +56,7 @@ public:
 		id_ = glCreateProgram();
 	}
 
-	void Load(const char *src, GLenum type) {
+	bool Load(const char *src, GLenum type) {
 		shaders.emplace_back();
 		GLuint &cur = shaders.back();
 
@@ -70,8 +70,10 @@ public:
 			char log[16384];
 			glGetShaderInfoLog(cur, 16384, nullptr, log);
 			printf("******SHADER COMPILE ERROR******\nsrc:\n%s\nerr:\n%s\n\n\n", src, log);
+			return false;
 		}
 		glAttachShader(id_, cur);
+		return true;
 	}
 
 	/* void LoadBinary(const GLuint *src, GLsizei length, GLenum type) {

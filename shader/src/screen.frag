@@ -9,6 +9,8 @@ layout(location = 0) out vec4 oColor;
 layout(binding = BLOOM_TEXTURE) uniform sampler2D uBloom;
 layout(binding = TAA_TEXTURE) uniform sampler2D uTAALight;
 
+layout(binding = MOTION_BLUR_TILE_0_TEXTURE) uniform sampler2D uTile0;
+
 vec3 ToneMapFilmic_Hejl2015(in const vec3 hdr, in const float white_pt) {
 	vec4 vh = vec4(hdr, white_pt);
 	vec4 va = (1.425 * vh) + 0.05;
@@ -28,4 +30,6 @@ void main() {
 	vec3 color = mix(light, bloom, 0.1);
 	color = ToneMapFilmic_Hejl2015(color, 3.2);
 	oColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
+
+	oColor = texture(uTile0, vec2(gl_FragCoord.xy / 720));
 }

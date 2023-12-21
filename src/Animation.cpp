@@ -74,6 +74,7 @@ void Animation::Initialize() {
 #include <shader/quad.vert.str>
 	    ;
 	m_bloom.Initialize(kQuadVert);
+	m_motion_blur.Initialize(kQuadVert);
 	m_light_pass.Initialize(kQuadVert);
 	m_taa.Initialize(kQuadVert);
 	m_screen_pass.Initialize(kQuadVert);
@@ -251,6 +252,8 @@ void Animation::Draw(int width, int height) {
 
 	// Light Pass
 	m_light_pass.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+	// Motion Blur
+	m_motion_blur.Generate(width, height, 20, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 	// TAA
 	m_taa.Generate(width, height, jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 

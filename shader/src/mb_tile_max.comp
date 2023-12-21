@@ -1,0 +1,145 @@
+#version 450
+
+// clang-format off
+%s
+// macro injections:
+// TILE_SIZE, SUBGROUP_SIZE, SHARED_SIZE
+#ifdef SUBGROUP_SIZE
+#extension GL_KHR_shader_subgroup_basic : enable
+#extension GL_KHR_shader_subgroup_ballot : enable
+#extension GL_KHR_shader_subgroup_arithmetic : enable
+#endif
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+// clang-format on
+
+#include "Binding.h"
+
+layout(binding = GBUFFER_VELOCITY_TEXTURE) uniform sampler2D uVelocity;
+layout(rg16, binding = MOTION_BLUR_TILE_0_IMAGE) uniform writeonly image2D uTile0;
+
+#ifdef SHARED_SIZE
+shared vec2 sMaxVelocity[SHARED_SIZE];
+#endif
+
+vec2 get_max_velocity(in const vec2 l, in const vec2 r) { return dot(l, l) > dot(r, r) ? l : r; }
+
+void main() {
+	ivec2 source_size = textureSize(uVelocity, 0);
+	ivec2 source_pos = ivec2(gl_GlobalInvocationID.xy);
+
+	vec2 cur_vel =
+	    any(greaterThanEqual(source_pos, source_size)) ? vec2(0) : texelFetch(uVelocity, source_pos, 0).rg - 0.5;
+
+	ivec2 target_pos = ivec2(gl_WorkGroupID.xy);
+
+#ifdef SUBGROUP_SIZE
+	// Subgroup Reduction
+	float len2 = dot(cur_vel, cur_vel);
+	float len2_sg_max = subgroupMax(len2);
+	uvec4 ballot = subgroupBallot(len2 == len2_sg_max);
+	uint ballot_lsb = subgroupBallotFindLSB(ballot);
+	if (ballot_lsb == gl_SubgroupInvocationID) {
+#ifdef SHARED_SIZE
+		sMaxVelocity[gl_LocalInvocationIndex / SUBGROUP_SIZE] = cur_vel;
+#else
+		imageStore(uTile0, target_pos, vec4(cur_vel + 0.5, 0, 0));
+		return;
+#endif
+	}
+
+#elif defined(SHARED_SIZE)
+
+	sMaxVelocity[gl_LocalInvocationIndex] = cur_vel;
+
+#else
+
+	imageStore(uTile0, target_pos, vec4(cur_vel + 0.5, 0, 0));
+	return;
+
+#endif
+
+#ifdef SHARED_SIZE
+	// Parallel Reduction
+#define I gl_LocalInvocationIndex
+
+#if SHARED_SIZE > 4096
+	barrier();
+	if (I < 4096 && I + 4096 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 4096]);
+#endif
+
+#if SHARED_SIZE > 2048
+	barrier();
+	if (I < 2048 && I + 2048 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 2048]);
+#endif
+
+#if SHARED_SIZE > 1024
+	barrier();
+	if (I < 1024 && I + 1024 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 1024]);
+#endif
+
+#if SHARED_SIZE > 512
+	barrier();
+	if (I < 512 && I + 512 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 512]);
+#endif
+
+#if SHARED_SIZE > 256
+	barrier();
+	if (I < 256 && I + 256 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 256]);
+#endif
+
+#if SHARED_SIZE > 128
+	barrier();
+	if (I < 128 && I + 128 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 128]);
+#endif
+
+#if SHARED_SIZE > 64
+	barrier();
+	if (I < 64 && I + 64 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 64]);
+#endif
+
+#if SHARED_SIZE > 32
+	barrier();
+	if (I < 32 && I + 32 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 32]);
+#endif
+
+#if SHARED_SIZE > 16
+	barrier();
+	if (I < 16 && I + 16 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 16]);
+#endif
+
+#if SHARED_SIZE > 8
+	barrier();
+	if (I < 8 && I + 8 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 8]);
+#endif
+
+#if SHARED_SIZE > 4
+	barrier();
+	if (I < 4 && I + 4 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 4]);
+#endif
+
+#if SHARED_SIZE > 2
+	barrier();
+	if (I < 2 && I + 2 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 2]);
+#endif
+
+	// SHARED_SIZE > 1 is ensured
+	barrier();
+	if (I == 0) {
+		cur_vel = get_max_velocity(sMaxVelocity[0], sMaxVelocity[1]);
+		imageStore(uTile0, target_pos, vec4(cur_vel + 0.5, 0, 0));
+	}
+
+#endif
+}
