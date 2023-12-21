@@ -21,7 +21,7 @@ layout(rg16, binding = MOTION_BLUR_TILE_0_IMAGE) uniform writeonly image2D uTile
 shared vec2 sMaxVelocity[SHARED_SIZE];
 #endif
 
-vec2 get_max_velocity(in const vec2 l, in const vec2 r) { return dot(l, l) > dot(r, r) ? l : r; }
+vec2 get_max_velocity(in const vec2 l, in const vec2 r) { return dot(l, l) >= dot(r, r) ? l : r; }
 
 void main() {
 	ivec2 source_size = textureSize(uVelocity, 0);
@@ -37,7 +37,7 @@ void main() {
 	float len2 = dot(cur_vel, cur_vel);
 	float len2_sg_max = subgroupMax(len2);
 	uvec4 ballot = subgroupBallot(len2 == len2_sg_max);
-	uint ballot_lsb = subgroupBallotFindLSB(ballot);
+	uint ballot_lsb = subgroupBallotFindLSB(ballot); // Get first subgroup
 	if (ballot_lsb == gl_SubgroupInvocationID) {
 #ifdef SHARED_SIZE
 		sMaxVelocity[gl_LocalInvocationIndex / SUBGROUP_SIZE] = cur_vel;
