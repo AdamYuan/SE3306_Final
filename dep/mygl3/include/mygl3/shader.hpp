@@ -100,9 +100,9 @@ public:
 		shaders.clear();
 	}
 
-	void LoadFromFile(const char *filename, GLenum type) {
+	bool LoadFromFile(const char *filename, GLenum type) {
 		std::string str{load_file(filename)};
-		Load(str.c_str(), type);
+		return Load(str.c_str(), type);
 	}
 
 	void Use() const { glUseProgram(id_); }
