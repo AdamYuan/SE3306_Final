@@ -15,7 +15,7 @@ private:
 	void initialize_target(int width, int height, int tile_size);
 	void initialize_tile_max_shader();
 
-	void generate_tile_max();
+	inline static constexpr auto div_ceil(auto x, auto y) { return x / y + (x % y == 0 ? 0 : 1); }
 
 public:
 	void Initialize(const char *quad_vert_str);
@@ -23,6 +23,13 @@ public:
 	template <typename QuadDrawFunc>
 	void GenerateVelocityTile(int width, int height, int tile_size, QuadDrawFunc &&quad_draw_func) {
 		initialize_target(width, height, tile_size);
-		generate_tile_max();
+		int tw = div_ceil(m_width, m_tile_size), th = div_ceil(m_height, m_tile_size);
+		m_tile_max_shader.Use();
+		glDispatchCompute(tw, th, 1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		m_tile_nei_fbo.Bind();
+		m_tile_nei_shader.Use();
+		quad_draw_func(tw, th);
 	}
 };

@@ -25,6 +25,7 @@ set(SHADER_SRC
         taa.frag
         light.frag
         mb_tile_max.comp
+        mb_tile_nei.frag
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)

@@ -243,7 +243,10 @@ void Animation::Draw(int width, int height) {
 	m_quad_vao.Bind();
 
 	// Motion Blur (Velocity Tile)
-	m_motion_blur.GenerateVelocityTile(width, height, 20, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+	m_motion_blur.GenerateVelocityTile(width, height, 20, [](int w, int h) {
+		glViewport(0, 0, w, h);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	});
 
 	// Generate Bloom
 	m_bloom.Generate(width, height, 5, 0.005f, [](int w, int h) {

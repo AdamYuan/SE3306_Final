@@ -5,8 +5,6 @@
 
 #include <string>
 
-inline static constexpr auto div_ceil(auto x, auto y) { return x / y + (x % y == 0 ? 0 : 1); }
-
 void MotionBlur::initialize_tile_max_shader() {
 	int subgroup_size = 1, shared_size = m_tile_size * m_tile_size;
 	if (mygl3::Shader s; mygl3::IsExtensionSupported("GL_KHR_shader_subgroup") && //
@@ -40,13 +38,17 @@ void main(){})",
 	m_tile_max_shader.Finalize();
 }
 
-void MotionBlur::generate_tile_max() {
-	m_tile_max_shader.Use();
-	glDispatchCompute(div_ceil(m_width, m_tile_size), div_ceil(m_height, m_tile_size), 1);
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+void MotionBlur::Initialize(const char *quad_vert_str) {
+	{
+		m_tile_nei_shader.Initialize();
+		constexpr const char *kFrag =
+#include <shader/mb_tile_nei.frag.str>
+		    ;
+		m_tile_nei_shader.Load(quad_vert_str, GL_VERTEX_SHADER);
+		m_tile_nei_shader.Load(kFrag, GL_FRAGMENT_SHADER);
+		m_tile_nei_shader.Finalize();
+	}
 }
-
-void MotionBlur::Initialize(const char *quad_vert_str) {}
 
 void MotionBlur::initialize_target(int width, int height, int tile_size) {
 	if (m_width == width && m_height == height && m_tile_size == tile_size)
@@ -71,4 +73,9 @@ void MotionBlur::initialize_target(int width, int height, int tile_size) {
 	m_tile.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_tile.SetWrapFilter(GL_CLAMP_TO_EDGE);
 	m_tile.Bind(MOTION_BLUR_TILE_TEXTURE);
+
+	GLenum attachments[] = {GL_COLOR_ATTACHMENT0};
+	m_tile_nei_fbo.Initialize();
+	m_tile_nei_fbo.AttachTexture2D(m_tile, GL_COLOR_ATTACHMENT0);
+	glNamedFramebufferDrawBuffers(m_tile_nei_fbo.Get(), 1, attachments);
 }
