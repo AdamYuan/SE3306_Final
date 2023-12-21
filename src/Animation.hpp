@@ -54,12 +54,13 @@ private:
 	void drag(float delta_t, const std::optional<glm::vec2> &opt_drag_pos);
 
 	// control flags
-	bool m_marbles_flag, m_fire_ball_flag;
+	bool m_marbles_flag = false, m_fire_ball_flag = false, m_motion_blur_flag = false;
 
 public:
 	void Initialize();
 	void ToggleMarbles();
 	void ToggleFireball();
+	inline void ToggleMotionBlur() { m_motion_blur_flag ^= 1; }
 	void Update(float delta_t, const std::optional<glm::vec2> &opt_drag_pos);
 	void Draw(float delta_t, int width, int height);
 };

@@ -15,6 +15,8 @@ static void key_callback(GLFWwindow *, int key, int, int action, int) {
 		animation.ToggleMarbles();
 	else if (key == GLFW_KEY_F)
 		animation.ToggleFireball();
+	else if (key == GLFW_KEY_M)
+		animation.ToggleMotionBlur();
 }
 
 int main() {

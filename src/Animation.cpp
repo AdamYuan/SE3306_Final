@@ -243,10 +243,11 @@ void Animation::Draw(float delta_t, int width, int height) {
 	m_quad_vao.Bind();
 
 	// Motion Blur (Velocity Tile)
-	m_motion_blur.GenerateTile(width, height, 16, [](int w, int h) {
-		glViewport(0, 0, w, h);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-	});
+	if (m_motion_blur_flag)
+		m_motion_blur.GenerateTile(width, height, 16, [](int w, int h) {
+			glViewport(0, 0, w, h);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		});
 
 	// Generate Bloom
 	m_bloom.Generate(width, height, 5, 0.005f, [](int w, int h) {
@@ -258,11 +259,12 @@ void Animation::Draw(float delta_t, int width, int height) {
 
 	// Light Pass
 	m_light_pass.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
-	// Motion Blur
-	m_motion_blur.GenerateBlur(width, height, delta_t, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 	// TAA
 	m_taa.Generate(width, height, jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+	// Motion Blur
+	if (m_motion_blur_flag)
+		m_motion_blur.GenerateBlur(width, height, delta_t, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 
 	// Screen Pass
-	m_screen_pass.Generate(jitter, delta_t, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+	m_screen_pass.Generate(jitter, delta_t, m_motion_blur_flag, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 }

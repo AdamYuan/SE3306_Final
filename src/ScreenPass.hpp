@@ -12,11 +12,12 @@ public:
 	void Initialize(const char *quad_vert_str);
 
 	template <typename QuadDrawFunc>
-	void Generate(const glm::vec2 &jitter, float delta_t, QuadDrawFunc &&quad_draw_func) {
+	void Generate(const glm::vec2 &jitter, float delta_t, bool motion_blur, QuadDrawFunc &&quad_draw_func) {
 		mygl3::FrameBuffer::Unbind();
 		m_shader.Use();
 		m_shader.SetVec2(0, glm::value_ptr(jitter));
 		m_shader.SetFloat(1, 1.0f / delta_t);
+		m_shader.SetInt(2, motion_blur);
 		quad_draw_func();
 	}
 };

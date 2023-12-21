@@ -4,13 +4,15 @@
 
 layout(location = 0) uniform vec2 uJitter;
 layout(location = 1) uniform float uInvDeltaT;
+layout(location = 2) uniform int uMotionBlurFlag;
 
 layout(location = 0) out vec4 oColor;
 
 layout(binding = BLOOM_TEXTURE) uniform sampler2D uBloom;
 layout(binding = MOTION_BLUR_TEXTURE) uniform sampler2D uMotionBlur;
-layout(binding = TAA_TEXTURE) uniform sampler2D uTAALight;
+layout(binding = TAA_TEXTURE) uniform sampler2D uTAA;
 layout(binding = MOTION_BLUR_TILE_0_TEXTURE) uniform sampler2D uTile0;
+layout(binding = MOTION_BLUR_TILE_TEXTURE) uniform sampler2D uTile;
 
 vec3 ToneMapFilmic_Hejl2015(in const vec3 hdr, in const float white_pt) {
 	vec4 vh = vec4(hdr, white_pt);
@@ -30,12 +32,8 @@ void main() {
 	vec2 inv_resolution = 1.0 / textureSize(uBloom, 0);
 	vec2 uv = gl_FragCoord.xy * inv_resolution, uv_unjitter = uv + uJitter * .5;
 
-	vec3 light = texelFetch(uTAALight, coord, 0).rgb;
-	vec3 motion = textureLod(uMotionBlur, uv_unjitter, 0).rgb;
+	vec3 color = uMotionBlurFlag == 1 ? texelFetch(uMotionBlur, coord, 0).rgb : texelFetch(uTAA, coord, 0).rgb;
 	vec3 bloom = textureLod(uBloom, uv_unjitter, 0).rgb;
-
-	float velocity_length = GetVelocityLength(texture(uTile0, uv).rg);
-	vec3 color = mix(light, motion, invlerp(0., 1., velocity_length) * .8);
 	color /= 1.0 - color; // Inverse Tone Mapping
 	color = mix(color, bloom, 0.1);
 	color = ToneMapFilmic_Hejl2015(color, 3.2);
