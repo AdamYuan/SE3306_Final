@@ -242,6 +242,9 @@ void Animation::Draw(int width, int height) {
 	glDisable(GL_DEPTH_TEST);
 	m_quad_vao.Bind();
 
+	// Motion Blur (Velocity Tile)
+	m_motion_blur.GenerateVelocityTile(width, height, 20, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+
 	// Generate Bloom
 	m_bloom.Generate(width, height, 5, 0.005f, [](int w, int h) {
 		glViewport(0, 0, w, h);
@@ -252,8 +255,6 @@ void Animation::Draw(int width, int height) {
 
 	// Light Pass
 	m_light_pass.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
-	// Motion Blur
-	m_motion_blur.Generate(width, height, 20, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 	// TAA
 	m_taa.Generate(width, height, jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 

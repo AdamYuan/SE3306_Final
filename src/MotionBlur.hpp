@@ -21,7 +21,7 @@ public:
 	void Initialize(const char *quad_vert_str);
 
 	template <typename QuadDrawFunc>
-	void Generate(int width, int height, int tile_size, QuadDrawFunc &&quad_draw_func) {
+	void GenerateVelocityTile(int width, int height, int tile_size, QuadDrawFunc &&quad_draw_func) {
 		initialize_target(width, height, tile_size);
 		generate_tile_max();
 	}
