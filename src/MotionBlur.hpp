@@ -33,10 +33,12 @@ public:
 		quad_draw_func(tw, th);
 	}
 
-	template <typename QuadDrawFunc> void GenerateBlur(int width, int height, QuadDrawFunc &&quad_draw_func) {
+	template <typename QuadDrawFunc>
+	void GenerateBlur(int width, int height, float delta_t, QuadDrawFunc &&quad_draw_func) {
 		initialize_target(width, height, m_tile_size);
 		m_blur_fbo.Bind();
 		m_blur_shader.Use();
+		m_blur_shader.SetFloat(0, 1.f / delta_t);
 		quad_draw_func();
 	}
 };

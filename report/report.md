@@ -296,7 +296,9 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 ### 管线概述
 
-本次作业的渲染管线如下图所示：
+本次作业的渲染管线如下所示（Motion Blur是可切换的，所以画了两个图）：
+
+#### 无Motion Blur
 
 <img src="img/pipeline.svg"  />
 
@@ -308,6 +310,16 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 * **Light Pass**：计算屏幕空间的光照，输出到材质
 * **TAA Pass**：对Light Pass的输出做Temporal Anti-Aliasing
 * **Screen Pass**：将TAA Pass的输出与Bloom Pass输出做混合，并做Tone Mapping + Gamma Correction，绘制最终的图像到屏幕
+
+#### 有Motion Blur
+
+![](img/pipeline-mb.svg)
+
+加了Motion Blur后管线有点太复杂了，图有点难画T.T
+
+* **Velocity Tile (Max) Pass**：将Velocity Buffer降采样（$16\times16$）为Velocity Tiles，取$16\times16$个Velocity中的最大值（向量模最大的）
+* **Velocity Tile (Gather) Pass**：计算$3\times 3$范围内的最大Velocity
+* **Motion Blur Pass**：对TAA Pass的输出做Motion Blur
 
 （要是允许用我的Vulkan Render Graph，能用Resource Aliasing节省好多显存，用OpenGL就没办法了>.<）
 

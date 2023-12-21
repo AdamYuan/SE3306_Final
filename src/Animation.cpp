@@ -192,7 +192,7 @@ void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_p
 	    [this, delta_t](const Fireball &fireball) { m_particle_system.SustainFire(fireball, delta_t); });
 }
 
-void Animation::Draw(int width, int height) {
+void Animation::Draw(float delta_t, int width, int height) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
@@ -244,7 +244,7 @@ void Animation::Draw(int width, int height) {
 
 	// Motion Blur (Velocity Tile)
 	if (m_motion_blur_flag)
-		m_motion_blur.GenerateTile(width, height, 16, [](int w, int h) {
+		m_motion_blur.GenerateTile(width, height, 20, [](int w, int h) {
 			glViewport(0, 0, w, h);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 		});
@@ -263,7 +263,7 @@ void Animation::Draw(int width, int height) {
 	m_taa.Generate(width, height, jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 	// Motion Blur
 	if (m_motion_blur_flag)
-		m_motion_blur.GenerateBlur(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
+		m_motion_blur.GenerateBlur(width, height, delta_t, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 
 	// Screen Pass
 	m_screen_pass.Generate(jitter, m_motion_blur_flag, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });

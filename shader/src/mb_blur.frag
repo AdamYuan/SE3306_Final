@@ -2,6 +2,8 @@
 
 #include "Binding.h"
 
+layout(location = 0) uniform float uInvDeltaT;
+
 layout(location = 0) out vec3 oColor;
 
 layout(binding = TAA_TEXTURE) uniform sampler2D uTAA;
@@ -12,8 +14,9 @@ layout(binding = MOTION_BLUR_TILE_TEXTURE) uniform sampler2D uTile;
 // From Next-Generation-Post-Processing-in-Call-of-Duty-Advanced-Warfare-v18 and Unreal Engine
 
 #define STEP_COUNT 8
-#define SOFT_Z_EXTENT 1.0
-#define VELOCITY_SCALE 2.5
+#define SOFT_Z_EXTENT 64.0
+#define VELOCITY_SCALE (uInvDeltaT * 0.02)
+// #define VELOCITY_SCALE 2.2
 vec2 DepthCmp(in const float center_depth, in const float sample_depth) {
 	// return sample_depth > center_depth ? vec2(1, 0) : vec2(0, 1);
 	return clamp(0.5 + vec2(SOFT_Z_EXTENT, -SOFT_Z_EXTENT) * (sample_depth - center_depth), vec2(0), vec2(1));
