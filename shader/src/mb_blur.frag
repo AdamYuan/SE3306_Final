@@ -4,12 +4,12 @@
 
 layout(location = 0) out vec3 oColor;
 
-layout(binding = TAA_TEXTURE) uniform sampler2D uTAALight;
+layout(binding = TAA_TEXTURE) uniform sampler2D uTAA;
 layout(binding = GBUFFER_VELOCITY_TEXTURE) uniform sampler2D uVelocity;
 layout(binding = GBUFFER_DEPTH_TEXTURE) uniform sampler2D uDepth;
 layout(binding = MOTION_BLUR_TILE_TEXTURE) uniform sampler2D uTile;
 
-// From Next-Generation-Post-Processing-in-Call-of-Duty-Advanced-Warfare-v18
+// From Next-Generation-Post-Processing-in-Call-of-Duty-Advanced-Warfare-v18 and Unreal Engine
 vec2 DepthCmp(in const float center_depth, in const float sample_depth, in const float depth_scale) {
 	return clamp(0.5 + vec2(depth_scale, -depth_scale) * (sample_depth - center_depth), vec2(0), vec2(1));
 }
@@ -39,10 +39,10 @@ float GetVelocityLength(in const vec2 vel_samp) { return length(vel_samp - 0.5) 
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
 
-	vec2 inv_resolution = 1.0 / textureSize(uTAALight, 0);
+	vec2 inv_resolution = 1.0 / textureSize(uTAA, 0);
 	vec2 uv = gl_FragCoord.xy * inv_resolution;
 
-	vec3 center_color = texelFetch(uTAALight, coord, 0).rgb;
+	vec3 center_color = texelFetch(uTAA, coord, 0).rgb;
 	float center_depth = texelFetch(uDepth, coord, 0).r;
 	float center_velocity_length = GetVelocityLength(texelFetch(uVelocity, coord, 0).rg);
 
@@ -70,8 +70,8 @@ void main() {
 		vec2 sample_uv_0 = uv + offset_fraction * search_vector.xy;
 		vec2 sample_uv_1 = uv + offset_fraction * search_vector.zw;
 
-		vec3 sample_color_0 = texture(uTAALight, sample_uv_0).rgb;
-		vec3 sample_color_1 = texture(uTAALight, sample_uv_1).rgb;
+		vec3 sample_color_0 = texture(uTAA, sample_uv_0).rgb;
+		vec3 sample_color_1 = texture(uTAA, sample_uv_1).rgb;
 		float sample_depth_0 = texture(uDepth, sample_uv_0).r;
 		float sample_depth_1 = texture(uDepth, sample_uv_1).r;
 		float sample_velocity_length_0 = GetVelocityLength(texture(uVelocity, sample_uv_0).rg);
