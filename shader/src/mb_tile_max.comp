@@ -65,6 +65,18 @@ void main() {
 	if (I >= SHARED_SIZE)
 		return;
 
+#if SHARED_SIZE > 16384
+	barrier();
+	if (I < 16384 && I + 16384 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 16384]);
+#endif
+
+#if SHARED_SIZE > 8192
+	barrier();
+	if (I < 8192 && I + 8192 < SHARED_SIZE)
+		sMaxVelocity[I] = get_max_velocity(sMaxVelocity[I], sMaxVelocity[I + 8192]);
+#endif
+
 #if SHARED_SIZE > 4096
 	barrier();
 	if (I < 4096 && I + 4096 < SHARED_SIZE)
