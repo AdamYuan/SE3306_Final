@@ -61,5 +61,5 @@ public:
 	void ToggleMarbles();
 	void ToggleFireball();
 	void Update(float delta_t, const std::optional<glm::vec2> &opt_drag_pos);
-	void Draw(int width, int height);
+	void Draw(float delta_t, int width, int height);
 };

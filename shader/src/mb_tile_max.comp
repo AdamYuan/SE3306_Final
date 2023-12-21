@@ -1,8 +1,6 @@
 #version 450
 
-// clang-format off
-%s
-// macro injections:
+// macro injections: %s
 // TILE_SIZE, SUBGROUP_SIZE, SHARED_SIZE
 #ifdef SUBGROUP_SIZE
 #extension GL_KHR_shader_subgroup_basic : enable
@@ -10,7 +8,6 @@
 #extension GL_KHR_shader_subgroup_arithmetic : enable
 #endif
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
-// clang-format on
 
 #include "Binding.h"
 

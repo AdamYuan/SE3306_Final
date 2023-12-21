@@ -20,7 +20,7 @@ void main(){})",
 	} else
 		printf("GL_KHR_shader_subgroup_{basic, ballot, arithmetic} not supported\n");
 
-	std::string macro = "#define TILE_SIZE " + std::to_string(m_tile_size) + "\n";
+	std::string macro = "\n#define TILE_SIZE " + std::to_string(m_tile_size) + "\n";
 	if (subgroup_size > 1)
 		macro += "#define SUBGROUP_SIZE " + std::to_string(subgroup_size) + "\n";
 	if (shared_size > 1)
@@ -48,6 +48,15 @@ void MotionBlur::Initialize(const char *quad_vert_str) {
 		m_tile_nei_shader.Load(kFrag, GL_FRAGMENT_SHADER);
 		m_tile_nei_shader.Finalize();
 	}
+	{
+		m_blur_shader.Initialize();
+		constexpr const char *kFrag =
+#include <shader/mb_blur.frag.str>
+		    ;
+		m_blur_shader.Load(quad_vert_str, GL_VERTEX_SHADER);
+		m_blur_shader.Load(kFrag, GL_FRAGMENT_SHADER);
+		m_blur_shader.Finalize();
+	}
 }
 
 void MotionBlur::initialize_target(int width, int height, int tile_size) {
@@ -68,14 +77,25 @@ void MotionBlur::initialize_target(int width, int height, int tile_size) {
 	m_tile_0.Bind(MOTION_BLUR_TILE_0_TEXTURE);
 	glBindImageTexture(MOTION_BLUR_TILE_0_IMAGE, m_tile_0.Get(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG16);
 
+	GLenum attachments[] = {GL_COLOR_ATTACHMENT0};
+
 	m_tile.Initialize();
 	m_tile.Storage(div_ceil(width, tile_size), div_ceil(height, tile_size), GL_RG16, 1);
 	m_tile.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_tile.SetWrapFilter(GL_CLAMP_TO_EDGE);
 	m_tile.Bind(MOTION_BLUR_TILE_TEXTURE);
 
-	GLenum attachments[] = {GL_COLOR_ATTACHMENT0};
 	m_tile_nei_fbo.Initialize();
 	m_tile_nei_fbo.AttachTexture2D(m_tile, GL_COLOR_ATTACHMENT0);
 	glNamedFramebufferDrawBuffers(m_tile_nei_fbo.Get(), 1, attachments);
+
+	m_blur.Initialize();
+	m_blur.Storage(width, height, GL_RGB16, 1);
+	m_blur.SetSizeFilter(GL_LINEAR, GL_LINEAR);
+	m_blur.SetWrapFilter(GL_CLAMP_TO_EDGE);
+	m_blur.Bind(MOTION_BLUR_TEXTURE);
+
+	m_blur_fbo.Initialize();
+	m_blur_fbo.AttachTexture2D(m_blur, GL_COLOR_ATTACHMENT0);
+	glNamedFramebufferDrawBuffers(m_blur_fbo.Get(), 1, attachments);
 }

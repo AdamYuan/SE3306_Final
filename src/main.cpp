@@ -44,8 +44,9 @@ int main() {
 			drag = glm::vec2{(float)cursor_pos.x / (float)kWidth, (float)cursor_pos.y / (float)kHeight};
 		}
 		auto cur_time = (float)glfwGetTime();
-		animation.Update(std::min(cur_time - prev_time, .1f), drag);
-		animation.Draw(kWidth, kHeight);
+		float delta_t = std::min(cur_time - prev_time, .1f);
+		animation.Update(delta_t, drag);
+		animation.Draw(delta_t, kWidth, kHeight);
 		glfwSwapBuffers(window);
 
 		prev_time = cur_time;
