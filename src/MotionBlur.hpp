@@ -38,12 +38,12 @@ public:
 		// For optimization
 		m_speed_depth_fbo.Bind();
 		m_speed_depth_shader.Use();
+		m_speed_depth_shader.SetVec2(0, glm::value_ptr(jitter));
 		quad_draw_func(width, height);
 
 		m_blur_fbo.Bind();
 		m_blur_shader.Use();
 		m_blur_shader.SetFloat(0, search_scale);
-		m_blur_shader.SetVec2(1, glm::value_ptr(jitter));
 		quad_draw_func(width, height);
 	}
 };

@@ -3,7 +3,6 @@
 #include "Binding.h"
 
 layout(location = 0) uniform float uSearchScale;
-layout(location = 1) uniform vec2 uJitter;
 
 layout(location = 0) out vec3 oColor;
 
@@ -16,7 +15,7 @@ layout(binding = MOTION_BLUR_TILE_TEXTURE) uniform sampler2D uTile;
 #define STEP_COUNT 8
 #define SOFT_Z_EXTENT 24.0
 vec2 DepthCmp(in const float center_depth, in const float sample_depth) {
-	// return sample_depth > center_depth ? vec2(1, 0) : vec2(0, 1);
+	// return center_depth < sample_depth ? vec2(1, 0) : vec2(0, 1);
 	return clamp(0.5 + vec2(SOFT_Z_EXTENT, -SOFT_Z_EXTENT) * (sample_depth - center_depth), vec2(0), vec2(1));
 }
 vec2 SpreadCmp(in const float offset_length, in const vec2 spread_length, in const float pixel_to_sample_scale) {
@@ -42,10 +41,10 @@ void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
 
 	vec2 inv_resolution = 1.0 / textureSize(uTAA, 0);
-	vec2 uv = gl_FragCoord.xy * inv_resolution + uJitter * .5;
+	vec2 uv = gl_FragCoord.xy * inv_resolution;
 
 	vec3 center_color = texelFetch(uTAA, coord, 0).rgb;
-	vec2 center_speed_depth = texture(uSpeedDepth, uv).rg;
+	vec2 center_speed_depth = texelFetch(uSpeedDepth, coord, 0).rg;
 	float center_speed = center_speed_depth.x;
 	float center_depth = center_speed_depth.y;
 
