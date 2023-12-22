@@ -68,32 +68,36 @@ void main() {
 	float random = InterleavedGradientNoise(coord);
 	vec2 jitter = vec2(random - 0.5, 0.5 - random);
 
-	for (uint i = 0; i < STEP_COUNT; i++) {
-		vec2 offset_length = vec2(i + 0.5) + jitter;
-		vec2 offset_fraction = offset_length / STEP_COUNT;
-
-		vec4 sample_uv = uv.xyxy + offset_fraction.xyxy * search_vector;
-
-		vec3 sample_color_0 = texture(uTAA, sample_uv.xy).rgb;
-		vec3 sample_color_1 = texture(uTAA, sample_uv.zw).rgb;
-		float sample_depth_0 = texture(uDepth, sample_uv.xy).r;
-		float sample_depth_1 = texture(uDepth, sample_uv.zw).r;
-		float sample_velocity_length_0 = length(texture(uVelocity, sample_uv.xy).rg) * VELOCITY_SCALE;
-		float sample_velocity_length_1 = length(texture(uVelocity, sample_uv.zw).rg) * VELOCITY_SCALE;
-
-		// in pixels
-		float weight_0 = SampleWeight(center_depth, sample_depth_0, offset_length.x, center_velocity_length,
-		                              sample_velocity_length_0, pixel_to_sample_scale);
-		float weight_1 = SampleWeight(center_depth, sample_depth_1, offset_length.x, center_velocity_length,
-		                              sample_velocity_length_1, pixel_to_sample_scale);
-
-		bvec2 mirror = bvec2(sample_depth_0 > sample_depth_1, sample_velocity_length_1 > sample_velocity_length_0);
-		weight_0 = all(mirror) ? weight_1 : weight_0;
-		weight_1 = any(mirror) ? weight_1 : weight_0;
-
-		color_accum += weight_0 * sample_color_0 + weight_1 * sample_color_1;
-		weight_accum += weight_0 + weight_1;
+#define SAMPLE(I) \
+	{ \
+		vec2 offset_length = vec2(I + 0.5) + jitter; \
+		vec2 offset_fraction = offset_length / STEP_COUNT; \
+		vec4 sample_uv = uv.xyxy + offset_fraction.xyxy * search_vector; \
+		vec3 sample_color_0 = texture(uTAA, sample_uv.xy).rgb; \
+		vec3 sample_color_1 = texture(uTAA, sample_uv.zw).rgb; \
+		float sample_depth_0 = texture(uDepth, sample_uv.xy).r; \
+		float sample_depth_1 = texture(uDepth, sample_uv.zw).r; \
+		float sample_velocity_length_0 = length(texture(uVelocity, sample_uv.xy).rg) * VELOCITY_SCALE; \
+		float sample_velocity_length_1 = length(texture(uVelocity, sample_uv.zw).rg) * VELOCITY_SCALE; \
+		float weight_0 = SampleWeight(center_depth, sample_depth_0, offset_length.x, center_velocity_length, \
+		                              sample_velocity_length_0, pixel_to_sample_scale); \
+		float weight_1 = SampleWeight(center_depth, sample_depth_1, offset_length.x, center_velocity_length, \
+		                              sample_velocity_length_1, pixel_to_sample_scale); \
+		bvec2 mirror = bvec2(sample_depth_0 > sample_depth_1, sample_velocity_length_1 > sample_velocity_length_0); \
+		weight_0 = all(mirror) ? weight_1 : weight_0; \
+		weight_1 = any(mirror) ? weight_1 : weight_0; \
+		color_accum += weight_0 * sample_color_0 + weight_1 * sample_color_1; \
+		weight_accum += weight_0 + weight_1; \
 	}
+
+	SAMPLE(0)
+	SAMPLE(1)
+	SAMPLE(2)
+	SAMPLE(3)
+	SAMPLE(4)
+	SAMPLE(5)
+	SAMPLE(6)
+	SAMPLE(7) // STEP_COUNT - 1
 
 	color_accum *= .5 / STEP_COUNT;
 	weight_accum *= .5 / STEP_COUNT;
