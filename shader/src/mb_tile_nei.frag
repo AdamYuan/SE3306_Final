@@ -13,16 +13,15 @@ void main() {
 	vec2 uv = gl_FragCoord.xy * inv_resolution;
 	float dx = inv_resolution.x, dy = inv_resolution.y;
 
-	vec2 s0 = texture(uTile0, vec2(uv.x - dx, uv.y - dy)).rg - 0.5;
-	vec2 s1 = texture(uTile0, vec2(uv.x, uv.y - dy)).rg - 0.5;
-	vec2 s2 = texture(uTile0, vec2(uv.x + dx, uv.y - dy)).rg - 0.5;
-	vec2 s3 = texture(uTile0, vec2(uv.x - dx, uv.y)).rg - 0.5;
-	vec2 s4 = texture(uTile0, vec2(uv.x, uv.y)).rg - 0.5;
-	vec2 s5 = texture(uTile0, vec2(uv.x + dx, uv.y)).rg - 0.5;
-	vec2 s6 = texture(uTile0, vec2(uv.x - dx, uv.y + dy)).rg - 0.5;
-	vec2 s7 = texture(uTile0, vec2(uv.x, uv.y + dy)).rg - 0.5;
-	vec2 s8 = texture(uTile0, vec2(uv.x + dx, uv.y + dy)).rg - 0.5;
+	vec2 s0 = texture(uTile0, vec2(uv.x - dx, uv.y - dy)).rg;
+	vec2 s1 = texture(uTile0, vec2(uv.x, uv.y - dy)).rg;
+	vec2 s2 = texture(uTile0, vec2(uv.x + dx, uv.y - dy)).rg;
+	vec2 s3 = texture(uTile0, vec2(uv.x - dx, uv.y)).rg;
+	vec2 s4 = texture(uTile0, vec2(uv.x, uv.y)).rg;
+	vec2 s5 = texture(uTile0, vec2(uv.x + dx, uv.y)).rg;
+	vec2 s6 = texture(uTile0, vec2(uv.x - dx, uv.y + dy)).rg;
+	vec2 s7 = texture(uTile0, vec2(uv.x, uv.y + dy)).rg;
+	vec2 s8 = texture(uTile0, vec2(uv.x + dx, uv.y + dy)).rg;
 
-	vec2 s = reduce(reduce(reduce(reduce(s0, s1), reduce(s2, s3)), reduce(reduce(s4, s5), reduce(s6, s7))), s8);
-	oVelocity = s + 0.5;
+	oVelocity = reduce(reduce(reduce(reduce(s0, s1), reduce(s2, s3)), reduce(reduce(s4, s5), reduce(s6, s7))), s8);
 }

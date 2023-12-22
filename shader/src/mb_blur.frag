@@ -15,7 +15,7 @@ layout(binding = MOTION_BLUR_TILE_TEXTURE) uniform sampler2D uTile;
 
 #define STEP_COUNT 8
 #define SOFT_Z_EXTENT 64.0
-#define VELOCITY_SCALE (uInvDeltaT * 0.02)
+#define VELOCITY_SCALE (uInvDeltaT * 0.022)
 // #define VELOCITY_SCALE 2.2
 vec2 DepthCmp(in const float center_depth, in const float sample_depth) {
 	// return sample_depth > center_depth ? vec2(1, 0) : vec2(0, 1);
@@ -48,9 +48,9 @@ void main() {
 
 	vec3 center_color = texelFetch(uTAA, coord, 0).rgb;
 	float center_depth = texelFetch(uDepth, coord, 0).r;
-	float center_velocity_length = length(texelFetch(uVelocity, coord, 0).rg - 0.5) * VELOCITY_SCALE;
+	float center_velocity_length = length(texelFetch(uVelocity, coord, 0).rg) * VELOCITY_SCALE;
 
-	vec2 max_pixel_velocity = texture(uTile, uv).rg - 0.5;
+	vec2 max_pixel_velocity = texture(uTile, uv).rg;
 	float max_pixel_velocity_length = length(max_pixel_velocity);
 
 	if (max_pixel_velocity_length < 1e-5) {
@@ -79,8 +79,8 @@ void main() {
 		vec3 sample_color_1 = texture(uTAA, sample_uv_1).rgb;
 		float sample_depth_0 = texture(uDepth, sample_uv_0).r;
 		float sample_depth_1 = texture(uDepth, sample_uv_1).r;
-		float sample_velocity_length_0 = length(texture(uVelocity, sample_uv_0).rg - 0.5) * VELOCITY_SCALE;
-		float sample_velocity_length_1 = length(texture(uVelocity, sample_uv_1).rg - 0.5) * VELOCITY_SCALE;
+		float sample_velocity_length_0 = length(texture(uVelocity, sample_uv_0).rg) * VELOCITY_SCALE;
+		float sample_velocity_length_1 = length(texture(uVelocity, sample_uv_1).rg) * VELOCITY_SCALE;
 
 		// in pixels
 		float weight_0 = SampleWeight(center_depth, sample_depth_0, offset_length.x, center_velocity_length,

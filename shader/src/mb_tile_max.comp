@@ -12,7 +12,7 @@ layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 #include "Binding.h"
 
 layout(binding = GBUFFER_VELOCITY_TEXTURE) uniform sampler2D uVelocity;
-layout(rg16, binding = MOTION_BLUR_TILE_0_IMAGE) uniform writeonly image2D uTile0;
+layout(rg16f, binding = MOTION_BLUR_TILE_0_IMAGE) uniform writeonly image2D uTile0;
 
 #ifdef SHARED_SIZE
 shared vec2 sMaxVelocity[SHARED_SIZE];
@@ -24,8 +24,7 @@ void main() {
 	ivec2 source_size = textureSize(uVelocity, 0);
 	ivec2 source_pos = ivec2(gl_GlobalInvocationID.xy);
 
-	vec2 cur_vel =
-	    any(greaterThanEqual(source_pos, source_size)) ? vec2(0) : texelFetch(uVelocity, source_pos, 0).rg - 0.5;
+	vec2 cur_vel = any(greaterThanEqual(source_pos, source_size)) ? vec2(0) : texelFetch(uVelocity, source_pos, 0).rg;
 
 	ivec2 target_pos = ivec2(gl_WorkGroupID.xy);
 
@@ -39,7 +38,7 @@ void main() {
 #ifdef SHARED_SIZE
 		sMaxVelocity[gl_LocalInvocationIndex / SUBGROUP_SIZE] = cur_vel;
 #else
-		imageStore(uTile0, target_pos, vec4(cur_vel + 0.5, 0, 0));
+		imageStore(uTile0, target_pos, vec4(cur_vel, 0, 0));
 		return;
 #endif
 	}
@@ -50,7 +49,7 @@ void main() {
 
 #else
 
-	imageStore(uTile0, target_pos, vec4(cur_vel + 0.5, 0, 0));
+	imageStore(uTile0, target_pos, vec4(cur_vel, 0, 0));
 	return;
 
 #endif
@@ -150,7 +149,7 @@ void main() {
 	barrier();
 	if (I == 0) {
 		cur_vel = reduce(sMaxVelocity[0], sMaxVelocity[1]);
-		imageStore(uTile0, target_pos, vec4(cur_vel + 0.5, 0, 0));
+		imageStore(uTile0, target_pos, vec4(cur_vel, 0, 0));
 	}
 
 #endif

@@ -71,16 +71,16 @@ void MotionBlur::initialize_target(int width, int height, int tile_size) {
 	}
 
 	m_tile_0.Initialize();
-	m_tile_0.Storage(div_ceil(width, tile_size), div_ceil(height, tile_size), GL_RG16, 1);
+	m_tile_0.Storage(div_ceil(width, tile_size), div_ceil(height, tile_size), GL_RG16F, 1);
 	m_tile_0.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_tile_0.SetWrapFilter(GL_CLAMP_TO_EDGE);
 	m_tile_0.Bind(MOTION_BLUR_TILE_0_TEXTURE);
-	glBindImageTexture(MOTION_BLUR_TILE_0_IMAGE, m_tile_0.Get(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG16);
+	glBindImageTexture(MOTION_BLUR_TILE_0_IMAGE, m_tile_0.Get(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG16F);
 
 	GLenum attachments[] = {GL_COLOR_ATTACHMENT0};
 
 	m_tile.Initialize();
-	m_tile.Storage(div_ceil(width, tile_size), div_ceil(height, tile_size), GL_RG16, 1);
+	m_tile.Storage(div_ceil(width, tile_size), div_ceil(height, tile_size), GL_RG16F, 1);
 	m_tile.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_tile.SetWrapFilter(GL_CLAMP_TO_EDGE);
 	m_tile.Bind(MOTION_BLUR_TILE_TEXTURE);

@@ -37,7 +37,7 @@ void GBuffer::initialize_target(int width, int height) {
 	m_depth.SetWrapFilter(GL_CLAMP_TO_EDGE);
 
 	m_velocity.Initialize();
-	m_velocity.Storage(m_width, m_height, GL_RG16, 1);
+	m_velocity.Storage(m_width, m_height, GL_RG16F, 1);
 	m_velocity.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_velocity.SetWrapFilter(GL_CLAMP_TO_EDGE);
 

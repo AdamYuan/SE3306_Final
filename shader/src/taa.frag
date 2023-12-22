@@ -45,7 +45,7 @@ void main() {
 	if (uFirst == 1)
 		oColor = light;
 	else {
-		vec2 velocity = texelFetch(uVelocity, coord, 0).rg - .5;
+		vec2 velocity = texelFetch(uVelocity, coord, 0).rg;
 		vec3 prev_light = RGB2YCoCg(texture(uPrevLight, uv - velocity).rgb);
 
 		light = RGB2YCoCg(light);
