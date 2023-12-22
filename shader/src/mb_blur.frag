@@ -7,8 +7,7 @@ layout(location = 0) uniform float uInvDeltaT;
 layout(location = 0) out vec3 oColor;
 
 layout(binding = TAA_TEXTURE) uniform sampler2D uTAA;
-layout(binding = GBUFFER_VELOCITY_TEXTURE) uniform sampler2D uVelocity;
-layout(binding = GBUFFER_DEPTH_TEXTURE) uniform sampler2D uDepth;
+layout(binding = MOTION_BLUR_SPEED_DEPTH_TEXTURE) uniform sampler2D uSpeedDepth;
 layout(binding = MOTION_BLUR_TILE_TEXTURE) uniform sampler2D uTile;
 
 // From Next-Generation-Post-Processing-in-Call-of-Duty-Advanced-Warfare-v18 and Unreal Engine
@@ -45,8 +44,9 @@ void main() {
 	vec2 uv = gl_FragCoord.xy * inv_resolution;
 
 	vec3 center_color = texelFetch(uTAA, coord, 0).rgb;
-	float center_depth = texelFetch(uDepth, coord, 0).r;
-	float center_velocity_length = length(texelFetch(uVelocity, coord, 0).rg);
+	vec2 center_speed_depth = texelFetch(uSpeedDepth, coord, 0).rg;
+	float center_speed = center_speed_depth.x;
+	float center_depth = center_speed_depth.y;
 
 	vec2 max_pixel_velocity = texture(uTile, uv).rg;
 
@@ -58,8 +58,8 @@ void main() {
 	float search_scale = uInvDeltaT * 0.015;
 	vec4 search_vector = vec4(max_pixel_velocity, -max_pixel_velocity) * search_scale;
 
-	float max_pixel_velocity_length = length(max_pixel_velocity);
-	float pixel_to_sample_scale = STEP_COUNT / max_pixel_velocity_length;
+	float max_pixel_speed = length(max_pixel_velocity);
+	float pixel_to_sample_scale = STEP_COUNT / max_pixel_speed;
 
 	vec3 color_accum = vec3(0);
 	float weight_accum = 0;
@@ -74,15 +74,17 @@ void main() {
 		vec4 sample_uv = uv.xyxy + offset_fraction.xyxy * search_vector; \
 		vec3 sample_color_0 = texture(uTAA, sample_uv.xy).rgb; \
 		vec3 sample_color_1 = texture(uTAA, sample_uv.zw).rgb; \
-		float sample_depth_0 = texture(uDepth, sample_uv.xy).r; \
-		float sample_depth_1 = texture(uDepth, sample_uv.zw).r; \
-		float sample_velocity_length_0 = length(texture(uVelocity, sample_uv.xy).rg); \
-		float sample_velocity_length_1 = length(texture(uVelocity, sample_uv.zw).rg); \
-		float weight_0 = SampleWeight(center_depth, sample_depth_0, offset_length.x, center_velocity_length, \
-		                              sample_velocity_length_0, pixel_to_sample_scale); \
-		float weight_1 = SampleWeight(center_depth, sample_depth_1, offset_length.x, center_velocity_length, \
-		                              sample_velocity_length_1, pixel_to_sample_scale); \
-		bvec2 mirror = bvec2(sample_depth_0 > sample_depth_1, sample_velocity_length_1 > sample_velocity_length_0); \
+		vec2 sample_speed_depth_0 = texture(uSpeedDepth, sample_uv.xy).rg; \
+		vec2 sample_speed_depth_1 = texture(uSpeedDepth, sample_uv.zw).rg; \
+		float sample_speed_0 = sample_speed_depth_0.x; \
+		float sample_speed_1 = sample_speed_depth_1.x; \
+		float sample_depth_0 = sample_speed_depth_0.y; \
+		float sample_depth_1 = sample_speed_depth_1.y; \
+		float weight_0 = SampleWeight(center_depth, sample_depth_0, offset_length.x, center_speed, sample_speed_0, \
+		                              pixel_to_sample_scale); \
+		float weight_1 = SampleWeight(center_depth, sample_depth_1, offset_length.x, center_speed, sample_speed_1, \
+		                              pixel_to_sample_scale); \
+		bvec2 mirror = bvec2(sample_depth_0 > sample_depth_1, sample_speed_1 > sample_speed_0); \
 		weight_0 = all(mirror) ? weight_1 : weight_0; \
 		weight_1 = any(mirror) ? weight_1 : weight_0; \
 		color_accum += weight_0 * sample_color_0 + weight_1 * sample_color_1; \

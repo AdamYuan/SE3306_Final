@@ -6,10 +6,10 @@
 
 class MotionBlur {
 private:
-	mygl3::Shader m_tile_max_shader, m_tile_nei_shader, m_blur_shader;
+	mygl3::Shader m_tile_max_shader, m_tile_nei_shader, m_speed_depth_shader, m_blur_shader;
 
-	mygl3::Texture2D m_tile_0, m_tile, m_blur;
-	mygl3::FrameBuffer m_tile_nei_fbo, m_blur_fbo;
+	mygl3::Texture2D m_tile_0, m_tile, m_speed_depth, m_blur;
+	mygl3::FrameBuffer m_tile_nei_fbo, m_speed_depth_fbo, m_blur_fbo;
 	int m_width{-1}, m_height{-1}, m_tile_size{-1};
 
 	void initialize_target(int width, int height, int tile_size);
@@ -27,10 +27,16 @@ public:
 		m_tile_max_shader.Use();
 		glDispatchCompute(tw, th, 1);
 		glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
-	
+
 		m_tile_nei_fbo.Bind();
 		m_tile_nei_shader.Use();
 		quad_draw_func(tw, th);
+
+		// Gather pixel speed & depth information to a texture
+		// For optimization
+		m_speed_depth_fbo.Bind();
+		m_speed_depth_shader.Use();
+		quad_draw_func(width, height);
 
 		m_blur_fbo.Bind();
 		m_blur_shader.Use();

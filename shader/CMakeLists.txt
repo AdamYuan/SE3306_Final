@@ -27,6 +27,7 @@ set(SHADER_SRC
         mb_tile_max.comp
         mb_tile_nei.frag
         mb_blur.frag
+        mb_speed_depth.frag
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)

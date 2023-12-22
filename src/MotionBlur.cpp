@@ -58,6 +58,15 @@ void MotionBlur::Initialize(const char *quad_vert_str) {
 		m_blur_shader.Load(kFrag, GL_FRAGMENT_SHADER);
 		m_blur_shader.Finalize();
 	}
+	{
+		m_speed_depth_shader.Initialize();
+		constexpr const char *kFrag =
+#include <shader/mb_speed_depth.frag.str>
+		    ;
+		m_speed_depth_shader.Load(quad_vert_str, GL_VERTEX_SHADER);
+		m_speed_depth_shader.Load(kFrag, GL_FRAGMENT_SHADER);
+		m_speed_depth_shader.Finalize();
+	}
 }
 
 void MotionBlur::initialize_target(int width, int height, int tile_size) {
@@ -99,4 +108,14 @@ void MotionBlur::initialize_target(int width, int height, int tile_size) {
 	m_blur_fbo.Initialize();
 	m_blur_fbo.AttachTexture2D(m_blur, GL_COLOR_ATTACHMENT0);
 	glNamedFramebufferDrawBuffers(m_blur_fbo.Get(), 1, attachments);
+
+	m_speed_depth.Initialize();
+	m_speed_depth.Storage(width, height, GL_RG16F, 1);
+	m_speed_depth.SetSizeFilter(GL_LINEAR, GL_LINEAR);
+	m_speed_depth.SetWrapFilter(GL_CLAMP_TO_EDGE);
+	m_speed_depth.Bind(MOTION_BLUR_SPEED_DEPTH_TEXTURE);
+
+	m_speed_depth_fbo.Initialize();
+	m_speed_depth_fbo.AttachTexture2D(m_speed_depth, GL_COLOR_ATTACHMENT0);
+	glNamedFramebufferDrawBuffers(m_speed_depth_fbo.Get(), 1, attachments);
 }
