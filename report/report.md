@@ -2,7 +2,7 @@
 
 521021910595 袁翊天
 
-| ![](img/screenshot0.png) | ![](img/screenshot1.png) | ![](img/screenshot2.png) |
+| ![](img/screenshot0.png) | ![](img/screenshot3.png) | ![](img/screenshot2.png) |
 | ------------------------ | ------------------------ | ------------------------ |
 
 ## Libraries
@@ -257,7 +257,7 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 ### 旋转
 
-转动时直接根据鼠标在屏幕上的拖动唯一对$x,z$轴做旋转，同时也要平移响应的距离以模拟纯滚动。
+转动时直接根据鼠标在屏幕上的拖动唯一对$x,z$轴做旋转，同时也要平移相应距离以模拟纯滚动。
 
 ## 粒子系统
 
@@ -317,8 +317,8 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 加了Motion Blur后管线有点太复杂了，图有点难画T.T
 
-* **Velocity Tile (Max) Pass**：将Velocity Buffer降采样（$16\times16$）为Velocity Tiles，取$16\times16$个Velocity中的最大值（向量模最大的）
-* **Velocity Tile (Gather) Pass**：计算$3\times 3$范围内的最大Velocity
+* **Velocity Tile (Max) Pass**：将Velocity Buffer划分为若干个$20\times 20$的Tile，求每个Tile中的最大Velocity
+* **Velocity Tile (Scatter) Pass**：计算$3\times 3$范围内的最大Velocity
 * **Motion Blur Pass**：对TAA Pass的输出做Motion Blur
 
 （要是允许用我的Vulkan Render Graph，能用Resource Aliasing节省好多显存，用OpenGL就没办法了>.<）
@@ -343,9 +343,15 @@ $\vec{v}’ = \hat{v}\cdot\max\{0, ||v|| - \mu g \Delta t\}, \vec{\omega}’ = \
 
 由于点光源（位置为Cornell Box顶部半球灯的球心）在$[-1,1]^3$外，一个Shadow Map Texture足够涵盖$[-1,1]^3$范围内的所有物体，无需使用Cubemap Texture。
 
-在Light Pass中使用$5 \times 5$ PCF采样实现软阴影，效果如下：
+Light Pass中的ShadowMap采样尝试了$5 \times 5$ PCF和Poisson Disk随机采样两种方法，效果如下：
 
-<img src="img/diffuse_shadowmap.png" style="zoom:50%;" />
+|                         | $5\times5$ PCF                                             | Poisson Disk                                                 |
+| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ |
+| Direct Light            | <img src="img/diffuse_shadowmap.png" style="zoom: 50%;" /> | <img src="img/diffuse_shadowmap_poisson.png" style="zoom: 50%;" /> |
+| Direct + Indirect Light | <img src="img/screenshot2.png" style="zoom: 50%;" />       | <img src="img/diffuse_sm_poisson_gi.png" style="zoom: 50%;" /> |
+| 采样次数                | 25                                                         | 1                                                            |
+
+可见随机Poisson Disk采样的噪点在全局光照下基本不可见，且其采样次数远少于$5\times 5$ PCF，故最终使用了随机Poisson Disk采样。
 
 ### 基于体素的全局光照
 
@@ -421,19 +427,37 @@ Voxel Cone Tracing即在一个圆锥体中进行体素采样（四线性插值�
 
 本次作业的场景中有大量的发光体（Cornell Box灯、火球、粒子），实现泛光效果能够增强其表现力。
 
-程序实现了https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/中的泛光技术。
+> 泛光实现参考了以下资料：
+>
+> * Next Generation Post Processing in Call of Duty: Advanced Warfare
+>
+>   https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
+>
+> * https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
+>
 
-> 该方法分为Downsample和Upsample两步：
+泛光的实现分为Downsample和Upsample两步：
 >
 > ![](img/bloom_pipeline.png)
 >
 > https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
 >
-> * Downsample步骤使用如下图所示的kernel，这样能够避免出现不自然的方形光晕：<img src="img/bloom_downsample.png" style="zoom:50%;" />
+> 
 >
-> * Upsample步骤则使用一个$3\times3$ Tent Filter向上采样相加到上层图像上（注意不是采样9个临近像素，而是9个指定UV-space偏移量的双线性过滤样本），以实现更好的模糊效果：![](img/bloom_upsample.png)
->
->   
+
+#### Downsample
+
+Downsample步骤使用如下图所示的kernel，这样能够避免出现不自然的方形光晕：
+
+> <img src="img/bloom_downsample.png" style="zoom:50%;" />https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
+
+#### Upsample
+
+Upsample步骤则使用一个$3\times3$ Tent Filter向上采样相加到上层图像上（注意不是采样9个临近像素，而是9个指定UV-space偏移量的双线性过滤样本），以实现更好的模糊效果：
+
+> ![](img/bloom_upsample.png)https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
+
+#### 混合
 
 生成的Bloom材质在Screen Pass的混合方法如下：
 
@@ -441,10 +465,10 @@ $\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f
 
 实现出的效果如下（对比了之前写的$9\times9$ Gaussian Blur）：
 
-| 方法                                       | Bloom Pass                                 | Screen Pass                                 |
-| ------------------------------------------ | ------------------------------------------ | ------------------------------------------- |
-| **Physically Based Bloom<br />(作业采用)** | ![](img/bloom_blur.png)                    | ![](img/bloom_final.png)                    |
-| Gaussian Blur                              | <img src="img/bloom_gaussian_blur.png"  /> | <img src="img/bloom_gaussian_final.png"  /> |
+| 方法                                       | Bloom Pass                                                  | Screen Pass                                                  |
+| ------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------ |
+| **Physically Based Bloom<br />(作业采用)** | <img src="img/bloom_blur.png" style="zoom:50%;" />          | <img src="img/bloom_final.png" style="zoom:50%;" />          |
+| Gaussian Blur                              | <img src="img/bloom_gaussian_blur.png" style="zoom:50%;" /> | <img src="img/bloom_gaussian_final.png" style="zoom:50%;" /> |
 
 可见Physically Based Bloom比Guassian Blur效果好很多。
 
@@ -517,9 +541,53 @@ $\text{Color}' = \text{Color} \times (1 - f) + \text{Bloom} \times f$，其中$f
 | --------------------------- | ---------------------------- |
 | ![](img/taa_after_crop.png) | ![](img/taa_before_crop.png) |
 
+可见画面质量改善很大。
+
 ### Motion Blur
 
 （既然为了TAA都把Velocity Buffer画出来了，那肯定得试下Motion Blur）
+
+> Motion Blur实现参考了以下资料：
+>
+> * Next Generation Post Processing in Call of Duty: Advanced Warfare
+>
+>   https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
+>
+> * Unreal Engine’s Implementation
+>
+>   https://github.com/raysjoshua/UnrealEngine/blob/master/Engine/Shaders/PostProcessMotionBlur.usf
+
+#### Velocity Tile生成
+
+Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方向由该像素邻域内的速度决定（画面中速度为0的像素也可能参与模糊，如果周围的像素有速度）。
+
+为了加速模糊方向的查询，作业中参考Next Generation Post Processing in Call of Duty: Advanced Warfare的做法将Velocity Buffer划分为$20\times 20$的Tile，求出Tile中的速度最大值（向量模最大的速度）。作业中使用Compute Shader实现这一功能：
+
+* 设置Compute Shader的Workgroup Size为$20 \times 20 \times 1$
+* 设置大小为$20 \times 20$的Shared Memory
+* 每个Thread首先从Velocity Buffer读入对应像素的Velocity
+* Velocity存入对应的Shared Memory位置
+* 而后在Shared Memory做Parallel Reduction求出最大速度
+* 如果设备支持Subgroup（DX那边好像叫Wave）
+  * 可以先快速求出Subgroup内的最大速度
+  * 存入Shared Memory（此时Shared Memory大小为$\lceil \frac{20 \times 20}{\text{SubgroupSize}} \rceil$）
+  * 再Fallback到Parallel Reduction
+  * 在RTX 3060上速度能提升$50\%$
+  * （无法不能再做Subgrouop Reduction，因为文档里没有保证Subgroup在Workgroup中的排布方式）
+  * *据说Intel的驱动不会严格用满每个Subgroup（https://www.reddit.com/r/vulkan/comments/13jq7ol/nvidia_subgroups/），这样的话前面计算的Shared Memory可能不等于Subgroup数量，所以在Intel显卡禁用这个优化，Fuck Intel*
+  * *算了算了，为了兼容性还是彻底禁用这个优化吧，毕竟本来就不是什么性能瓶颈。subgroup size control要Vulkan才有，Fuck OpenGL，白忙活*
+
+而后需要对Velocity Tile进行扩散操作，即对每个Tile，求出其$3\times 3$邻域的最大速度。
+
+结果如下图所示：
+
+| Velocity Buffer              | Tile (Max)                 | Tile (Scatter)                     |
+| ---------------------------- | -------------------------- | ---------------------------------- |
+| ![](img/velocity_buffer.png) | ![](img/velocity_tile.png) | ![](img/velocity_tile_scatter.png) |
+
+#### Blur Filter
+
+
 
 ## 性能分析
 
