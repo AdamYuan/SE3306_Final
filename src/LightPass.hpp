@@ -11,6 +11,8 @@ private:
 	mygl3::FrameBuffer m_fbo;
 	int m_width{-1}, m_height{-1};
 
+	GLuint m_tick = 0;
+
 	void initialize_target(int width, int height);
 
 public:
@@ -20,6 +22,7 @@ public:
 		initialize_target(width, height);
 		m_fbo.Bind();
 		m_shader.Use();
+		m_shader.SetUint(0, m_tick++);
 		quad_draw_func();
 	}
 };

@@ -4,6 +4,8 @@
 #include "Config.h"
 #include "Texture.h"
 
+layout(location = 0) uniform uint uTick; // For shadow map sample
+
 layout(location = 0) out vec3 oLight;
 
 layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
@@ -38,6 +40,9 @@ float de_linearize_depth(in const float linear_depth) {
 	return (2.0 * Z_NEAR * Z_FAR / linear_depth - Z_FAR - Z_NEAR) / (Z_NEAR - Z_FAR);
 }
 
+float InterleavedGradientNoise(in const ivec2 pixel_pos) {
+	return fract(52.9829189 * fract(dot(vec2(pixel_pos), vec2(0.06711056, 0.00583715))));
+}
 float DirectVisibility(in const vec3 position, in const vec3 normal) {
 	vec3 light_dir = GetCornellLightDir(position);
 	vec4 shadow_pos = uShadowViewProjection * vec4(position, 1);
@@ -47,19 +52,17 @@ float DirectVisibility(in const vec3 position, in const vec3 normal) {
 	shadow_pos.z = de_linearize_depth(linearize_depth(shadow_pos.z) + clamp(0.1 * dot(normal, light_dir), -0.02, 0.05));
 
 	float shadow = 0;
-#define SHADOW_SAMPLE(OFFSET) shadow += textureProjOffset(uShadowMap, shadow_pos, OFFSET)
-#define SHADOW_SAMPLE_X(X_OFFSET) \
-	SHADOW_SAMPLE(ivec2(X_OFFSET, -2)); \
-	SHADOW_SAMPLE(ivec2(X_OFFSET, -1)); \
-	SHADOW_SAMPLE(ivec2(X_OFFSET, 0)); \
-	SHADOW_SAMPLE(ivec2(X_OFFSET, 1)); \
-	SHADOW_SAMPLE(ivec2(X_OFFSET, 2))
-	SHADOW_SAMPLE_X(-2);
-	SHADOW_SAMPLE_X(-1);
-	SHADOW_SAMPLE_X(0);
-	SHADOW_SAMPLE_X(1);
-	SHADOW_SAMPLE_X(2);
-	shadow *= 0.04;
+
+	const vec2 kPoissonDisk[16] =
+	    vec2[](vec2(-0.94201624, -0.39906216), vec2(0.94558609, -0.76890725), vec2(-0.094184101, -0.92938870),
+	           vec2(0.34495938, 0.29387760), vec2(-0.91588581, 0.45771432), vec2(-0.81544232, -0.87912464),
+	           vec2(-0.38277543, 0.27676845), vec2(0.97484398, 0.75648379), vec2(0.44323325, -0.97511554),
+	           vec2(0.53742981, -0.47373420), vec2(-0.26496911, -0.41893023), vec2(0.79197514, 0.19090188),
+	           vec2(-0.24188840, 0.99706507), vec2(-0.81409955, 0.91437590), vec2(0.19984126, 0.78641367),
+	           vec2(0.14383161, -0.14100790));
+	vec2 unit = 1.5 / textureSize(uShadowMap, 0);
+	uint idx = (uint(16.0 * InterleavedGradientNoise(ivec2(gl_FragCoord.xy))) + uTick) & 0xfu;
+	shadow = textureProj(uShadowMap, vec4(shadow_pos.xy + kPoissonDisk[idx] * unit, shadow_pos.zw));
 	shadow = smoothstep(0.02, 1.0, shadow);
 
 	return GetCornellLightVisibility(normal, light_dir, shadow) * .2 + .8;
