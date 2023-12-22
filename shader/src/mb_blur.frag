@@ -72,15 +72,14 @@ void main() {
 		vec2 offset_length = vec2(i + 0.5) + jitter;
 		vec2 offset_fraction = offset_length / STEP_COUNT;
 
-		vec2 sample_uv_0 = uv + offset_fraction * search_vector.xy;
-		vec2 sample_uv_1 = uv + offset_fraction * search_vector.zw;
+		vec4 sample_uv = uv.xyxy + offset_fraction.xyxy * search_vector;
 
-		vec3 sample_color_0 = texture(uTAA, sample_uv_0).rgb;
-		vec3 sample_color_1 = texture(uTAA, sample_uv_1).rgb;
-		float sample_depth_0 = texture(uDepth, sample_uv_0).r;
-		float sample_depth_1 = texture(uDepth, sample_uv_1).r;
-		float sample_velocity_length_0 = length(texture(uVelocity, sample_uv_0).rg) * VELOCITY_SCALE;
-		float sample_velocity_length_1 = length(texture(uVelocity, sample_uv_1).rg) * VELOCITY_SCALE;
+		vec3 sample_color_0 = texture(uTAA, sample_uv.xy).rgb;
+		vec3 sample_color_1 = texture(uTAA, sample_uv.zw).rgb;
+		float sample_depth_0 = texture(uDepth, sample_uv.xy).r;
+		float sample_depth_1 = texture(uDepth, sample_uv.zw).r;
+		float sample_velocity_length_0 = length(texture(uVelocity, sample_uv.xy).rg) * VELOCITY_SCALE;
+		float sample_velocity_length_1 = length(texture(uVelocity, sample_uv.zw).rg) * VELOCITY_SCALE;
 
 		// in pixels
 		float weight_0 = SampleWeight(center_depth, sample_depth_0, offset_length.x, center_velocity_length,
