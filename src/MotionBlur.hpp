@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/gtc/type_ptr.hpp>
 #include <mygl3/framebuffer.hpp>
 #include <mygl3/shader.hpp>
 #include <mygl3/texture.hpp>
@@ -21,7 +22,8 @@ public:
 	void Initialize(const char *quad_vert_str);
 
 	template <typename QuadDrawFunc>
-	void Generate(int width, int height, int tile_size, float delta_t, QuadDrawFunc &&quad_draw_func) {
+	void Generate(int width, int height, int tile_size, float search_scale, const glm::vec2 &jitter,
+	              QuadDrawFunc &&quad_draw_func) {
 		initialize_target(width, height, tile_size);
 		int tw = div_ceil(m_width, m_tile_size), th = div_ceil(m_height, m_tile_size);
 		m_tile_max_shader.Use();
@@ -40,7 +42,8 @@ public:
 
 		m_blur_fbo.Bind();
 		m_blur_shader.Use();
-		m_blur_shader.SetFloat(0, 1.f / delta_t);
+		m_blur_shader.SetFloat(0, search_scale);
+		m_blur_shader.SetVec2(1, glm::value_ptr(jitter));
 		quad_draw_func(width, height);
 	}
 };
