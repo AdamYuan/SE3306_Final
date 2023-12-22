@@ -587,7 +587,10 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
 
 #### Blur Filter
 
+本次作业的Motion Blur Filter根据Next Generation Post Processing in Call of Duty: Advanced Warfare设计，代码实现参考了虚幻引擎：
 
+> * 在Velocity Tile采样（双线性），获得当前像素的模糊方向
+> * 运动模糊分为内模糊和外模糊：
 
 ## 性能分析
 
