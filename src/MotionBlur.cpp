@@ -7,18 +7,19 @@
 
 void MotionBlur::initialize_tile_max_shader() {
 	int subgroup_size = 1, shared_size = m_tile_size * m_tile_size;
-	if (mygl3::Shader s; mygl3::IsExtensionSupported("GL_KHR_shader_subgroup") && //
+	// Disable subgroup optimization for compatibility
+	/* if (mygl3::Shader s; false && mygl3::IsExtensionSupported("GL_KHR_shader_subgroup") && //
 	                     (s.Initialize(), s.Load(R"(#version 450
 #extension GL_KHR_shader_subgroup_basic : require
 #extension GL_KHR_shader_subgroup_ballot : require
 #extension GL_KHR_shader_subgroup_arithmetic : require
 void main(){})",
 	                                             GL_COMPUTE_SHADER))) {
-		glGetIntegerv(GL_SUBGROUP_SIZE_KHR, &subgroup_size);
-		printf("GL_KHR_shader_subgroup_{basic, ballot, arithmetic} supported, gl_SubgroupSize = %d\n", subgroup_size);
-		shared_size = div_ceil(shared_size, subgroup_size);
+	    glGetIntegerv(GL_SUBGROUP_SIZE_KHR, &subgroup_size);
+	    printf("GL_KHR_shader_subgroup_{basic, ballot, arithmetic} supported, gl_SubgroupSize = %d\n", subgroup_size);
+	    shared_size = div_ceil(shared_size, subgroup_size);
 	} else
-		printf("GL_KHR_shader_subgroup_{basic, ballot, arithmetic} not supported\n");
+	    printf("GL_KHR_shader_subgroup_{basic, ballot, arithmetic} not supported\n"); */
 
 	std::string macro = "\n#define TILE_SIZE " + std::to_string(m_tile_size) + "\n";
 	if (subgroup_size > 1)

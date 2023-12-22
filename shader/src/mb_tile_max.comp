@@ -33,10 +33,11 @@ void main() {
 	float len2 = dot(velocity, velocity);
 	float len2_sg_max = subgroupMax(len2);
 	uvec4 ballot = subgroupBallot(len2 == len2_sg_max);
-	uint ballot_lsb = subgroupBallotFindLSB(ballot); // Get first subgroup
+	uint ballot_lsb = subgroupBallotFindLSB(ballot);
 	if (ballot_lsb == gl_SubgroupInvocationID) {
 #ifdef SHARED_SIZE
-		sMaxVelocity[gl_SubgroupID] = velocity;
+		// Might have correctness issue on Intel Graphics Cards, Fuck Intel
+		sMaxVelocity[gl_LocalInvocationIndex / SUBGROUP_SIZE] = velocity;
 #else
 		imageStore(uTile0, target_pos, vec4(velocity, 0, 0));
 		return;
