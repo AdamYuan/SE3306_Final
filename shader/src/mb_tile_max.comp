@@ -24,132 +24,98 @@ void main() {
 	ivec2 source_size = textureSize(uVelocity, 0);
 	ivec2 source_pos = ivec2(gl_GlobalInvocationID.xy);
 
-	vec2 cur_vel = any(greaterThanEqual(source_pos, source_size)) ? vec2(0) : texelFetch(uVelocity, source_pos, 0).rg;
+	vec2 velocity = any(greaterThanEqual(source_pos, source_size)) ? vec2(0) : texelFetch(uVelocity, source_pos, 0).rg;
 
 	ivec2 target_pos = ivec2(gl_WorkGroupID.xy);
 
 #ifdef SUBGROUP_SIZE
 	// Subgroup Reduction
-	float len2 = dot(cur_vel, cur_vel);
+	float len2 = dot(velocity, velocity);
 	float len2_sg_max = subgroupMax(len2);
 	uvec4 ballot = subgroupBallot(len2 == len2_sg_max);
 	uint ballot_lsb = subgroupBallotFindLSB(ballot); // Get first subgroup
 	if (ballot_lsb == gl_SubgroupInvocationID) {
 #ifdef SHARED_SIZE
-		sMaxVelocity[gl_LocalInvocationIndex / SUBGROUP_SIZE] = cur_vel;
+		sMaxVelocity[gl_SubgroupID] = velocity;
 #else
-		imageStore(uTile0, target_pos, vec4(cur_vel, 0, 0));
+		imageStore(uTile0, target_pos, vec4(velocity, 0, 0));
 		return;
 #endif
 	}
 
 #elif defined(SHARED_SIZE)
 
-	sMaxVelocity[gl_LocalInvocationIndex] = cur_vel;
+	sMaxVelocity[gl_LocalInvocationIndex] = velocity;
 
 #else
 
-	imageStore(uTile0, target_pos, vec4(cur_vel, 0, 0));
+	imageStore(uTile0, target_pos, vec4(velocity, 0, 0));
 	return;
 
 #endif
 
 #ifdef SHARED_SIZE
-	// Parallel Reduction
-#define I gl_LocalInvocationIndex
 
-	if (I >= SHARED_SIZE)
+	// Parallel Reduction
+#define PARALLEL_REDUCE(N) \
+	barrier(); \
+	if (gl_LocalInvocationIndex < N && gl_LocalInvocationIndex + N < SHARED_SIZE) \
+		sMaxVelocity[gl_LocalInvocationIndex] = \
+		    reduce(sMaxVelocity[gl_LocalInvocationIndex], sMaxVelocity[gl_LocalInvocationIndex + N]);
+
+	if (gl_LocalInvocationIndex >= SHARED_SIZE)
 		return;
 
+#if SHARED_SIZE > 32768
+#error TOO MUCH REDUCTIONS
+#endif
 #if SHARED_SIZE > 16384
-	barrier();
-	if (I < 16384 && I + 16384 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 16384]);
+	PARALLEL_REDUCE(16384)
 #endif
-
 #if SHARED_SIZE > 8192
-	barrier();
-	if (I < 8192 && I + 8192 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 8192]);
+	PARALLEL_REDUCE(8192)
 #endif
-
 #if SHARED_SIZE > 4096
-	barrier();
-	if (I < 4096 && I + 4096 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 4096]);
+	PARALLEL_REDUCE(4096)
 #endif
-
 #if SHARED_SIZE > 2048
-	barrier();
-	if (I < 2048 && I + 2048 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 2048]);
+	PARALLEL_REDUCE(2048)
 #endif
-
 #if SHARED_SIZE > 1024
-	barrier();
-	if (I < 1024 && I + 1024 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 1024]);
+	PARALLEL_REDUCE(1024)
 #endif
-
 #if SHARED_SIZE > 512
-	barrier();
-	if (I < 512 && I + 512 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 512]);
+	PARALLEL_REDUCE(512)
 #endif
-
 #if SHARED_SIZE > 256
-	barrier();
-	if (I < 256 && I + 256 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 256]);
+	PARALLEL_REDUCE(256)
 #endif
-
 #if SHARED_SIZE > 128
-	barrier();
-	if (I < 128 && I + 128 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 128]);
+	PARALLEL_REDUCE(128)
 #endif
-
 #if SHARED_SIZE > 64
-	barrier();
-	if (I < 64 && I + 64 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 64]);
+	PARALLEL_REDUCE(64)
 #endif
-
 #if SHARED_SIZE > 32
-	barrier();
-	if (I < 32 && I + 32 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 32]);
+	PARALLEL_REDUCE(32)
 #endif
-
 #if SHARED_SIZE > 16
-	barrier();
-	if (I < 16 && I + 16 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 16]);
+	PARALLEL_REDUCE(16)
 #endif
-
 #if SHARED_SIZE > 8
-	barrier();
-	if (I < 8 && I + 8 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 8]);
+	PARALLEL_REDUCE(8)
 #endif
-
 #if SHARED_SIZE > 4
-	barrier();
-	if (I < 4 && I + 4 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 4]);
+	PARALLEL_REDUCE(4)
 #endif
-
 #if SHARED_SIZE > 2
-	barrier();
-	if (I < 2 && I + 2 < SHARED_SIZE)
-		sMaxVelocity[I] = reduce(sMaxVelocity[I], sMaxVelocity[I + 2]);
+	PARALLEL_REDUCE(2)
 #endif
-
 	// SHARED_SIZE > 1 is ensured
 	barrier();
-	if (I == 0) {
-		cur_vel = reduce(sMaxVelocity[0], sMaxVelocity[1]);
-		imageStore(uTile0, target_pos, vec4(cur_vel, 0, 0));
+	if (gl_LocalInvocationIndex == 0) {
+		velocity = reduce(sMaxVelocity[0], sMaxVelocity[1]);
+		imageStore(uTile0, target_pos, vec4(velocity, 0, 0));
 	}
 
 #endif
