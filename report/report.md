@@ -589,8 +589,27 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
 
 本次作业的Motion Blur Filter根据Next Generation Post Processing in Call of Duty: Advanced Warfare设计，代码实现参考了虚幻引擎：
 
-> * 在Velocity Tile采样（双线性），获得当前像素的模糊方向
-> * 运动模糊分为内模糊和外模糊：
+> https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
+>
+> * 在Velocity Tile采样（双线性），获得当前像素的模糊方向（双向，向前&向后）
+>
+> * 运动模糊分为内模糊和外模糊，分别表示物体上的模糊和背景上的模糊，两者之间是有分界的：
+>
+>   <img src="img/mb_inner_outer.png" style="zoom: 50%;" />
+>
+> * 内模糊会对采样方向上的所有Sample赋予均等的权重，以将背景混合进去：
+>
+>   <img src="img/mb_inner.png" style="zoom:50%;" />
+>
+> * 外模糊则只会对物体上的Sample赋予模糊权重，以防止背景也变模糊：
+>
+>   <img src="img/mb_outer.png" style="zoom:50%;" />
+>
+> * 如何判断像素是否在物体上、是否是背景：
+>
+>   * 若像素在Velocity Buffer中的速度大小等于Tile的速度大小，则认为像素在物体上
+>   * 两个像素间，认为Depth较大的像素是背景；Depth较小的在物体上
+>   * 这两个条件都可以用于判断，实现中通过混合这两个条件求出每个Sample的权重
 
 ## 性能分析
 
