@@ -26,8 +26,8 @@ public:
 		int tw = div_ceil(m_width, m_tile_size), th = div_ceil(m_height, m_tile_size);
 		m_tile_max_shader.Use();
 		glDispatchCompute(tw, th, 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
+		glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+	
 		m_tile_nei_fbo.Bind();
 		m_tile_nei_shader.Use();
 		quad_draw_func(tw, th);
