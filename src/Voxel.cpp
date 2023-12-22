@@ -47,7 +47,7 @@ void Voxel::generate_mipmap() {
 		                   GL_RGBA16F);
 	m_mipmap_0_shader.Use();
 	dispatch(m_resolution >> 1, m_resolution >> 1, m_resolution >> 1);
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
 	for (int l = 2; l < m_mipmaps; ++l) {
 		for (int i = 0; i < 6; ++i)
@@ -56,7 +56,7 @@ void Voxel::generate_mipmap() {
 		m_mipmap_shader.Use();
 		m_mipmap_shader.SetInt(0, l - 2);
 		dispatch(m_resolution >> l, m_resolution >> l, 6 * (m_resolution >> l));
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 	}
 }
 
