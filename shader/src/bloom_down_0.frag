@@ -12,7 +12,7 @@
 // Remember to use edge clamping for this texture!
 
 #include "Binding.h"
-#include "Texture.h"
+#include "Config.h"
 
 layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
 layout(location = 0) out vec3 oDownSample;

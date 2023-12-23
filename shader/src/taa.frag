@@ -1,6 +1,7 @@
 #version 450
 
 #include "Binding.h"
+#include "Config.h"
 
 layout(location = 0) uniform int uFirst;
 layout(location = 1) uniform vec2 uJitter;
@@ -45,7 +46,7 @@ void main() {
 	if (uFirst == 1)
 		oColor = light;
 	else {
-		vec2 velocity = texelFetch(uVelocity, coord, 0).rg;
+		vec2 velocity = texelFetch(uVelocity, coord, 0).rg * INV_VELOCITY_SCALE;
 		vec3 prev_light = RGB2YCoCg(texture(uPrevLight, uv - velocity).rgb);
 
 		light = RGB2YCoCg(light);

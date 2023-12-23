@@ -1,6 +1,7 @@
 #version 450
 
 #include "Binding.h"
+#include "Config.h"
 
 layout(location = 0) uniform float uSearchScale;
 
@@ -44,6 +45,7 @@ void main() {
 	vec2 uv = gl_FragCoord.xy * inv_resolution;
 
 	vec3 center_color = texelFetch(uTAA, coord, 0).rgb;
+	// since speed values are divided, there's no need to multiply by INV_VELOCITY_SCALE
 	vec2 center_speed_depth = texelFetch(uSpeedDepth, coord, 0).rg;
 	float center_speed = center_speed_depth.x;
 	float center_depth = center_speed_depth.y;
@@ -55,7 +57,7 @@ void main() {
 		return;
 	}
 
-	vec4 search_vector = vec4(max_pixel_velocity, -max_pixel_velocity) * uSearchScale;
+	vec4 search_vector = vec4(max_pixel_velocity, -max_pixel_velocity) * INV_VELOCITY_SCALE * uSearchScale;
 
 	float max_pixel_speed = length(max_pixel_velocity);
 	float pixel_to_sample_scale = STEP_COUNT / max_pixel_speed;

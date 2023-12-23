@@ -2,7 +2,6 @@
 
 #include "Binding.h"
 #include "Config.h"
-#include "Texture.h"
 
 layout(location = 0) uniform uint uTick; // For shadow map sample
 

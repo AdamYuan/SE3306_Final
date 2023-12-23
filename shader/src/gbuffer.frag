@@ -1,5 +1,6 @@
 #version 450
 
+#include "Config.h"
 #include "Texture.h"
 
 layout(location = 0) in vec3 vNormal;
@@ -24,5 +25,5 @@ void main() {
 	oAlbedo = GetAlbedo(vColor);
 	// since uModel is a guarenteed orthogonal matrix, there's no need for transpose(inverse(mat3(uModel)))
 	oNormal = float32x3_to_oct(normalize(vNormal));
-	oVelocity = (vClip.xy / vClip.w - vPrevClip.xy / vPrevClip.w) * .5;
+	oVelocity = (vClip.xy / vClip.w - vPrevClip.xy / vPrevClip.w) * .5 * VELOCITY_SCALE;
 }

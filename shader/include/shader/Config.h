@@ -4,6 +4,8 @@
 #define VOXEL_SCALE 0.75f
 #define Z_NEAR 0.1f
 #define Z_FAR 4.0f
+#define VELOCITY_SCALE 16.0f
+#define INV_VELOCITY_SCALE 0.0625f
 
 #ifndef GLSL
 #include <glm/glm.hpp>
@@ -15,6 +17,8 @@ const float kCornellLightHeight = 1.5f, kCornellLightRadius = 0.6f;
 const vec3 kCornellLightRadiance = vec3(3.5);
 
 #ifdef GLSL
+
+bool IsEmissive(in const vec3 color) { return any(greaterThan(color, vec3(1))); }
 
 vec3 GetCornellLightDir(in const vec3 position) { return normalize(vec3(0, kCornellLightHeight, 0) - position); }
 

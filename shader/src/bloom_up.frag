@@ -19,7 +19,7 @@ layout(location = 2) uniform int uLevel0;
 
 layout(location = 0) out vec3 oUpSample;
 
-#include "Texture.h"
+#include "Config.h"
 layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
 vec3 sample_emissive(in const vec2 uv) {
 	vec3 color = texture(uAlbedo, uv).rgb;
