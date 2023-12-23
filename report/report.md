@@ -573,9 +573,9 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
   * 存入Shared Memory（此时Shared Memory大小为$\lceil \frac{20 \times 20}{\text{SubgroupSize}} \rceil$）
   * 再Fallback到Parallel Reduction
   * 在RTX 3060上速度能提升$50\%$
-  * （无法不能再做Subgrouop Reduction，因为文档里没有保证Subgroup在Workgroup中的排布方式）
+  * （不能再做Subgrouop Reduction，因为文档里没有保证Subgroup在Workgroup中的排布方式）
   * *据说Intel的驱动不会严格用满每个Subgroup（https://www.reddit.com/r/vulkan/comments/13jq7ol/nvidia_subgroups/），这样的话前面计算的Shared Memory可能不等于Subgroup数量，所以在Intel显卡禁用这个优化，Fuck Intel*
-  * *算了算了，为了兼容性还是彻底禁用这个优化吧，毕竟本来就不是什么性能瓶颈。subgroup size control要Vulkan才有，Fuck OpenGL，白忙活*
+  * *算了算了，为了兼容性还是彻底禁用这个优化吧，毕竟本来就不是什么性能瓶颈，Parallel Reduction也足够快了。subgroup size control要Vulkan才有，Fuck OpenGL，白忙活*
 
 而后需要对Velocity Tile进行扩散操作，即对每个Tile，求出其$3\times 3$邻域的最大速度。
 
@@ -610,6 +610,29 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
 >   * 若像素在Velocity Buffer中的速度大小等于Tile的速度大小，则认为像素在物体上
 >   * 两个像素间，认为Depth较大的像素是背景；Depth较小的在物体上
 >   * 这两个条件都可以用于判断，实现中通过混合这两个条件求出每个Sample的权重
+>   
+> * 优化：
+>
+>   * 由于采样时只需要颜色信息、深度和速度大小，可以事先将速度大小和深度打包到一个RG16F材质中，这样每个Sample的访存减少了4个Byte
+>   * 速度大小为0的Tile直接跳过
+>   * 参考资料中提到有种优化是同时求Tile的最大和最小速度，若两个速度相近则认定样本属于同一个物体上的内模糊，这样就无需计算权重直接求平均即可
+>     * 不过我认为本次作业中这样的场景较少（因为运动物体都比较小），因此没有实现这个优化
+
+#### 效果
+
+| 1                   | 2                   | 3                   | 4                                                |
+| ------------------- | ------------------- | ------------------- | ------------------------------------------------ |
+| ![](img/mb_eg0.png) | ![](img/mb_eg1.png) | ![](img/mb_eg2.png) | <img src="img/mb_eg4.png" style="zoom: 150%;" /> |
+
+* 可以较为清晰地看到内外模糊的分界
+* 火花粒子与得到了模糊
+* 采样的随机Offset产生了少许噪点，但实际运行中是基本看不到的
+* 也有一些不当的模糊（图4），推测是由于该物体处在几个Tile的交界处，且该物体的速度不是Tile内最大的，所以其采样方向受周围几个Tile的牵扯，导致产生了几个方向同时模糊的错误效果
+  * 这种Artifact是Tile-Based Motion Blur的本身缺陷导致的
+  * [A Fast and Stable Feature-Aware Motion Blur Filter](https://casual-effects.com/research/Guertin2014MotionBlur/Guertin2014MotionBlur-small.pdf)提出了一种有趣的解决方法：
+    * 计算每个Tile与周围Tile的方差，根据这个方差给像素的速度计算一个权重，而后与Tile速度加权得到采样速度
+    * 同时对Tile边界的像素点增加随机扰动
+    * 不过这个算法要调的参数有点多，本次作业没有实现
 
 ## 性能分析
 
@@ -622,4 +645,28 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
 
 * 可见即使在集成显卡，Frame Time也在$10 \text{ms}$以内，基本没有性能问题
   * 不过集成显卡的驱动似乎都会有些问题，导致容易产生artifacts
+  * Linux下的mesa-vdpau驱动（AMD集显）有Bug，导致几个Incoherent Image Write的后续Barrier不生效（这绝对是不符合OpenGL标准的），有概率产生离谱的问题
 * 每帧$80\%$以上的时间都消耗在Light Pass，这是由于Voxel Cone Tracing计算量较大
+
+## 杂谈
+
+本来写完Voxel Cone Tracing就交作业了，结果期末DDL清空地太快了，连续两周没事情做，于是把很多以前没尝试过的渲染效果（Physically-Based Bloom、TAA、Motion Blur）都实现了一遍，有不少收获。
+
+用OpenGL写这些Modern Rendering Techniques还是挺折磨的。不适感主要来自以下几个方面：
+
+* 渲染管线本来是一个优美的有向无环图结构，在OpenGL却只能用一堆诡异的全局状态来组织，给我的感觉是丑陋的API破坏了优美的设计
+
+* OpenGL缺少对很多现代GPU特性的完整支持（比如Subgroup、Command Buffer），导致一些优化无法实现
+* Modern OpenGL的文档也写得也不咋样，很多较新的文档都是语焉不详，甚至有不少错误（比如glsl的`barrier`部分）
+* 各家驱动厂商对OpenGL的维护也堪称敷衍，比如OpenGL 4.6号称支持的SPIRV Shader居然在某些驱动下无法使用Uniform，此外SPIRV Shader在某些编译优化参数下甚至会直接崩溃，害得我Debug了好久，不得不重新启用字符串Shader
+
+但实话实说，OpenGL这种历史包袱太过沉重的API又有谁想去维护呢？估计khronos的人都跑去维护Vulkan了，换我我也跑路。
+
+OpenGL确实不再适合现代图形程序了，Vulkan已经从它手中接过了跨平台图形API的旗帜。
+
+相比垂垂老矣的OpenGL，Vulkan还处在它的上升期。虽然（我认为）Vulkan也有不少缺点，比如：
+
+* VkRenderPass的subpass有些过渡设计了，这本来是为移动端优化设计的，却同时给PC端程序编写增加了复杂度
+* 前段时间官方的Synchronization Validation Layer出Bug，居然连示例程序都报错
+* VkImageLayout成了某种意义的“全局状态”，需要开发者自行记忆并维护。不过这也算是为了更高的性能做出的牺牲，可以理解
+* 
