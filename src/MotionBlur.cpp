@@ -100,7 +100,7 @@ void MotionBlur::initialize_target(int width, int height, int tile_size) {
 	glNamedFramebufferDrawBuffers(m_tile_nei_fbo.Get(), 1, attachments);
 
 	m_blur.Initialize();
-	m_blur.Storage(width, height, GL_RGB16, 1);
+	m_blur.Storage(width, height, GL_RGB10, 1);
 	m_blur.SetSizeFilter(GL_LINEAR, GL_LINEAR);
 	m_blur.SetWrapFilter(GL_CLAMP_TO_EDGE);
 	m_blur.Bind(MOTION_BLUR_TEXTURE);

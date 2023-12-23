@@ -20,7 +20,7 @@ void TemporalAA::initialize_target(int width, int height) {
 	GLenum attachments[] = {GL_COLOR_ATTACHMENT0};
 	for (int i = 0; i < 2; ++i) {
 		m_textures[i].Initialize();
-		m_textures[i].Storage(m_width, m_height, GL_RGB16, 1);
+		m_textures[i].Storage(m_width, m_height, GL_RGB10, 1);
 		m_textures[i].SetSizeFilter(GL_LINEAR, GL_LINEAR);
 		m_textures[i].SetWrapFilter(GL_CLAMP_TO_BORDER);
 
