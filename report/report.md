@@ -601,7 +601,7 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
 >
 >   <img src="img/mb_inner.png" style="zoom:50%;" />
 >
-> * 外模糊则只会对物体上的Sample赋予模糊权重，以防止背景也变模糊：
+> * 外模糊则只会对物体上的Sample赋予模糊权重，以防止物体外的背景也变模糊：
 >
 >   <img src="img/mb_outer.png" style="zoom:50%;" />
 >
@@ -616,7 +616,7 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
 >   * 由于采样时只需要颜色信息、深度和速度大小，可以事先将速度大小和深度打包到一个RG16F材质中，这样每个Sample的访存减少了4个Byte
 >   * 速度大小为0的Tile直接跳过
 >   * 参考资料中提到有种优化是同时求Tile的最大和最小速度，若两个速度相近则认定样本属于同一个物体上的内模糊，这样就无需计算权重直接求平均即可
->     * 不过我认为本次作业中这样的场景较少（因为运动物体都比较小），因此没有实现这个优化
+>     * 不过我认为本次作业中这样的场景较少（因为运动物体都比较小，就不倒翁可能占据多个Tile），因此没有实现这个优化
 
 #### 效果
 
@@ -650,23 +650,42 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
 
 ## 杂谈
 
-本来写完Voxel Cone Tracing就交作业了，结果期末DDL清空地太快了，连续两周没事情做，于是把很多以前没尝试过的渲染效果（Physically-Based Bloom、TAA、Motion Blur）都实现了一遍，有不少收获。
+本来12月初写完Voxel Cone Tracing就打算收工交作业了，结果期末DDL清空地太快了，连续两周没事情做，遂把很多以前没尝试过的渲染效果（Physically-Based Bloom、TAA、Motion Blur）实现了一遍，可以说是收获颇丰。
 
 用OpenGL写这些Modern Rendering Techniques还是挺折磨的。不适感主要来自以下几个方面：
 
 * 渲染管线本来是一个优美的有向无环图结构，在OpenGL却只能用一堆诡异的全局状态来组织，给我的感觉是丑陋的API破坏了优美的设计
 
 * OpenGL缺少对很多现代GPU特性的完整支持（比如Subgroup、Command Buffer），导致一些优化无法实现
-* Modern OpenGL的文档也写得也不咋样，很多较新的文档都是语焉不详，甚至有不少错误（比如glsl的`barrier`部分）
+* Modern OpenGL的文档也写得也不咋样，很多较新的文档都是语焉不详，甚至有不少错误（比如`glMultiDrawElementsIndirect`文档中说Indirect Buffer可以用Client-side的指针传过去，结果实际用下来只能读取绑定到`GL_DRAW_INDIRECT_BUFFER`的Buffer）
 * 各家驱动厂商对OpenGL的维护也堪称敷衍，比如OpenGL 4.6号称支持的SPIRV Shader居然在某些驱动下无法使用Uniform，此外SPIRV Shader在某些编译优化参数下甚至会直接崩溃，害得我Debug了好久，不得不重新启用字符串Shader
 
 但实话实说，OpenGL这种历史包袱太过沉重的API又有谁想去维护呢？估计khronos的人都跑去维护Vulkan了，换我我也跑路。
 
 OpenGL确实不再适合现代图形程序了，Vulkan已经从它手中接过了跨平台图形API的旗帜。
 
-相比垂垂老矣的OpenGL，Vulkan还处在它的上升期。虽然（我认为）Vulkan也有不少缺点，比如：
+相比垂垂老矣的OpenGL，Vulkan还处在它的上升期。现代GPU特性和对已有功能的补充正在以“肉眼可见”的速度纳入Vulkan标准，各家显卡厂商也在积极地扩展和适配Vulkan标准，以下是一些我亲身经历的例子：
 
-* VkRenderPass的subpass有些过渡设计了，这本来是为移动端优化设计的，却同时给PC端程序编写增加了复杂度
-* 前段时间官方的Synchronization Validation Layer出Bug，居然连示例程序都报错
-* VkImageLayout成了某种意义的“全局状态”，需要开发者自行记忆并维护。不过这也算是为了更高的性能做出的牺牲，可以理解
-* 
+* VkRenderPass的subpass设计饱受诟病（本来是为移动端优化设计的，却同时给PC端程序编写增加了复杂度），于是Vulkan 1.3推出了Dynamic Rendering特性，一个`vkCmdBeginRendering`就能解决问题
+
+* 原本Vulkan 1.0的synchronization机制，一个`vkCmdPipelineBarrier`只能使用一对stageMask
+
+  Vulkan 1.3加入的Synchronization 2能够为每个Memory Barrier单独设置stageMask，同时也引入了更精细的stageMask和accessFlag设置。我的RenderGraph便是使用Synchronization 2实现的
+
+* Vulkan 1.0的Framebuffer必须在创建时绑定Image，这对于Tripple Buffering的场景不友好，需要创建很多Framebuffer对象（而且据说这样做也没有任何性能提升）
+
+  Vulkan 1.2加入了Imageless Framebuffer，彻底解决了这一通点
+
+* 光线追踪已经成为Vulkan标准的一部分，AMD显卡驱动也添加了光追的实现，可以说Vulkan的光追API已经能够跨平台了（这下我的老Compressed Wide BVH代码彻底没用了）
+
+* Vulkan 1.1引入了Subgroup特性，且基本在所有平台都得到了支持*（我就不懂了，为啥电脑上的AMD驱动在OpenGL不支持Subgroup，到Vulkan就支持了）*；Vulkan官方甚至还写了一篇干货满满的[Subgroup教程](https://www.khronos.org/blog/vulkan-subgroup-tutorial)，我也是通过这篇教程学习了Subgroup编程
+
+* Vulkan的Specification极其详实，提供了所有函数、参数的解释以及大量的教程和用例，能解决大部分问题。我在编写RenderGraph时就通过阅读Specification学习了Resource Aliasing的做法。*（相比而言OpenGL 4.\*的文档写了个啥？各种函数和参数的说明都是随便几句话应付过去，甚至有些是Undocumented的，还得自己去找Example）*
+
+写到这里着实是有些感慨。OpenGL是我入门所学的图形API，那时还是2017年，OpenGL刚刚推出Direct State Access，大有“现代化”的趋势*（那时我也相信OpenGL不会止步于此，结果真的就止步于此了）*；Vulkan还不满“一周岁”，属于是没啥人学的“小众技术”。
+
+弹指间七年过去了，OpenGL已经是没人维护的状态了；而Vulkan则蒸蒸日上，不仅在很多领域取代了OpenGL，还进一步拓宽了图形编程的边界（例如Async Compute、Render Graph、Resource Aliasing等新的实践方法都是OpenGL难以实现的）。
+
+然而，Vulkan的现代特性在未来也几乎必然会成为沉重的历史包袱。就像OpenGL的全局状态设计再怎么扩展也难以适应当今图形程序的大量并行需求；或许未来的图形编程会使用某种当下无法想象的范式，Vulkan标准中用于扩展功能的`pNext`指针再怎么堆彻也无法应对。
+
+OpenGL的辉煌延续了20年，如今黯然落幕。Vulkan是初升的朝阳，又会在何时迎来它的黄昏呢？
