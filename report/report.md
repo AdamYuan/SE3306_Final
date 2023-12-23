@@ -657,7 +657,7 @@ Motion Blur需要在速度方向对物体进行模糊，每个像素的模糊方
 * 渲染管线本来是一个优美的有向无环图结构，在OpenGL却只能用一堆诡异的全局状态来组织，给我的感觉是丑陋的API破坏了优美的设计
 
 * OpenGL缺少对很多现代GPU特性的完整支持（比如Subgroup、Command Buffer），导致一些优化无法实现
-* Modern OpenGL的文档也写得也不咋样，很多较新的文档都是语焉不详，甚至有不少错误（比如`glMultiDrawElementsIndirect`文档中说Indirect Buffer可以用Client-side的指针传过去，结果实际用下来只能读取绑定到`GL_DRAW_INDIRECT_BUFFER`的Buffer）
+* Modern OpenGL的文档也写得也不咋样，很多较新的文档都是语焉不详，甚至有错漏（比如`glMultiDrawElementsIndirect`文档中说Indirect Buffer可以用Client-side的指针传过去，结果实际用下来只能读取绑定到`GL_DRAW_INDIRECT_BUFFER`的Buffer）
 * 各家驱动厂商对OpenGL的维护也堪称敷衍，比如OpenGL 4.6号称支持的SPIRV Shader居然在某些驱动下无法使用Uniform，此外SPIRV Shader在某些编译优化参数下甚至会直接崩溃，害得我Debug了好久，不得不重新启用字符串Shader
 
 但实话实说，OpenGL这种历史包袱太过沉重的API又有谁想去维护呢？估计khronos的人都跑去维护Vulkan了，换我我也跑路。
