@@ -1,6 +1,6 @@
-#include "ARenderGraph.hpp"
 #include "Animation.hpp"
 #include "GPUAnimation.hpp"
+#include "rg/ARenderGraph.hpp"
 
 #include <myvk/FrameManager.hpp>
 #include <myvk/GLFWHelper.hpp>
@@ -47,10 +47,10 @@ int main() {
 	GPUAMesh gpu_ani_mesh = GPUAMesh::Create(command_pool);
 	GPUATexture gpu_ani_texture = GPUATexture::Create(command_pool);
 
-	myvk::Ptr<ARenderGraph> render_graphs[kFrameCount];
+	myvk::Ptr<rg::ARenderGraph> render_graphs[kFrameCount];
 	for (auto &render_graph : render_graphs) {
 		render_graph =
-		    ARenderGraph::Create(generic_queue, frame_manager, GPUAInstance::Create(gpu_ani_mesh, gpu_ani_texture));
+		    rg::ARenderGraph::Create(generic_queue, frame_manager, GPUAInstance::Create(gpu_ani_mesh, gpu_ani_texture));
 		render_graph->SetCanvasSize(VkExtent2D{kWidth, kHeight});
 	}
 

@@ -41,9 +41,9 @@ add_executable(
         src/GPUMeshInstance.cpp
         src/GPUAnimation.cpp
 
-        src/ARenderGraph.cpp
-        src/GBufferPass.cpp
-        src/ShadowMapPass.cpp
+        src/rg/ARenderGraph.cpp
+        src/rg/GBufferPass.cpp
+        src/rg/ShadowMapPass.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 

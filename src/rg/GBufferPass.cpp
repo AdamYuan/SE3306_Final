@@ -1,11 +1,12 @@
 #include "GBufferPass.hpp"
 
+namespace rg {
 void GBufferPass::CreatePipeline() {
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 
 	auto pipeline_layout =
-	    myvk::PipelineLayout::Create(device, {m_ani_instance.GetDescriptorSet()->GetDescriptorSetLayoutPtr()},
-	                                 {{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4) + sizeof(glm::vec2)}});
+		myvk::PipelineLayout::Create(device, {m_ani_instance.GetDescriptorSet()->GetDescriptorSetLayoutPtr()},
+		                             {{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4) + sizeof(glm::vec2)}});
 
 	constexpr uint32_t kVertSpv[] = {
 #include <shader/gbuffer.vert.u32>
@@ -19,8 +20,8 @@ void GBufferPass::CreatePipeline() {
 	frag_shader_module = myvk::ShaderModule::Create(device, kFragSpv, sizeof(kFragSpv));
 
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stages = {
-	    vert_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
-	    frag_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT)};
+		vert_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
+		frag_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT)};
 
 	myvk::GraphicsPipelineState pipeline_state = {};
 	pipeline_state.m_vertex_input_state.Enable(GPUMeshInstance::GetVertexInputBindings(),
@@ -33,11 +34,11 @@ void GBufferPass::CreatePipeline() {
 	pipeline_state.m_color_blend_state.Enable(3, VK_FALSE);
 	auto extent = GetRenderGraphPtr()->GetCanvasSize();
 	pipeline_state.m_viewport_state.Enable(
-	    std::vector<VkViewport>{{0, 0, (float)extent.width, (float)extent.height, 0.0f, 1.0f}},
-	    std::vector<VkRect2D>{{{0, 0}, extent}});
+		std::vector<VkViewport>{{0, 0, (float)extent.width, (float)extent.height, 0.0f, 1.0f}},
+		std::vector<VkRect2D>{{{0, 0}, extent}});
 
 	m_pipeline =
-	    myvk::GraphicsPipeline::Create(pipeline_layout, GetVkRenderPass(), shader_stages, pipeline_state, GetSubpass());
+		myvk::GraphicsPipeline::Create(pipeline_layout, GetVkRenderPass(), shader_stages, pipeline_state, GetSubpass());
 }
 
 void GBufferPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const {
@@ -49,4 +50,5 @@ void GBufferPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffe
 	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc_data),
 	                                 pc_data);
 	m_ani_instance.CmdDraw(command_buffer, 0, 0, 0, 0, 0);
+}
 }

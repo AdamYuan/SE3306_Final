@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GPUAnimation.hpp"
+#include "../GPUAnimation.hpp"
 
 #include "GBufferPass.hpp"
 
@@ -8,6 +8,7 @@
 #include <myvk_rg/pass/ImageBlitPass.hpp>
 #include <myvk_rg/resource/SwapchainImage.hpp>
 
+namespace rg {
 class ARenderGraph final : public myvk_rg::RenderGraph<ARenderGraph> {
 	MYVK_RG_FRIENDS
 private:
@@ -26,3 +27,4 @@ private:
 public:
 	inline void Update(const Animation &animation) { m_ani_instance.Update(animation); }
 };
+} // namespace rg

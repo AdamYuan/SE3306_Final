@@ -1,8 +1,9 @@
 #pragma once
 
-#include "GPUAnimation.hpp"
+#include "../GPUAnimation.hpp"
 #include <myvk_rg/RenderGraph.hpp>
 
+namespace rg {
 class GBufferPass final : public myvk_rg::GraphicsPassBase {
 	MYVK_RG_FRIENDS
 
@@ -35,3 +36,4 @@ public:
 	inline auto GetVelocityOutput() { return MakeImageOutput({"velocity_in"}); }
 	inline auto GetDepthOutput() { return MakeImageOutput({"depth_in"}); }
 };
+} // namespace rg
