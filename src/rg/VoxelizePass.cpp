@@ -2,10 +2,6 @@
 
 namespace rg {
 
-VoxelClearPass::~VoxelClearPass() = default;
-VoxelDrawPass::~VoxelDrawPass() = default;
-VoxelizePass::~VoxelizePass() = default;
-
 void VoxelDrawPass::CreatePipeline() {
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 

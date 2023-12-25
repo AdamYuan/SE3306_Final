@@ -32,7 +32,7 @@ private:
 	}
 
 public:
-	~ShadowMapPass() final;
+	inline ~ShadowMapPass() final = default;
 	void CreatePipeline() final;
 	void CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const final;
 	inline auto GetShadowMapOutput() { return MakeImageOutput({"depth_in"}); }

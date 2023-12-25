@@ -19,7 +19,7 @@ private:
 	}
 
 public:
-	~VoxelClearPass() final;
+	inline ~VoxelClearPass() final = default;
 	inline void CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const final {
 		command_buffer->CmdClearColorImage(GetImageResource({"voxel"})->GetVkImageView()->GetImagePtr(),
 		                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {});
@@ -33,7 +33,7 @@ class VoxelDrawPass final : public myvk_rg::GraphicsPassBase {
 private:
 	GPUAInstance m_ani_instance;
 	myvk::Ptr<myvk::GraphicsPipeline> m_pipeline;
-	uint32_t m_resolution;
+	uint32_t m_resolution{};
 
 	void Initialize(const GPUAInstance &ani_instance, uint32_t resolution, myvk_rg::ImageInput cleared_voxel,
 	                myvk_rg::ImageInput shadow_map) {
@@ -61,7 +61,7 @@ private:
 	}
 
 public:
-	~VoxelDrawPass() final;
+	inline ~VoxelDrawPass() final = default;
 	void CreatePipeline() final;
 	void CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const final;
 	inline auto GetVoxelOutput() { return MakeImageOutput({"voxel_in"}); }
@@ -77,7 +77,7 @@ private:
 	}
 
 public:
-	~VoxelizePass() final;
+	inline ~VoxelizePass() final = default;
 	inline auto GetVoxelOutput() {
 		return CreateImageAliasOutput({"voxel"}, GetPass<VoxelDrawPass>({"draw_pass"})->GetVoxelOutput());
 	}

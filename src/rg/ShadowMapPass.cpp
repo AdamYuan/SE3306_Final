@@ -1,7 +1,6 @@
 #include "ShadowMapPass.hpp"
 
 namespace rg {
-ShadowMapPass::~ShadowMapPass() = default;
 
 void ShadowMapPass::CreatePipeline() {
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();

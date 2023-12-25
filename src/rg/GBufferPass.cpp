@@ -2,7 +2,6 @@
 
 namespace rg {
 
-GBufferPass::~GBufferPass() = default;
 void GBufferPass::CreatePipeline() {
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 
