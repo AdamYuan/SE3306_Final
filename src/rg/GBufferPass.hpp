@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RG_GBUFFER_PASS_HPP
+#define RG_GBUFFER_PASS_HPP
 
 #include "../GPUAnimation.hpp"
 #include <myvk_rg/RenderGraph.hpp>
@@ -37,3 +38,5 @@ public:
 	inline auto GetDepthOutput() { return MakeImageOutput({"depth_in"}); }
 };
 } // namespace rg
+
+#endif
