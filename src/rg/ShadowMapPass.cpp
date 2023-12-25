@@ -32,11 +32,9 @@ void ShadowMapPass::CreatePipeline() {
 	                                                VK_CULL_MODE_FRONT_BIT);
 	pipeline_state.m_depth_stencil_state.Enable(VK_TRUE, VK_TRUE);
 	pipeline_state.m_multisample_state.Enable(VK_SAMPLE_COUNT_1_BIT);
-	// pipeline_state.m_color_blend_state.Enable(3, VK_FALSE);
-	auto extent = GetRenderGraphPtr()->GetCanvasSize();
 	pipeline_state.m_viewport_state.Enable(
-	    std::vector<VkViewport>{{0, 0, (float)extent.width, (float)extent.height, 0.0f, 1.0f}},
-	    std::vector<VkRect2D>{{{0, 0}, extent}});
+	    std::vector<VkViewport>{{0, 0, (float)m_resolution, (float)m_resolution, 0.0f, 1.0f}},
+	    std::vector<VkRect2D>{{{0, 0}, {m_resolution, m_resolution}}});
 
 	m_pipeline =
 	    myvk::GraphicsPipeline::Create(pipeline_layout, GetVkRenderPass(), shader_stages, pipeline_state, GetSubpass());

@@ -28,19 +28,18 @@ add_subdirectory(dep)
 add_subdirectory(shader)
 add_subdirectory(texture)
 
-add_executable(
-        Tumbler
-        src/main.cpp
+add_executable(Tumbler src/main.cpp
+        # CPU Data
         src/Mesh.cpp
         src/MeshLoader.cpp
         src/Animation.cpp
         src/Playground.cpp
         src/ParticleSystem.cpp
-
+        # GPU Data
         src/GPUMesh.cpp
         src/GPUMeshInstance.cpp
         src/GPUAnimation.cpp
-
+        # Render Graph
         src/rg/ARenderGraph.cpp
         src/rg/GBufferPass.cpp
         src/rg/ShadowMapPass.cpp

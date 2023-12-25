@@ -21,22 +21,20 @@ private:
 		auto swapchain_image = CreateResource<myvk_rg::SwapchainImage>({"swapchain_image"}, frame_manager);
 
 		auto gbuffer_pass = CreatePass<GBufferPass>({"gbuffer_pass"}, m_ani_instance);
-		auto shadowmap_pass_0 =
-		    CreatePass<ShadowMapPass>({"shadow_pass", 0}, m_ani_instance, ADrawConfig{.opt_tumbler_lod = 0}, nullptr);
+		auto shadowmap_pass_0 = CreatePass<ShadowMapPass>({"shadow_pass", 0}, m_ani_instance,
+		                                                  ADrawConfig{.opt_tumbler_lod = 0}, 480, nullptr);
 
 		auto voxelize_pass =
 		    CreatePass<VoxelizePass>({"voxelize_pass"}, m_ani_instance, 64, shadowmap_pass_0->GetShadowMapOutput());
 
-		auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit"}, voxelize_pass->GetVoxelOutput(), swapchain_image,
-		                                                    VK_FILTER_NEAREST);
-
+		auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, voxelize_pass->GetVoxelOutput(),
+		                                                    swapchain_image, VK_FILTER_NEAREST);
 
 		auto shadowmap_pass_1 =
-			CreatePass<ShadowMapPass>({"shadow_pass", 1}, m_ani_instance, ADrawConfig{.opt_marble_lod = 0},
-			                          shadowmap_pass_0->GetShadowMapOutput());
+		    CreatePass<ShadowMapPass>({"shadow_pass", 1}, m_ani_instance, ADrawConfig{.opt_marble_lod = 0}, 480,
+		                              shadowmap_pass_0->GetShadowMapOutput());
 
 		AddResult({"result"}, blit_pass->GetDstOutput());
-		// AddResult({"voxel"}, voxelize_pass->GetVoxelOutput());
 	}
 
 public:

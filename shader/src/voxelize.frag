@@ -40,6 +40,4 @@ void main() {
 	                                         GetCornellLightVisibility(normal, GetCornellLightDir(gWorldPos),
 	                                                                   textureProj(uShadowMap, vec4(shadow_pos, 1)));
 	imageStore(uVoxelRadiance, voxel_pos, vec4(radiance, 1.));
-	// imageStore(uVoxelRadiance, voxel_pos, vec4(albedo, 1.));
-	// imageStore(uVoxelRadiance, ivec3(0, 0, 0), vec4(1, 0, 0, 1.));
 }

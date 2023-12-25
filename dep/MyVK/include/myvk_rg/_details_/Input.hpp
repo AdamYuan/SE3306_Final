@@ -219,6 +219,10 @@ public:
 };
 
 class DescriptorSetData {
+public:
+	struct Binding {
+		uint32_t binding, index;
+	};
 private:
 	std::unordered_map<uint32_t, DescriptorBinding> m_bindings;
 

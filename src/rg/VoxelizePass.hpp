@@ -73,8 +73,7 @@ class VoxelizePass final : public myvk_rg::PassGroupBase {
 private:
 	void Initialize(const GPUAInstance &ani_instance, uint32_t resolution, myvk_rg::ImageInput shadow_map) {
 		auto clear_pass = CreatePass<VoxelClearPass>({"clear_pass"}, resolution);
-		auto draw_pass = CreatePass<VoxelDrawPass>({"draw_pass"}, ani_instance, resolution,
-		                                           clear_pass->GetVoxelOutput(), shadow_map);
+		CreatePass<VoxelDrawPass>({"draw_pass"}, ani_instance, resolution, clear_pass->GetVoxelOutput(), shadow_map);
 	}
 
 public:

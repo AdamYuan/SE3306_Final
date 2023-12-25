@@ -17,5 +17,4 @@ void main() {
 	vColor = mix(aColor, aInstanceColor.rgb, aInstanceColor.a);
 	gl_Position = aModel * vec4(aPosition, 1.0);
 	vShadowPos = uShadowViewProj * gl_Position;
-	vShadowPos.y = -vShadowPos.y;
 }
