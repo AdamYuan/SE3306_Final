@@ -47,7 +47,7 @@ jobs:
         with:
           update: false
           msystem: ${{ matrix.config.sys }}
-          install: mingw-w64-${{ matrix.config.env }}-gcc cmake ninja
+          install: mingw-w64-${{ matrix.config.env }}-gcc mingw-w64-${{ matrix.config.env }}-shaderc cmake ninja
 
       - name: Configure
         shell: msys2 {0}

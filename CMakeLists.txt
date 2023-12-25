@@ -33,14 +33,17 @@ add_executable(
         src/main.cpp
         src/Mesh.cpp
         src/MeshLoader.cpp
-        src/GPUMesh.cpp
-        src/GPUMeshInstance.cpp
         src/Animation.cpp
-        src/GPUAnimation.cpp
         src/Playground.cpp
         src/ParticleSystem.cpp
+
+        src/GPUMesh.cpp
+        src/GPUMeshInstance.cpp
+        src/GPUAnimation.cpp
+
         src/ARenderGraph.cpp
         src/GBufferPass.cpp
+        src/ShadowMapPass.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 
