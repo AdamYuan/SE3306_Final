@@ -27,6 +27,7 @@ private:
 	const DescriptorSetData *m_p_descriptor_set_data{};
 	// GraphicsPass
 	const AttachmentData *m_p_attachment_data{};
+	std::optional<VkExtent3D> m_opt_area;
 
 	mutable struct {
 	private:
@@ -140,6 +141,17 @@ public:
 
 	uint32_t GetSubpass() const;
 	const myvk::Ptr<myvk::RenderPass> &GetVkRenderPass() const;
+
+	inline void SetAreaForce(uint32_t width, uint32_t height, uint32_t layer = 1) {
+		if (!m_opt_area || m_opt_area->width != width || m_opt_area->height != height || m_opt_area->depth != layer)
+			GetRenderGraphPtr()->SetCompilePhrases(CompilePhrase::kSchedule);
+		m_opt_area = VkExtent3D{.width = width, .height = height, .depth = layer};
+	}
+	inline void ClearArea() {
+		if (m_opt_area)
+			GetRenderGraphPtr()->SetCompilePhrases(CompilePhrase::kSchedule);
+		m_opt_area = std::nullopt;
+	}
 
 	inline void UpdatePipeline() const { m_executor_info.pipeline_updated = true; }
 };

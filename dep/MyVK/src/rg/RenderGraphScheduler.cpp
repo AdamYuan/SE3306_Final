@@ -53,6 +53,12 @@ RenderGraphScheduler::_compute_pass_merge_info(const RenderGraphResolver &resolv
 			continue;
 
 		RenderPassArea &area = merge_infos[i].area;
+		if (pass->m_opt_area) {
+			area.extent = VkExtent2D{pass->m_opt_area->width, pass->m_opt_area->height};
+			area.layers = pass->m_opt_area->depth;
+			continue;
+		}
+
 		const auto maintain_area = [&area](const auto *resource) {
 			if constexpr (ResourceVisitorTrait<decltype(resource)>::kType == ResourceType::kImage) {
 				RenderPassArea desired_area;

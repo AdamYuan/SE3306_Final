@@ -16,10 +16,7 @@ layout(location = 1) out vec3 gColor;
 layout(location = 2) out vec3 gWorldPos;
 layout(location = 3) out vec4 gShadowPos;
 
-vec3 Project(vec3 v, in const uint axis) {
-	v *= VOXEL_SCALE;
-	return axis == 0 ? v.yzx : (axis == 1 ? v.zxy : v.xyz);
-}
+vec2 Project(vec3 v, in const uint axis) { return (axis == 0 ? v.yz : (axis == 1 ? v.zx : v.xy)) * VOXEL_SCALE; }
 
 void main() {
 	vec3 pos0 = gl_in[0].gl_Position.xyz;
@@ -35,19 +32,19 @@ void main() {
 	gColor = vColor[0];
 	gWorldPos = pos0;
 	gShadowPos = vShadowPos[0];
-	gl_Position = vec4(Project(pos0, axis), 1.0);
+	gl_Position = vec4(Project(pos0, axis), 0.0, 1.0);
 	EmitVertex();
 	gNormal = vNormal[1];
 	gColor = vColor[1];
 	gWorldPos = pos1;
 	gShadowPos = vShadowPos[1];
-	gl_Position = vec4(Project(pos1, axis), 1.0);
+	gl_Position = vec4(Project(pos1, axis), 0.0, 1.0);
 	EmitVertex();
 	gNormal = vNormal[2];
 	gColor = vColor[2];
 	gWorldPos = pos2;
 	gShadowPos = vShadowPos[2];
-	gl_Position = vec4(Project(pos2, axis), 1.0);
+	gl_Position = vec4(Project(pos2, axis), 0.0, 1.0);
 	EmitVertex();
 	EndPrimitive();
 }

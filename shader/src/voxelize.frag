@@ -1,16 +1,17 @@
 #version 450 core
 
-#include "Binding.h"
 #include "Config.h"
-#include "Texture.h"
 
 layout(location = 0) in vec3 gNormal;
 layout(location = 1) in vec3 gColor;
 layout(location = 2) in vec3 gWorldPos;
 layout(location = 3) in vec4 gShadowPos;
 
-layout(rgba16f, binding = VOXEL_RADIANCE_IMAGE) uniform writeonly image3D uVoxelRadiance;
-layout(binding = SHADOW_MAP_TEXTURE) uniform sampler2DShadow uShadowMap;
+layout(set = 0, rgba16f, binding = 0) uniform writeonly image3D uVoxelRadiance;
+layout(set = 0, binding = 1) uniform sampler2DShadow uShadowMap;
+
+#define TEXTURE_SET 1
+#include "Texture.h"
 
 ivec3 GetVoxelPos() {
 	int voxel_resolution = imageSize(uVoxelRadiance).x;
@@ -39,4 +40,6 @@ void main() {
 	                                         GetCornellLightVisibility(normal, GetCornellLightDir(gWorldPos),
 	                                                                   textureProj(uShadowMap, vec4(shadow_pos, 1)));
 	imageStore(uVoxelRadiance, voxel_pos, vec4(radiance, 1.));
+	// imageStore(uVoxelRadiance, voxel_pos, vec4(albedo, 1.));
+	// imageStore(uVoxelRadiance, ivec3(0, 0, 0), vec4(1, 0, 0, 1.));
 }

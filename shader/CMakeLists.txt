@@ -11,6 +11,9 @@ set(SHADER_SRC
         gbuffer.vert
         shadow.frag
         shadow.vert
+        voxelize.frag
+        voxelize.geom
+        voxelize.vert
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)
