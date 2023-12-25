@@ -30,6 +30,7 @@ void ParticleSystem::SustainFire(const Fireball &fireball, float delta_t) {
 		bias *= glm::dot(bias, bias);
 
 		FireParticle p = {};
+		p.id = m_id_counter++;
 		p.life = kFireParticleLife;
 		p.center = fireball.center + bias * Fireball::kRadius * .95f;
 		glm::vec3 base_velocity = fireball.GetVelocity(p.center);
@@ -57,6 +58,7 @@ void ParticleSystem::EmitAshes(const Marble &marble) {
 	std::normal_distribution<float> life_dis{kAshParticleLife, 0.05f};
 	while (count--) {
 		AshParticle p = {};
+		p.id = m_id_counter++;
 		p.life = std::max(life_dis(m_rand), .0f);
 		p.center = marble.center;
 		p.velocity = marble.linear_velocity * .3f;
@@ -86,6 +88,7 @@ void ParticleSystem::EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad) {
 	std::normal_distribution<float> grad_v_dis{.8f, .5f}, life_dis{kSparkParticleLife, 0.05f};
 	while (count--) {
 		SparkParticle p = {};
+		p.id = m_id_counter++;
 		p.life = std::max(life_dis(m_rand), .0f);
 		glm::vec2 dir2;
 		do {
@@ -99,7 +102,7 @@ void ParticleSystem::EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad) {
 	}
 }
 
-void ParticleSystem::Update(float delta_t, GPUMesh *p_mesh) {
+void ParticleSystem::Update(float delta_t) {
 	const auto update_life = [&](auto &particles) {
 		for (auto &p : particles)
 			p.life -= delta_t;
@@ -111,7 +114,6 @@ void ParticleSystem::Update(float delta_t, GPUMesh *p_mesh) {
 	update_life(m_sparks);
 	update_life(m_ashes);
 
-	pop_mesh_prev(p_mesh);
 	const auto update = [&](auto &particles) {
 		for (auto &p : particles)
 			p.Update(&m_rand, delta_t);
@@ -119,42 +121,22 @@ void ParticleSystem::Update(float delta_t, GPUMesh *p_mesh) {
 	update(m_fires);
 	update(m_sparks);
 	update(m_ashes);
-	pop_mesh(p_mesh);
 }
 
-void ParticleSystem::pop_mesh_prev(GPUMesh *p_mesh) const {
-	uint32_t count = 0;
-	const auto pop_mesh_vec_prev = [&](auto &particles) {
+TransformSet ParticleSystem::GetTransforms() const {
+	TransformSet transforms;
+	const auto pop_transforms = [&](auto &particles) {
 		for (const auto &p : particles) {
-			if (count >= m_max_particles)
+			if (transforms.size() >= m_max_particles)
 				return;
 			auto model = glm::identity<glm::mat4>();
 			model[0][0] = model[1][1] = model[2][2] = p.GetRadius();
 			model[3] = glm::vec4(p.center, 1.f);
-			p_mesh->SetPrevModel(count, model);
-			++count;
+			transforms[p.id] = {.model = model, .color = glm::vec4{p.GetColor(), 1.f}};
 		}
 	};
-	pop_mesh_vec_prev(m_fires);
-	pop_mesh_vec_prev(m_sparks);
-	pop_mesh_vec_prev(m_ashes);
-	p_mesh->SetInstanceCount(count);
-}
-void ParticleSystem::pop_mesh(GPUMesh *p_mesh) const {
-	uint32_t count = 0;
-	const auto pop_mesh_vec = [&](auto &particles) {
-		for (const auto &p : particles) {
-			if (count >= m_max_particles)
-				return;
-			auto model = glm::identity<glm::mat4>();
-			model[0][0] = model[1][1] = model[2][2] = p.GetRadius();
-			model[3] = glm::vec4(p.center, 1.f);
-			p_mesh->SetModel(count, model);
-			p_mesh->SetColor(count, glm::vec4{p.GetColor(), 1.f});
-			++count;
-		}
-	};
-	pop_mesh_vec(m_fires);
-	pop_mesh_vec(m_sparks);
-	pop_mesh_vec(m_ashes);
+	pop_transforms(m_fires);
+	pop_transforms(m_sparks);
+	pop_transforms(m_ashes);
+	return transforms;
 }

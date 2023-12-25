@@ -27,6 +27,7 @@ struct Marble final : public Sphere<Marble> {
 	inline static constexpr float kMass = .15f;
 	inline static constexpr float kRadius = 0.06f;
 
+	uint64_t id = 0;
 	glm::vec4 color = {};
 	bool alive = true;
 
@@ -36,4 +37,6 @@ struct Marble final : public Sphere<Marble> {
 struct Fireball final : public Sphere<Fireball> {
 	inline static constexpr float kMass = 1.5f;
 	inline static constexpr float kRadius = .2f;
+
+	uint64_t id = 0;
 };

@@ -1,5 +1,6 @@
 #include "Animation.hpp"
 
+#include "MeshLoader.hpp"
 #include <gcem.hpp>
 #include <shader/Config.h>
 
@@ -28,57 +29,48 @@ constexpr glm::vec3 kCameraPos = {.0f, .0f, 1.f + 1.f / gcem::tan(kCameraFov * 0
 static const glm::mat4 kCameraViewProj = glm::perspective(kCameraFov, 1.f, Z_NEAR, Z_FAR) *
                                          glm::lookAt(kCameraPos, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, 1.f, .0f});
 static const glm::mat4 kInvCameraViewProj = glm::inverse(kCameraViewProj);
+static const glm::mat4 kShadowViewProj =
+    glm::perspective(gcem::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, Z_NEAR, Z_FAR) *
+    glm::lookAt(glm::vec3{.0f, kCornellLightHeight, .0f}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, .0f, 1.f});
 
-void Animation::Initialize() {
-	// Load Meshes
-	{
-		const auto make_cornell = [](uint32_t ico_subdivision) {
-			return MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID,
-			                                   kCornellOtherColor, kCornellLightRadiance, kCornellLightHeight,
-			                                   kCornellLightRadius, ico_subdivision);
-		};
-		m_cornell_gpu_mesh.Initialize(std::initializer_list<Mesh>{make_cornell(4), make_cornell(2)});
-		m_tumbler_gpu_mesh.Initialize(std::initializer_list<Mesh>{MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID),
-		                                                          MeshLoader{}.MakeTumbler(3, 16, kTumblerTextureID)},
-		                              kTumblerCount);
-		m_marble_gpu_mesh.Initialize(
-		    std::initializer_list<Mesh>{MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID)},
-		    kMarbleCount);
+Mesh Animation::GetCornellMesh(int lod) {
+	const auto make_cornell = [](uint32_t ico_subdivision) {
+		return MeshLoader{}.MakeCornellBox(kCornellLeftColor, kCornellRightColor, kCornelFloorTextureID,
+		                                   kCornellOtherColor, kCornellLightRadiance, kCornellLightHeight,
+		                                   kCornellLightRadius, ico_subdivision);
+	};
+	return lod ? make_cornell(2) : make_cornell(4);
+}
+Mesh Animation::GetTumblerMesh(int lod) {
+	return lod ? MeshLoader{}.MakeTumbler(3, 16, kTumblerTextureID)
+	           : MeshLoader{}.MakeTumbler(10, 100, kTumblerTextureID);
+}
+Mesh Animation::GetMarbleMesh(int lod) { return MeshLoader{}.MakeUVSphere(Marble::kRadius, 20, kCornelFloorTextureID); }
+Mesh Animation::GetFireballMesh(int lod) {
+	if (lod) {
 		Mesh solid_lod_fireball = MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 1, kFireballRadiance);
 		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.9f, 0, kFireballRadiance));
 		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.8f, 0, kFireballRadiance));
 		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.7f, 0, kFireballRadiance));
 		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.5f, 0, kFireballRadiance));
 		solid_lod_fireball.Combine(MeshLoader{}.MakeIcoSphere(Fireball::kRadius * 0.3f, 0, kFireballRadiance));
-		m_fireball_gpu_mesh.Initialize(std::initializer_list<Mesh>{
-		    MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance), std::move(solid_lod_fireball)});
-		m_particle_gpu_mesh.Initialize(
-		    std::initializer_list<Mesh>{MeshLoader{}.MakeIcoSphere(1.f, 2, {}), MeshLoader{}.MakeIcoSphere(1.f, 0, {})},
-		    kMaxParticleCount);
+		return solid_lod_fireball;
 	}
+	return MeshLoader{}.MakeIcoSphere(Fireball::kRadius, 4, kFireballRadiance);
+}
+Mesh Animation::GetParticleMesh(int lod) {
+	return lod ? MeshLoader{}.MakeIcoSphere(1.f, 0, {}) : MeshLoader{}.MakeIcoSphere(1.f, 2, {});
+}
 
-	// Load Shaders
-	m_quad_vao.Initialize();
+uint32_t Animation::GetTumblerCount() { return kTumblerCount; }
+uint32_t Animation::GetMaxMarbleCount() { return kMarbleCount; }
+uint32_t Animation::GetMaxParticleCount() { return kMaxParticleCount; }
 
-	m_camera_buffer.Initialize();
-	glm::mat4 shadow_proj = glm::perspective(gcem::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, Z_NEAR, Z_FAR);
-	glm::mat4 shadow_view =
-	    glm::lookAt(glm::vec3{.0f, kCornellLightHeight, .0f}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, .0f, 1.f});
-	m_camera_buffer.Update(kCameraViewProj, kInvCameraViewProj, shadow_proj * shadow_view);
+glm::mat4 Animation::GetCameraViewProj() { return kCameraViewProj; }
+glm::mat4 Animation::GetInvCameraViewProj() { return kInvCameraViewProj; }
+glm::mat4 Animation::GetShadowViewProj() { return kShadowViewProj; }
 
-	m_texture.Initialize();
-	m_gbuffer.Initialize();
-	m_shadow_map.Initialize();
-	m_voxel.Initialize();
-	constexpr const char *kQuadVert =
-#include <shader/quad.vert.str>
-	    ;
-	m_bloom.Initialize(kQuadVert);
-	m_motion_blur.Initialize(kQuadVert);
-	m_light_pass.Initialize(kQuadVert);
-	m_taa.Initialize(kQuadVert);
-	m_screen_pass.Initialize(kQuadVert);
-
+Animation::Animation() {
 	m_playground.Initialize(kTumblerCount, kTumblerPlaceRadius);
 	m_particle_system.Initialize(kMaxParticleCount);
 }
@@ -155,10 +147,9 @@ void Animation::ToggleFireball() {
 }
 
 void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_pos) {
-	m_particle_system.Update(delta_t, &m_particle_gpu_mesh);
+	m_particle_system.Update(delta_t);
 	m_playground.Update(
-	    delta_t, &m_tumbler_gpu_mesh, &m_marble_gpu_mesh, &m_fireball_gpu_mesh,
-	    [this, delta_t, &opt_drag_pos]() { drag(delta_t, opt_drag_pos); },
+	    delta_t, [this, delta_t, &opt_drag_pos]() { drag(delta_t, opt_drag_pos); },
 	    [this](Marble *p_marble, SphereHitInfo info) {
 		    switch (info.type) {
 		    case SphereHitType::kFront:
@@ -190,76 +181,4 @@ void Animation::Update(float delta_t, const std::optional<glm::vec2> &opt_drag_p
 			    m_particle_system.EmitSparks(hit_info.position, hit_info.gradient);
 	    },
 	    [this, delta_t](const Fireball &fireball) { m_particle_system.SustainFire(fireball, delta_t); });
-}
-
-void Animation::Draw(float delta_t, int width, int height) {
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-
-	// Shadow Map
-	glViewport(0, 0, kShadowMapSize, kShadowMapSize);
-	glCullFace(GL_FRONT);
-	m_shadow_map.Generate(kShadowMapSize, kShadowMapSize, [this]() {
-		glClear(GL_DEPTH_BUFFER_BIT);
-		m_tumbler_gpu_mesh.Draw();
-	});
-
-	// Voxels
-	glViewport(0, 0, kVoxelResolution, kVoxelResolution);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	m_voxel.Generate(kVoxelResolution, kVoxelMipmaps, [this]() {
-		glClear(GL_COLOR_BUFFER_BIT);
-		m_cornell_gpu_mesh.Draw(1);
-		m_tumbler_gpu_mesh.Draw(1);
-		m_particle_gpu_mesh.Draw(1);
-		m_fireball_gpu_mesh.Draw(1);
-	});
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-
-	// Draw Marbles to Shadow Map
-	glViewport(0, 0, kShadowMapSize, kShadowMapSize);
-	glCullFace(GL_FRONT);
-	m_shadow_map.Generate(kShadowMapSize, kShadowMapSize, [this]() { m_marble_gpu_mesh.Draw(); });
-
-	glm::vec2 jitter = m_taa.GetJitter(width, height);
-
-	// G-Buffer
-	glViewport(0, 0, width, height);
-	glCullFace(GL_BACK);
-	m_gbuffer.Generate(width, height, jitter, [this]() {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		m_cornell_gpu_mesh.Draw();
-		m_tumbler_gpu_mesh.Draw();
-		m_marble_gpu_mesh.Draw();
-		m_fireball_gpu_mesh.Draw();
-		m_particle_gpu_mesh.Draw();
-	});
-
-	// Quad
-	glDisable(GL_DEPTH_TEST);
-	m_quad_vao.Bind();
-
-	// Generate Bloom
-	m_bloom.Generate(width, height, 5, 0.005f, [](int w, int h) {
-		glViewport(0, 0, w, h);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-	});
-
-	glViewport(0, 0, width, height);
-
-	// Light Pass
-	m_light_pass.Generate(width, height, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
-	// TAA
-	m_taa.Generate(width, height, jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
-	// Motion Blur
-	if (m_motion_blur_flag)
-		m_motion_blur.Generate(width, height, 16, glm::max(0.015f / delta_t, 1.0f), jitter, [](int w, int h) {
-			glViewport(0, 0, w, h);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		});
-	// Screen Pass
-	m_screen_pass.Generate(jitter, m_motion_blur_flag, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 }

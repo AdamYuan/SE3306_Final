@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.15)
 project(SE3306_Final)
 
-add_subdirectory(gl3w)
-add_subdirectory(glfw)
-add_subdirectory(mygl3)
+set(MYVK_TESTING OFF)
+add_subdirectory(MyVK)
+
 add_subdirectory(glm)
 add_subdirectory(gcem)
 add_subdirectory(stb_image)
 
 add_library(dep INTERFACE)
-target_link_libraries(dep INTERFACE gl3w glfw mygl3 glm gcem stb_image ${CMAKE_DL_LIBS})
+target_link_libraries(dep INTERFACE myvk::vulkan myvk::glfw myvk::rg glm gcem stb_image)

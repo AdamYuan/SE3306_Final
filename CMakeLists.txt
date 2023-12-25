@@ -32,21 +32,15 @@ add_executable(
         Tumbler
         src/main.cpp
         src/Mesh.cpp
-        src/Voxel.cpp
-        src/CameraBuffer.cpp
         src/MeshLoader.cpp
         src/GPUMesh.cpp
+        src/GPUMeshInstance.cpp
         src/Animation.cpp
-        src/GBuffer.cpp
-        src/ShadowMap.cpp
-        src/Bloom.cpp
+        src/GPUAnimation.cpp
         src/Playground.cpp
         src/ParticleSystem.cpp
-        src/LightPass.cpp
-        src/TemporalAA.cpp
-        src/Texture.cpp
-        src/ScreenPass.cpp
-        src/MotionBlur.cpp
+        src/ARenderGraph.cpp
+        src/GBufferPass.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 

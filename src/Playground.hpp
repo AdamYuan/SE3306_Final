@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Collider.hpp"
-#include "GPUMesh.hpp"
 #include "Sphere.hpp"
+#include "Transform.hpp"
 #include "Tumbler.hpp"
 
 #include <algorithm>
@@ -14,12 +14,10 @@ class Playground {
 private:
 	std::mt19937 m_rand{std::random_device{}()};
 
+	uint64_t m_id_counter = 0;
 	std::vector<Tumbler> m_tumblers;
 	std::vector<Marble> m_marbles;
 	std::optional<Fireball> m_fireball;
-
-	void pop_mesh_prev(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const;
-	void pop_mesh(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const;
 
 public:
 	struct RayCastInfo {
@@ -27,18 +25,21 @@ public:
 		Tumbler *p_tumbler;
 	};
 	void Initialize(uint32_t tumbler_count, float place_radius);
+
 	std::optional<RayCastInfo> RayCastTumbler(const glm::vec3 &origin, const glm::vec3 &dir);
+	TransformSet GetTumblerTransforms() const;
 
 	void CreateMarbles(uint32_t marble_count, const glm::vec4 &initial_color, float min_speed, float max_speed);
 	void DeleteMarbles();
+	TransformSet GetMarbleTransforms() const;
 
 	void CreateFireball(float speed);
 	void DeleteFireball();
+	TransformSet GetFireballTransforms() const;
 
 	template <typename TumblerDragFunc, typename MarbleHitCallback, typename MarbleEmptyCallback,
 	          typename FireballHitCallback, typename FireballCallback>
-	void Update(float delta_t, GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh,
-	            TumblerDragFunc &&tumbler_drag_func, MarbleHitCallback &&marble_hit_callback,
+	void Update(float delta_t, TumblerDragFunc &&tumbler_drag_func, MarbleHitCallback &&marble_hit_callback,
 	            MarbleEmptyCallback &&marble_empty_callback, FireballHitCallback &&fireball_hit_callback,
 	            FireballCallback &&fireball_callback) {
 		// remove dead marbles
@@ -46,8 +47,6 @@ public:
 		                m_marbles.end());
 		if (m_marbles.empty())
 			marble_empty_callback();
-
-		pop_mesh_prev(p_tumbler_mesh, p_marble_mesh, p_fireball_mesh);
 
 		tumbler_drag_func();
 
@@ -85,7 +84,5 @@ public:
 
 			fireball_callback(fireball);
 		}
-
-		pop_mesh(p_tumbler_mesh, p_marble_mesh, p_fireball_mesh);
 	}
 };

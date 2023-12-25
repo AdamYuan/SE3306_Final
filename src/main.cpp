@@ -1,9 +1,13 @@
-#include <GL/gl3w.h>
-#include <GLFW/glfw3.h>
-
+#include "ARenderGraph.hpp"
 #include "Animation.hpp"
+#include "GPUAnimation.hpp"
 
-constexpr int kWidth = 720, kHeight = 720;
+#include <myvk/FrameManager.hpp>
+#include <myvk/GLFWHelper.hpp>
+#include <myvk/Instance.hpp>
+#include <myvk/Queue.hpp>
+
+constexpr int kWidth = 720, kHeight = 720, kFrameCount = 3;
 
 Animation animation = {};
 
@@ -15,27 +19,42 @@ static void key_callback(GLFWwindow *, int key, int, int action, int) {
 		animation.ToggleMarbles();
 	else if (key == GLFW_KEY_F)
 		animation.ToggleFireball();
-	else if (key == GLFW_KEY_M)
-		animation.ToggleMotionBlur();
+	// else if (key == GLFW_KEY_M)
+	// 	animation.ToggleMotionBlur();
 }
 
 int main() {
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	GLFWwindow *window = glfwCreateWindow(kWidth, kHeight, "Tumbler", nullptr, nullptr);
-	glfwMakeContextCurrent(window);
+	GLFWwindow *window = myvk::GLFWCreateWindow("Tumbler", kWidth, kHeight, false);
 	glfwSetKeyCallback(window, key_callback);
-	gl3wInit();
 
-	animation.Initialize();
+	myvk::Ptr<myvk::Device> device;
+	myvk::Ptr<myvk::Queue> generic_queue;
+	myvk::Ptr<myvk::PresentQueue> present_queue;
+	{
+		auto instance = myvk::Instance::CreateWithGlfwExtensions();
+		auto surface = myvk::Surface::Create(instance, window);
+		auto physical_device = myvk::PhysicalDevice::Fetch(instance)[0];
+		device = myvk::Device::Create(physical_device,
+		                              myvk::GenericPresentQueueSelector{&generic_queue, surface, &present_queue},
+		                              physical_device->GetDefaultFeatures(), {VK_KHR_SWAPCHAIN_EXTENSION_NAME});
+	}
+	auto frame_manager =
+	    myvk::FrameManager::Create(generic_queue, present_queue, true, kFrameCount,
+	                               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	auto command_pool = myvk::CommandPool::Create(generic_queue);
+
+	GPUAMesh gpu_ani_mesh = GPUAMesh::Create(command_pool);
+	GPUATexture gpu_ani_texture = GPUATexture::Create(command_pool);
+
+	myvk::Ptr<ARenderGraph> render_graphs[kFrameCount];
+	for (auto &render_graph : render_graphs) {
+		render_graph =
+		    ARenderGraph::Create(generic_queue, frame_manager, GPUAInstance::Create(gpu_ani_mesh, gpu_ani_texture));
+		render_graph->SetCanvasSize(VkExtent2D{kWidth, kHeight});
+	}
 
 	auto prev_time = (float)glfwGetTime();
-
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -48,11 +67,25 @@ int main() {
 		auto cur_time = (float)glfwGetTime();
 		float delta_t = std::min(cur_time - prev_time, .1f);
 		animation.Update(delta_t, drag);
-		animation.Draw(delta_t, kWidth, kHeight);
-		glfwSwapBuffers(window);
-
 		prev_time = cur_time;
+
+		if (frame_manager->NewFrame()) {
+			uint32_t image_index = frame_manager->GetCurrentImageIndex();
+			uint32_t current_frame = frame_manager->GetCurrentFrame();
+			const auto &command_buffer = frame_manager->GetCurrentCommandBuffer();
+			const auto &render_graph = render_graphs[current_frame];
+
+			render_graph->Update(animation);
+
+			command_buffer->Begin();
+			render_graph->CmdExecute(command_buffer);
+			command_buffer->End();
+
+			frame_manager->Render();
+		}
 	}
+	frame_manager->WaitIdle();
+	glfwTerminate();
 
 	return 0;
 }

@@ -4,10 +4,11 @@
 #include <random>
 #include <vector>
 
-#include "GPUMesh.hpp"
 #include "Sphere.hpp"
+#include "Transform.hpp"
 
 template <typename Derived> struct Particle {
+	uint64_t id;
 	float life;
 	glm::vec3 center, velocity;
 	inline void Update(std::mt19937 *p_rand, float delta_t) {
@@ -42,9 +43,7 @@ private:
 	std::mt19937 m_rand{std::random_device{}()};
 
 	float m_unused_fire_delta_t = 0.f;
-
-	void pop_mesh_prev(GPUMesh *p_mesh) const;
-	void pop_mesh(GPUMesh *p_mesh) const;
+	uint64_t m_id_counter = 0;
 
 public:
 	inline void Initialize(uint32_t max_particles) { m_max_particles = max_particles; }
@@ -59,5 +58,6 @@ public:
 	void EmitAshes(const Marble &marble);
 	void EmitSparks(const glm::vec3 &pos, const glm::vec3 &grad);
 
-	void Update(float delta_t, GPUMesh *p_mesh);
+	void Update(float delta_t);
+	TransformSet GetTransforms() const;
 };

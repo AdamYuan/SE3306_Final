@@ -1,6 +1,7 @@
 #version 450
 
 #include "Config.h"
+#define TEXTURE_SET 0
 #include "Texture.h"
 
 layout(location = 0) in vec3 vNormal;
@@ -8,7 +9,7 @@ layout(location = 1) in vec3 vColor;
 layout(location = 2) in vec4 vClip;
 layout(location = 3) in vec4 vPrevClip;
 
-layout(location = 0) out vec3 oAlbedo;
+layout(location = 0) out vec4 oAlbedo;
 layout(location = 1) out vec2 oNormal;
 layout(location = 2) out vec2 oVelocity;
 
@@ -22,7 +23,7 @@ vec2 float32x3_to_oct(in const vec3 v) {
 }
 
 void main() {
-	oAlbedo = GetAlbedo(vColor);
+	oAlbedo = vec4(GetAlbedo(vColor), 1.0);
 	// since uModel is a guarenteed orthogonal matrix, there's no need for transpose(inverse(mat3(uModel)))
 	oNormal = float32x3_to_oct(normalize(vNormal));
 	oVelocity = (vClip.xy / vClip.w - vPrevClip.xy / vPrevClip.w) * .5 * VELOCITY_SCALE;

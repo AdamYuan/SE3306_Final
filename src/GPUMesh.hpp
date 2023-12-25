@@ -1,51 +1,27 @@
 #pragma once
 
 #include "Mesh.hpp"
-
+#include <myvk/Buffer.hpp>
+#include <myvk/CommandPool.hpp>
 #include <span>
 #include <vector>
 
-#include <mygl3/buffer.hpp>
-#include <mygl3/vertexarray.hpp>
-
-class GPUMesh {
+class GPUMesh final : public myvk::DeviceObjectBase {
 private:
-	mygl3::VertexArray m_vertex_array;
-	mygl3::Buffer m_vertex_buffer, m_index_buffer, m_instance_info_buffer;
-	struct InstanceInfo {
-		glm::vec4 color;
-		glm::mat4 model, prev_model;
-	};
-	std::vector<InstanceInfo> m_instance_infos;
+	myvk::Ptr<myvk::Buffer> m_vertex_buffer, m_index_buffer;
 	struct LodInfo {
-		GLsizei count, base_vertex;
-		void *base_index;
+		uint32_t index_count, first_index;
+		int32_t vertex_offset;
 	};
 	std::vector<LodInfo> m_lods;
-	uint32_t m_instance_count = 0;
-	bool m_changed = false;
 
 public:
-	void Initialize(std::span<const Mesh> mesh_lods, uint32_t max_instance_count = 1);
-	inline uint32_t GetMaxMeshCount() const { return m_instance_infos.size(); }
-	inline uint32_t GetCurrentMeshCount() const { return m_instance_count; }
-	inline void SetInstanceCount(uint32_t instance_count) {
-		if (instance_count == m_instance_count)
-			return;
-		m_instance_count = glm::clamp(instance_count, 0u, GetMaxMeshCount());
-		m_changed = true;
-	}
-	inline void SetModel(uint32_t mesh_id, const glm::mat4 &model) {
-		m_instance_infos[mesh_id].model = model;
-		m_changed = true;
-	}
-	inline void SetPrevModel(uint32_t mesh_id, const glm::mat4 &prev_model) {
-		m_instance_infos[mesh_id].prev_model = prev_model;
-		m_changed = true;
-	}
-	inline void SetColor(uint32_t mesh_id, const glm::vec4 &color) {
-		m_instance_infos[mesh_id].color = color;
-		m_changed = true;
-	}
-	void Draw(uint32_t lod = 0);
+	explicit GPUMesh(const myvk::Ptr<myvk::CommandPool> &command_pool, std::span<const Mesh> mesh_lods);
+	inline ~GPUMesh() final = default;
+
+	inline const myvk::Ptr<myvk::Device> &GetDevicePtr() const final { return m_vertex_buffer->GetDevicePtr(); }
+
+	inline const auto &GetLodInfo(int lod) const { return m_lods[lod]; }
+	inline const auto &GetVertexBuffer() const { return m_vertex_buffer; }
+	inline const auto &GetIndexBuffer() const { return m_index_buffer; }
 };

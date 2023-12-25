@@ -1,7 +1,5 @@
 #version 450
 
-#include "Binding.h"
-
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec3 aColor;
@@ -14,16 +12,16 @@ layout(location = 1) out vec3 vColor;
 layout(location = 2) out vec4 vClip;
 layout(location = 3) out vec4 vPrevClip;
 
-layout(location = 0) uniform vec2 uJitter;
-
-layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
-	mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection;
+layout(push_constant) uniform uuPushConstant {
+	mat4 uViewProj;
+	vec2 uJitter;
 };
 
 void main() {
 	vNormal = mat3(aModel) * aNormal;
 	vColor = mix(aColor, aInstanceColor.rgb, aInstanceColor.a);
-	vPrevClip = uViewProjection * aPrevModel * vec4(aPosition, 1.0);
-	vClip = uViewProjection * aModel * vec4(aPosition, 1.0);
+	vPrevClip = uViewProj * aPrevModel * vec4(aPosition, 1.0);
+	vClip = uViewProj * aModel * vec4(aPosition, 1.0);
 	gl_Position = vec4(vClip.xy + uJitter * vClip.w, vClip.zw);
+	gl_Position.y = -gl_Position.y;
 }

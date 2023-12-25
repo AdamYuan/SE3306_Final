@@ -48,8 +48,11 @@ void Playground::CreateMarbles(uint32_t marble_count, const glm::vec4 &initial_c
 	m_marbles.resize(marble_count, {.color = initial_color, .alive = true});
 
 	std::uniform_real_distribution<float> dir_dis{-1.f, 1.f}, speed_dis{min_speed, max_speed};
-	for (auto &marble : m_marbles)
+
+	for (auto &marble : m_marbles) {
+		marble.id = m_id_counter++;
 		marble.linear_velocity = gen_random_dir(&m_rand) * speed_dis(m_rand);
+	}
 }
 
 void Playground::DeleteMarbles() { m_marbles.clear(); }
@@ -57,35 +60,26 @@ void Playground::DeleteMarbles() { m_marbles.clear(); }
 void Playground::CreateFireball(float speed) {
 	m_fireball = Fireball{};
 	auto &fireball = m_fireball.value();
+	fireball.id = m_id_counter++;
 	fireball.linear_velocity = gen_random_dir(&m_rand) * speed;
 }
 void Playground::DeleteFireball() { m_fireball = std::nullopt; }
 
-void Playground::pop_mesh_prev(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const {
+TransformSet Playground::GetTumblerTransforms() const {
+	TransformSet transforms;
 	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
-		p_tumbler_mesh->SetPrevModel(i, m_tumblers[i].GetModel());
-	p_tumbler_mesh->SetInstanceCount(m_tumblers.size());
-
-	for (uint32_t i = 0; i < m_marbles.size(); ++i)
-		p_marble_mesh->SetPrevModel(i, m_marbles[i].GetModel());
-	p_marble_mesh->SetInstanceCount(m_marbles.size());
-
-	if (m_fireball) {
-		p_fireball_mesh->SetInstanceCount(1);
-		p_fireball_mesh->SetPrevModel(0, m_fireball.value().GetModel());
-	} else
-		p_fireball_mesh->SetInstanceCount(0);
+		transforms[i] = {.model = m_tumblers[i].GetModel(), .color = {}};
+	return transforms;
 }
-
-void Playground::pop_mesh(GPUMesh *p_tumbler_mesh, GPUMesh *p_marble_mesh, GPUMesh *p_fireball_mesh) const {
-	for (uint32_t i = 0; i < m_tumblers.size(); ++i)
-		p_tumbler_mesh->SetModel(i, m_tumblers[i].GetModel());
-
-	for (uint32_t i = 0; i < m_marbles.size(); ++i) {
-		p_marble_mesh->SetColor(i, m_marbles[i].color);
-		p_marble_mesh->SetModel(i, m_marbles[i].GetModel());
-	}
-
+TransformSet Playground::GetMarbleTransforms() const {
+	TransformSet transforms;
+	for (const auto &m : m_marbles)
+		transforms[m.id] = {.model = m.GetModel(), .color = m.color};
+	return transforms;
+}
+TransformSet Playground::GetFireballTransforms() const {
+	TransformSet transforms;
 	if (m_fireball)
-		p_fireball_mesh->SetModel(0, m_fireball.value().GetModel());
+		transforms[m_fireball->id] = {.model = m_fireball->GetModel(), .color = {}};
+	return transforms;
 }

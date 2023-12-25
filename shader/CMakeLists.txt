@@ -2,62 +2,43 @@ cmake_minimum_required(VERSION 3.15)
 project(SE3306_Final)
 
 set(SHADER_HEADER
-        Binding.h
-        Config.h
         Texture.h
+        Config.h
 )
 
 set(SHADER_SRC
-        shadow.frag
-        shadow.vert
         gbuffer.frag
         gbuffer.vert
-        voxelize.frag
-        voxelize.geom
-        voxelize.vert
-        voxel_mipmap_0.comp
-        voxel_mipmap.comp
-        quad.vert
-        screen.frag
-        bloom_down_0.frag
-        bloom_down.frag
-        bloom_up.frag
-        taa.frag
-        light.frag
-        mb_tile_max.comp
-        mb_tile_nei.frag
-        mb_blur.frag
-        mb_speed_depth.frag
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)
 
 list(TRANSFORM SHADER_HEADER PREPEND ${SHADER_INCLUDE_PATH}/)
 
-add_executable(shader_generator generator/generator.cpp)
-
-function(add_shader INPUT_FILE)
-    add_custom_command(
-            OUTPUT ${SHADER_INCLUDE_PATH}/${INPUT_FILE}.str
-            COMMAND $<TARGET_FILE_DIR:shader_generator>/shader_generator src/${INPUT_FILE} ${SHADER_INCLUDE_PATH}/${INPUT_FILE}.str ${SHADER_INCLUDE_PATH}/
+find_program(GLSLC "glslc" REQUIRED)
+# IF (GLSLC)
+function(add_spirv_shader INPUT_FILE)
+    add_custom_command(OUTPUT ${SHADER_INCLUDE_PATH}/${INPUT_FILE}.u32
+            COMMAND glslc src/${INPUT_FILE} -I${SHADER_INCLUDE_PATH} -o ${SHADER_INCLUDE_PATH}/${INPUT_FILE}.u32 -O -Os -mfmt=num --target-env=vulkan1.1 -DGLSL
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            DEPENDS shader_generator ${CMAKE_CURRENT_SOURCE_DIR}/src/${INPUT_FILE} ${SHADER_HEADER}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/${INPUT_FILE} ${SHADER_HEADER}
     )
 endfunction()
 
 foreach (X IN LISTS SHADER_SRC)
-    add_shader(${X})
+    add_spirv_shader(${X})
 endforeach ()
+# ENDIF ()
 
-set(SHADER_STR)
+set(SHADER_U32)
 foreach (X IN LISTS SHADER_SRC)
-    list(APPEND SHADER_STR ${SHADER_INCLUDE_PATH}/${X}.str)
+    list(APPEND SHADER_U32 include/shader/${X}.u32)
 endforeach ()
 
 add_custom_target(
-        shader_str ALL DEPENDS
-        ${SHADER_STR}
+        shader_u32 ALL DEPENDS
+        ${SHADER_U32}
 )
 add_library(shader INTERFACE)
-add_dependencies(shader shader_str)
+add_dependencies(shader shader_u32)
 target_include_directories(shader INTERFACE include)
