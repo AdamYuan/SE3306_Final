@@ -52,6 +52,6 @@ void GBufferPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffe
 	                                 pc_data);
 	m_ani_instance.CmdDraw(command_buffer, 0, 0, 0, 0, 0);
 }
-GBufferPass::~GBufferPass() {}
+GBufferPass::~GBufferPass() = default;
 
 } // namespace rg
