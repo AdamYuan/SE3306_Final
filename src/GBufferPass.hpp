@@ -27,6 +27,7 @@ private:
 	}
 
 public:
+	~GBufferPass() final = default;
 	void CreatePipeline() final;
 	void CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const final;
 	inline auto GetAlbedoOutput() { return MakeImageOutput({"albedo_in"}); }
