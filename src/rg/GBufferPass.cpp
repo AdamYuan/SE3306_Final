@@ -2,6 +2,7 @@
 
 namespace rg {
 
+GBufferPass::~GBufferPass() = default;
 void GBufferPass::CreatePipeline() {
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 
@@ -50,8 +51,11 @@ void GBufferPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffe
 	*(glm::vec2 *)(pc_data + 16) = {}; // jitter
 	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc_data),
 	                                 pc_data);
-	m_ani_instance.CmdDraw(command_buffer, 0, 0, 0, 0, 0);
+	m_ani_instance.CmdDraw(command_buffer, {.opt_cornell_lod = 0,
+	                                        .opt_tumbler_lod = 0,
+	                                        .opt_marble_lod = 0,
+	                                        .opt_fireball_lod = 0,
+	                                        .opt_particle_lod = 0});
 }
-GBufferPass::~GBufferPass() = default;
 
 } // namespace rg

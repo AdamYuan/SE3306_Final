@@ -44,6 +44,9 @@ add_executable(
         src/rg/ARenderGraph.cpp
         src/rg/GBufferPass.cpp
         src/rg/ShadowMapPass.cpp
+        src/rg/VoxelizePass.cpp
+        src/rg/VoxelMipmapPass.cpp
+        src/rg/LightPass.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 

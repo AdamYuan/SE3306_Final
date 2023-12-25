@@ -9,6 +9,8 @@ set(SHADER_HEADER
 set(SHADER_SRC
         gbuffer.frag
         gbuffer.vert
+        shadow.frag
+        shadow.vert
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)

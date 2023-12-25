@@ -54,7 +54,8 @@ GPUATexture GPUATexture::Create(const myvk::Ptr<myvk::CommandPool> &command_pool
 		ret.floor_image_view = myvk::ImageView::Create(floor_image, VK_IMAGE_VIEW_TYPE_2D);
 	}
 
-	ret.tumbler_sampler = myvk::Sampler::CreateClampToBorder(device, VK_FILTER_LINEAR, VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK);
+	ret.tumbler_sampler =
+	    myvk::Sampler::CreateClampToBorder(device, VK_FILTER_LINEAR, VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK);
 	ret.floor_sampler = myvk::Sampler::Create(device, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
 
 	VkSampler tumbler_immutable_sampler = ret.tumbler_sampler->GetHandle();
@@ -137,17 +138,15 @@ void GPUAInstance::Update(const Animation &animation) {
 	m_particle_instance->SetTransform(animation.GetParticleTransforms());
 }
 
-void GPUAInstance::CmdDraw(const myvk::Ptr<myvk::CommandBuffer> &command_buffer, std::optional<int> opt_cornell_lod,
-                           std::optional<int> opt_tumbler_lod, std::optional<int> opt_marble_lod,
-                           std::optional<int> opt_fireball_lod, std::optional<int> opt_particle_lod) const {
-	if (opt_cornell_lod)
-		m_cornell_instance->CmdDraw(command_buffer, *opt_cornell_lod);
-	if (opt_tumbler_lod)
-		m_tumbler_instance->CmdDraw(command_buffer, *opt_tumbler_lod);
-	if (opt_marble_lod)
-		m_marble_instance->CmdDraw(command_buffer, *opt_marble_lod);
-	if (opt_fireball_lod)
-		m_fireball_instance->CmdDraw(command_buffer, *opt_fireball_lod);
-	if (opt_particle_lod)
-		m_particle_instance->CmdDraw(command_buffer, *opt_particle_lod);
+void GPUAInstance::CmdDraw(const myvk::Ptr<myvk::CommandBuffer> &command_buffer, const ADrawConfig &config) const {
+	if (config.opt_cornell_lod)
+		m_cornell_instance->CmdDraw(command_buffer, *config.opt_cornell_lod);
+	if (config.opt_tumbler_lod)
+		m_tumbler_instance->CmdDraw(command_buffer, *config.opt_tumbler_lod);
+	if (config.opt_marble_lod)
+		m_marble_instance->CmdDraw(command_buffer, *config.opt_marble_lod);
+	if (config.opt_fireball_lod)
+		m_fireball_instance->CmdDraw(command_buffer, *config.opt_fireball_lod);
+	if (config.opt_particle_lod)
+		m_particle_instance->CmdDraw(command_buffer, *config.opt_particle_lod);
 }
