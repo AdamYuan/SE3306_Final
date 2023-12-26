@@ -1,15 +1,17 @@
 #version 450
 
-#include "Binding.h"
 #include "Config.h"
 
-layout(location = 0) uniform float uSearchScale;
+layout(location = 0) out vec4 oColor;
 
-layout(location = 0) out vec3 oColor;
+layout(binding = 0) uniform sampler2D uTAA;
+layout(binding = 1) uniform sampler2D uSpeedDepth;
+layout(binding = 2) uniform sampler2D uTile;
 
-layout(binding = TAA_TEXTURE) uniform sampler2D uTAA;
-layout(binding = MOTION_BLUR_SPEED_DEPTH_TEXTURE) uniform sampler2D uSpeedDepth;
-layout(binding = MOTION_BLUR_TILE_TEXTURE) uniform sampler2D uTile;
+layout(push_constant) uniform uuPushConstant {
+	vec2 uUVJitter;
+	float uSearchScale;
+};
 
 // From Next-Generation-Post-Processing-in-Call-of-Duty-Advanced-Warfare-v18 and Unreal Engine
 
@@ -42,18 +44,18 @@ void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
 
 	vec2 inv_resolution = 1.0 / textureSize(uTAA, 0);
-	vec2 uv = gl_FragCoord.xy * inv_resolution;
+	vec2 uv_unjitter = gl_FragCoord.xy * inv_resolution + uUVJitter;
 
 	vec3 center_color = texelFetch(uTAA, coord, 0).rgb;
 	// since speed values are divided, there's no need to multiply by INV_VELOCITY_SCALE
-	vec2 center_speed_depth = texelFetch(uSpeedDepth, coord, 0).rg;
+	vec2 center_speed_depth = texture(uSpeedDepth, uv_unjitter).rg;
 	float center_speed = center_speed_depth.x;
 	float center_depth = center_speed_depth.y;
 
-	vec2 max_pixel_velocity = texture(uTile, uv).rg;
+	vec2 max_pixel_velocity = texture(uTile, uv_unjitter).rg;
 
 	if (max_pixel_velocity == vec2(0)) {
-		oColor = center_color;
+		oColor = vec4(center_color, 1.0);
 		return;
 	}
 
@@ -72,7 +74,7 @@ void main() {
 	{ \
 		vec2 offset_length = vec2(I + 0.5) + jitter; \
 		vec2 offset_fraction = offset_length / STEP_COUNT; \
-		vec4 sample_uv = uv.xyxy + offset_fraction.xyxy * search_vector; \
+		vec4 sample_uv = uv_unjitter.xyxy + offset_fraction.xyxy * search_vector; \
 		vec3 sample_color_0 = texture(uTAA, sample_uv.xy).rgb; \
 		vec3 sample_color_1 = texture(uTAA, sample_uv.zw).rgb; \
 		vec2 sample_speed_depth_0 = texture(uSpeedDepth, sample_uv.xy).rg; \
@@ -104,5 +106,5 @@ void main() {
 	color_accum *= .5 / STEP_COUNT;
 	weight_accum *= .5 / STEP_COUNT;
 
-	oColor = color_accum + (1 - weight_accum) * center_color;
+	oColor = vec4(color_accum + (1 - weight_accum) * center_color, 1.0);
 }

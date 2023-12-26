@@ -341,27 +341,28 @@ private:
 	}
 
 	template <typename DescriptorInputType>
-	inline bool add_input_descriptor(const std::vector<DescriptorInputType> &input_resources, Usage usage,
-	                                 VkPipelineStageFlags2 pipeline_stage_flags, uint32_t binding,
-	                                 const myvk::Ptr<myvk::Sampler> &sampler = nullptr,
-	                                 uint32_t attachment_index = UINT32_MAX) {
+	inline Input *add_input_descriptor(const std::vector<DescriptorInputType> &input_resources, Usage usage,
+	                                   VkPipelineStageFlags2 pipeline_stage_flags, uint32_t binding,
+	                                   uint32_t attachment_index = UINT32_MAX) {
 		assert(!m_descriptor_set_data.IsBindingExist(binding));
 		if (m_descriptor_set_data.IsBindingExist(binding))
-			return false;
+			return nullptr;
 		std::vector<DescriptorBinding> inputs;
 		inputs.reserve(input_resources.size());
+		Input *ret_input = nullptr;
 		for (const auto &p : input_resources) {
 			auto input = get_input_pool_ptr()->add_input(p.input_key, p.resource, usage, pipeline_stage_flags, binding,
 			                                             attachment_index);
 			assert(input);
+			ret_input = input;
 			inputs.push_back(DescriptorBinding{input, p.get_sampler()});
 		}
 		assert(!inputs.empty());
 		if (inputs.empty())
-			return false;
+			return nullptr;
 		m_descriptor_set_data.AddBinding(binding, std::move(inputs));
 		get_render_graph_ptr()->SetCompilePhrases(CompilePhrase::kCreateDescriptor);
-		return true;
+		return ret_input; // Return pInput of last array element
 	}
 
 	inline void pre_remove_input(const Input *input) {
@@ -576,8 +577,8 @@ protected:
 		if (m_attachment_data.IsInputAttachmentExist(AttachmentIndex))
 			return false;
 		auto input = get_descriptor_slot_ptr()->add_input_descriptor(
-		    input_key, image, Usage::kInputAttachment, kUsageGetSpecifiedPipelineStages<Usage::kInputAttachment>,
-		    DescriptorBinding, nullptr, AttachmentIndex);
+		    std::vector<ImageDescriptorInput>{ImageDescriptorInput{input_key, image}}, Usage::kInputAttachment,
+		    kUsageGetSpecifiedPipelineStages<Usage::kInputAttachment>, DescriptorBinding, AttachmentIndex);
 		assert(input);
 		if (!input)
 			return false;

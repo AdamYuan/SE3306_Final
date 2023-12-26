@@ -3,10 +3,13 @@
 #include "GBufferPass.hpp"
 #include "LightPass.hpp"
 #include "MBTilePass.hpp"
+#include "MotionBlurPass.hpp"
 #include "ShadowMapPass.hpp"
 #include "TAAPass.hpp"
 #include "VoxelMipmapPass.hpp"
 #include "VoxelizePass.hpp"
+
+#include <GLFW/glfw3.h>
 
 namespace rg {
 
@@ -14,6 +17,7 @@ void ARenderGraph::Initialize(const myvk::Ptr<myvk::FrameManager> &frame_manager
                               uint64_t tick_mask) {
 	m_ani_instance = gpu_ani_instance;
 	m_tick_mask = tick_mask;
+	m_time = glfwGetTime();
 
 	auto swapchain_image = CreateResource<myvk_rg::SwapchainImage>({"swapchain_image"}, frame_manager);
 
@@ -39,8 +43,12 @@ void ARenderGraph::Initialize(const myvk::Ptr<myvk::FrameManager> &frame_manager
 
 	auto mb_tile_pass = CreatePass<MBTilePass>({"mb_tile_pass"}, gbuffer_pass->GetVelocityOutput(), 16);
 
-	auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, mb_tile_pass->GetVelocityTileOutput(),
-	                                                    swapchain_image, VK_FILTER_NEAREST);
+	auto mb_pass =
+	    CreatePass<MotionBlurPass>({"mb_pass"}, taa_pass->GetTAAOutput(), mb_tile_pass->GetVelocityTileOutput(),
+	                               gbuffer_pass->GetVelocityOutput(), gbuffer_pass->GetDepthOutput());
+
+	auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, mb_pass->GetMotionBlurOutput(), swapchain_image,
+	                                                    VK_FILTER_NEAREST);
 
 	AddResult({"result"}, blit_pass->GetDstOutput());
 }
@@ -60,7 +68,12 @@ void ARenderGraph::Update(const Animation &animation) {
 	GetPass<TAAPass>({"taa_pass"})->SetJitter(jitter);
 	GetPass<TAAPass>({"taa_pass"})->SetFirst(m_tick == 0);
 
+	double new_time = glfwGetTime(), delta = new_time - m_time;
+	GetPass<MotionBlurPass>({"mb_pass"})->SetJitter(jitter);
+	GetPass<MotionBlurPass>({"mb_pass"})->SetSearchScale(glm::max(float(0.015 / delta), 1.0f));
+
 	++m_tick;
+	m_time = new_time;
 }
 
 } // namespace rg
