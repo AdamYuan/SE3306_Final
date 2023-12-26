@@ -26,11 +26,11 @@ constexpr uint32_t kMaxParticleCount = 2048;
 constexpr float kCameraFov = glm::pi<float>() / 3.f;
 constexpr glm::vec3 kCameraPos = {.0f, .0f, 1.f + 1.f / gcem::tan(kCameraFov * 0.5f)};
 
-static const glm::mat4 kCameraViewProj = glm::perspective(kCameraFov, 1.f, Z_NEAR, Z_FAR) *
+static const glm::mat4 kCameraViewProj = glm::perspectiveZO(kCameraFov, 1.f, Z_NEAR, Z_FAR) *
                                          glm::lookAt(kCameraPos, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, 1.f, .0f});
 static const glm::mat4 kInvCameraViewProj = glm::inverse(kCameraViewProj);
 static const glm::mat4 kShadowViewProj =
-    glm::perspective(gcem::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, Z_NEAR, Z_FAR) *
+    glm::perspectiveZO(gcem::atan(1.f / (kCornellLightHeight - 1.f)) * 2.f, 1.f, Z_NEAR, Z_FAR) *
     glm::lookAt(glm::vec3{.0f, kCornellLightHeight, .0f}, glm::vec3{.0f, .0f, .0f}, glm::vec3{.0f, .0f, 1.f});
 
 Mesh Animation::GetCornellMesh(int lod) {

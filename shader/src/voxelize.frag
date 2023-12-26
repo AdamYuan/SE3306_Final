@@ -33,7 +33,8 @@ void main() {
 	vec3 light_dir = normalize(vec3(0, kCornellLightHeight, 0) - gWorldPos);
 	vec3 albedo = GetAlbedo(gColor);
 
-	vec3 shadow_pos = gShadowPos.xyz / gShadowPos.w * .5 + .5;
+	vec3 shadow_pos = gShadowPos.xyz / gShadowPos.w;
+	shadow_pos.xy = shadow_pos.xy * 0.5 + 0.5;
 
 	vec3 radiance = IsEmissive(albedo) ? albedo
 	                                   : kCornellLightRadiance * albedo *

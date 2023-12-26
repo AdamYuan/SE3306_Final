@@ -15,7 +15,7 @@ private:
 		m_ani_instance = ani_instance;
 
 		auto albedo = CreateResource<myvk_rg::ManagedImage>({"albedo"}, VK_FORMAT_R16G16B16A16_SFLOAT);
-		auto normal = CreateResource<myvk_rg::ManagedImage>({"normal"}, VK_FORMAT_R16G16_UNORM);
+		auto normal = CreateResource<myvk_rg::ManagedImage>({"normal"}, VK_FORMAT_R16G16_SNORM);
 		auto velocity = CreateResource<myvk_rg::ManagedImage>({"velocity"}, VK_FORMAT_R16G16_SFLOAT);
 		auto depth = CreateResource<myvk_rg::ManagedImage>({"depth"}, VK_FORMAT_D32_SFLOAT);
 		depth->SetLoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR);

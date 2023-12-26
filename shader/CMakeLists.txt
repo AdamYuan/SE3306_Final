@@ -7,6 +7,7 @@ set(SHADER_HEADER
 )
 
 set(SHADER_SRC
+        quad.vert
         gbuffer.frag
         gbuffer.vert
         shadow.frag
@@ -14,6 +15,9 @@ set(SHADER_SRC
         voxelize.frag
         voxelize.geom
         voxelize.vert
+        voxel_mipmap.comp
+        voxel_mipmap_0.comp
+        light.frag
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)

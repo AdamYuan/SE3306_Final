@@ -46,7 +46,7 @@ void RenderGraphDescriptor::Create(const myvk::Ptr<myvk::Device> &device, const 
 			VkDescriptorSetLayoutBinding &info = bindings.back();
 			info.binding = binding_data.first;
 			info.descriptorType = UsageGetDescriptorType(array.front().GetInputPtr()->GetUsage());
-			info.descriptorCount = 1;
+			info.descriptorCount = array.size();
 			info.stageFlags = VkShaderStagesFromVkPipelineStages(array.front().GetInputPtr()->GetUsagePipelineStages());
 
 			// collect immutable samplers
@@ -97,7 +97,7 @@ void RenderGraphDescriptor::Create(const myvk::Ptr<myvk::Device> &device, const 
 				});
 			}
 
-			++descriptor_type_counts[info.descriptorType];
+			descriptor_type_counts[info.descriptorType] += array.size();
 		}
 		descriptor_set_layouts.emplace_back(myvk::DescriptorSetLayout::Create(device, bindings));
 		// TODO: DescriptorSetLayout Create Callbacks

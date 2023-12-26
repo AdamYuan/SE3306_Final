@@ -1,26 +1,24 @@
 #version 450
 
-#include "Binding.h"
 #include "Config.h"
 
-layout(location = 0) uniform uint uTick; // For shadow map sample
+const uint uTick = 0;
 
-layout(location = 0) out vec3 oLight;
+layout(location = 0) out vec4 oLight;
 
-layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
-layout(binding = GBUFFER_NORMAL_TEXTURE) uniform sampler2D uNormal;
-layout(binding = GBUFFER_DEPTH_TEXTURE) uniform sampler2D uDepth;
-layout(binding = SHADOW_MAP_TEXTURE) uniform sampler2DShadow uShadowMap;
-layout(binding = VOXEL_RADIANCE_TEXTURE) uniform sampler3D uVoxelRadiance;
-layout(binding = VOXEL_RADIANCE_MIPMAP_TEXTURE) uniform sampler3D uVoxelRadianceMipmaps[6];
+layout(binding = 0) uniform sampler2D uAlbedo;
+layout(binding = 1) uniform sampler2D uNormal;
+layout(binding = 2) uniform sampler2D uDepth;
+layout(binding = 3) uniform sampler2DShadow uShadowMap;
+layout(binding = 4) uniform sampler3D uVoxelRadiance;
+layout(binding = 5) uniform sampler3D uVoxelRadianceMipmaps[6];
 
-layout(std140, binding = CAMERA_UNIFORM_BUFFER) uniform uuCamera {
-	mat4 uViewProjection, uInverseViewProjection, uShadowViewProjection;
-};
+layout(push_constant) uniform uuPushConstant { mat4 uInvViewProj, uShadowViewProj; };
 
 vec3 reconstruct_position(in const vec2 frag_coord, in float depth) {
-	vec4 clip = vec4((frag_coord / textureSize(uDepth, 0).xy) * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-	vec4 rec = uInverseViewProjection * clip;
+	vec4 clip = vec4((frag_coord / textureSize(uDepth, 0).xy) * 2.0 - 1.0, depth, 1.0);
+	clip.y = -clip.y;
+	vec4 rec = uInvViewProj * clip;
 	return rec.xyz / rec.w;
 }
 
@@ -35,6 +33,7 @@ vec3 oct_to_float32x3(vec2 e) {
 float linearize_depth(in const float depth) {
 	return (2.0 * Z_NEAR * Z_FAR) / (Z_FAR + Z_NEAR - depth * (Z_FAR - Z_NEAR));
 }
+// float linearize_depth(in const float d) { return Z_NEAR * Z_FAR / (Z_FAR + d * (Z_NEAR - Z_FAR)); }
 float de_linearize_depth(in const float linear_depth) {
 	return (2.0 * Z_NEAR * Z_FAR / linear_depth - Z_FAR - Z_NEAR) / (Z_NEAR - Z_FAR);
 }
@@ -44,11 +43,13 @@ float InterleavedGradientNoise(in const ivec2 pixel_pos) {
 }
 float DirectVisibility(in const vec3 position, in const vec3 normal) {
 	vec3 light_dir = GetCornellLightDir(position);
-	vec4 shadow_pos = uShadowViewProjection * vec4(position, 1);
+	vec4 shadow_pos = uShadowViewProj * vec4(position, 1);
+	shadow_pos.y = -shadow_pos.y;
 	shadow_pos /= shadow_pos.w;
-	shadow_pos.xyz = shadow_pos.xyz * 0.5 + 0.5;
+	shadow_pos.xy = shadow_pos.xy * 0.5 + 0.5;
 
-	shadow_pos.z = de_linearize_depth(linearize_depth(shadow_pos.z) + clamp(0.1 * dot(normal, light_dir), -0.02, 0.05));
+	// shadow_pos.z = de_linearize_depth(linearize_depth(shadow_pos.z) + clamp(0.1 * dot(normal, light_dir), -0.02,
+	// 0.05));
 
 	float shadow = 0;
 
@@ -146,5 +147,5 @@ void main() {
 	    IsEmissive(albedo) ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
 	light /= (light + 1);
 
-	oLight = light;
+	oLight = vec4(light, 1.0);
 }

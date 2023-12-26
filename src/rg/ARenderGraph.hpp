@@ -3,7 +3,9 @@
 #include "../GPUAnimation.hpp"
 
 #include "GBufferPass.hpp"
+#include "LightPass.hpp"
 #include "ShadowMapPass.hpp"
+#include "VoxelMipmapPass.hpp"
 #include "VoxelizePass.hpp"
 
 #include <myvk_rg/RenderGraph.hpp>
@@ -27,12 +29,20 @@ private:
 		auto voxelize_pass =
 		    CreatePass<VoxelizePass>({"voxelize_pass"}, m_ani_instance, 64, shadowmap_pass_0->GetShadowMapOutput());
 
-		auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, voxelize_pass->GetVoxelOutput(),
-		                                                    swapchain_image, VK_FILTER_NEAREST);
+		auto voxel_mipmap_pass =
+		    CreatePass<VoxelMipmapPass>({"voxel_mipmap_pass"}, 64, 7, voxelize_pass->GetVoxelOutput());
 
 		auto shadowmap_pass_1 =
 		    CreatePass<ShadowMapPass>({"shadow_pass", 1}, m_ani_instance, ADrawConfig{.opt_marble_lod = 0}, 480,
 		                              shadowmap_pass_0->GetShadowMapOutput());
+
+		auto light_pass =
+		    CreatePass<LightPass>({"light"}, gbuffer_pass->GetAlbedoOutput(), gbuffer_pass->GetNormalOutput(),
+		                          gbuffer_pass->GetDepthOutput(), shadowmap_pass_1->GetShadowMapOutput(),
+		                          voxelize_pass->GetVoxelOutput(), voxel_mipmap_pass->GetVoxelMipmapOutputs());
+
+		auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, light_pass->GetLightOutput(),
+		                                                    swapchain_image, VK_FILTER_NEAREST);
 
 		AddResult({"result"}, blit_pass->GetDstOutput());
 	}
