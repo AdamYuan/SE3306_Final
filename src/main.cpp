@@ -42,9 +42,8 @@ int main() {
 		                              myvk::GenericPresentQueueSelector{&generic_queue, surface, &present_queue},
 		                              features, {VK_KHR_SWAPCHAIN_EXTENSION_NAME});
 	}
-	auto frame_manager =
-	    myvk::FrameManager::Create(generic_queue, present_queue, true, kFrameCount,
-	                               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+	auto frame_manager = myvk::FrameManager::Create(generic_queue, present_queue, true, kFrameCount,
+	                                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 
 	auto command_pool = myvk::CommandPool::Create(generic_queue);
 
