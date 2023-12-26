@@ -23,6 +23,11 @@ set(SHADER_SRC
         mb_tile_nei.frag
         mb_speed_depth.frag
         mb_blur.frag
+        bloom_down_0.frag
+        bloom_down.frag
+        bloom_up.frag
+        bloom_up_0.frag
+        screen.frag
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)

@@ -9,26 +9,17 @@
 // Remember to use a floating-point texture format (for HDR)!
 // Remember to use edge clamping for this texture!
 //
-#include "Binding.h"
+layout(binding = 0) uniform sampler2D uBloom;
 
-layout(binding = BLOOM_TEXTURE) uniform sampler2D uBloom;
+layout(location = 0) out vec4 oUpSample;
 
-layout(location = 0) uniform int uSourceLod;
-layout(location = 1) uniform float uFilterRadius;
-layout(location = 2) uniform int uLevel0;
-
-layout(location = 0) out vec3 oUpSample;
-
-#include "Config.h"
-layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
-vec3 sample_emissive(in const vec2 uv) {
-	vec3 color = texture(uAlbedo, uv).rgb;
-	return IsEmissive(color) ? color : vec3(0);
-}
+layout(push_constant) uniform uuPushConstant {
+	ivec2 uDstResolution;
+	float uFilterRadius;
+};
 
 void main() {
-	ivec2 dst_resolution = textureSize(uBloom, uSourceLod - 1);
-	vec2 texcoord = gl_FragCoord.xy / vec2(dst_resolution);
+	vec2 uv = gl_FragCoord.xy / vec2(uDstResolution);
 
 	// The filter kernel is applied with a radius, specified in texture
 	// coordinates, so that the radius will vary across mip resolutions.
@@ -39,26 +30,25 @@ void main() {
 	// d - e - f
 	// g - h - i
 	// === ('e' is the current texel) ===
-	vec3 a = textureLod(uBloom, vec2(texcoord.x - x, texcoord.y + y), uSourceLod).rgb;
-	vec3 b = textureLod(uBloom, vec2(texcoord.x, texcoord.y + y), uSourceLod).rgb;
-	vec3 c = textureLod(uBloom, vec2(texcoord.x + x, texcoord.y + y), uSourceLod).rgb;
+	vec3 a = texture(uBloom, vec2(uv.x - x, uv.y + y)).rgb;
+	vec3 b = texture(uBloom, vec2(uv.x, uv.y + y)).rgb;
+	vec3 c = texture(uBloom, vec2(uv.x + x, uv.y + y)).rgb;
 
-	vec3 d = textureLod(uBloom, vec2(texcoord.x - x, texcoord.y), uSourceLod).rgb;
-	vec3 e = textureLod(uBloom, vec2(texcoord.x, texcoord.y), uSourceLod).rgb;
-	vec3 f = textureLod(uBloom, vec2(texcoord.x + x, texcoord.y), uSourceLod).rgb;
+	vec3 d = texture(uBloom, vec2(uv.x - x, uv.y)).rgb;
+	vec3 e = texture(uBloom, vec2(uv.x, uv.y)).rgb;
+	vec3 f = texture(uBloom, vec2(uv.x + x, uv.y)).rgb;
 
-	vec3 g = textureLod(uBloom, vec2(texcoord.x - x, texcoord.y - y), uSourceLod).rgb;
-	vec3 h = textureLod(uBloom, vec2(texcoord.x, texcoord.y - y), uSourceLod).rgb;
-	vec3 i = textureLod(uBloom, vec2(texcoord.x + x, texcoord.y - y), uSourceLod).rgb;
+	vec3 g = texture(uBloom, vec2(uv.x - x, uv.y - y)).rgb;
+	vec3 h = texture(uBloom, vec2(uv.x, uv.y - y)).rgb;
+	vec3 i = texture(uBloom, vec2(uv.x + x, uv.y - y)).rgb;
 
 	// Apply weighted distribution, by using a 3x3 tent filter:
 	//  1   | 1 2 1 |
 	// -- * | 2 4 2 |
 	// 16   | 1 2 1 |
-	oUpSample = e * 4.0;
-	oUpSample += (b + d + f + h) * 2.0;
-	oUpSample += (a + c + g + i);
-	oUpSample *= 1.0 / 16.0;
-	if (uLevel0 == 1)
-		oUpSample += sample_emissive(texcoord);
+	vec3 up = e * 4.0;
+	up += (b + d + f + h) * 2.0;
+	up += (a + c + g + i);
+	up *= 1.0 / 16.0;
+	oUpSample = vec4(up, 1.0);
 }

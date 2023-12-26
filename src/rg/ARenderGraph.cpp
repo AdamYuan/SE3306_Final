@@ -1,9 +1,11 @@
 #include "ARenderGraph.hpp"
 
+#include "BloomPass.hpp"
 #include "GBufferPass.hpp"
 #include "LightPass.hpp"
 #include "MBTilePass.hpp"
 #include "MotionBlurPass.hpp"
+#include "ScreenPass.hpp"
 #include "ShadowMapPass.hpp"
 #include "TAAPass.hpp"
 #include "VoxelMipmapPass.hpp"
@@ -47,10 +49,14 @@ void ARenderGraph::Initialize(const myvk::Ptr<myvk::FrameManager> &frame_manager
 	    CreatePass<MotionBlurPass>({"mb_pass"}, taa_pass->GetTAAOutput(), mb_tile_pass->GetVelocityTileOutput(),
 	                               gbuffer_pass->GetVelocityOutput(), gbuffer_pass->GetDepthOutput());
 
-	auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, mb_pass->GetMotionBlurOutput(), swapchain_image,
-	                                                    VK_FILTER_NEAREST);
+	auto bloom_pass = CreatePass<BloomPass>({"bloom_pass"}, gbuffer_pass->GetAlbedoOutput(), 6, 0.005f);
 
-	AddResult({"result"}, blit_pass->GetDstOutput());
+	auto screen_pass = CreatePass<ScreenPass>({"screen_pass"}, mb_pass->GetMotionBlurOutput(),
+	                                          bloom_pass->GetBloomOutput(), swapchain_image);
+	// auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, bloom_pass->GetBloomOutput(), swapchain_image,
+	//                                                     VK_FILTER_NEAREST);
+
+	AddResult({"result"}, screen_pass->GetOutput());
 }
 
 void ARenderGraph::Update(const Animation &animation) {
@@ -67,10 +73,10 @@ void ARenderGraph::Update(const Animation &animation) {
 	GetPass<GBufferPass>({"gbuffer_pass"})->SetJitter(jitter);
 	GetPass<TAAPass>({"taa_pass"})->SetJitter(jitter);
 	GetPass<TAAPass>({"taa_pass"})->SetFirst(m_tick == 0);
-
 	double new_time = glfwGetTime(), delta = new_time - m_time;
 	GetPass<MotionBlurPass>({"mb_pass"})->SetJitter(jitter);
 	GetPass<MotionBlurPass>({"mb_pass"})->SetSearchScale(glm::max(float(0.015 / delta), 1.0f));
+	GetPass<ScreenPass>({"screen_pass"})->SetJitter(jitter);
 
 	++m_tick;
 	m_time = new_time;

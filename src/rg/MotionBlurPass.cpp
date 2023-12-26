@@ -81,7 +81,6 @@ void MBDrawPass::CreatePipeline() {
 	    myvk::GraphicsPipeline::Create(pipeline_layout, GetVkRenderPass(), shader_stages, pipeline_state, GetSubpass());
 }
 void MBDrawPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const {
-
 	command_buffer->CmdBindPipeline(m_pipeline);
 	float pc_data[3];
 	*(glm::vec2 *)pc_data = glm::vec2(m_jitter.x, -m_jitter.y) * 0.5f;

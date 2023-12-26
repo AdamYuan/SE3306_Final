@@ -11,14 +11,11 @@
 // Remember to use a floating-point texture format (for HDR)!
 // Remember to use edge clamping for this texture!
 
-#include "Binding.h"
-
-layout(binding = BLOOM_TEXTURE) uniform sampler2D uBloom;
-layout(location = 0) out vec3 oDownSample;
-layout(location = 0) uniform int uSourceLod;
+layout(binding = 0) uniform sampler2D uBloom;
+layout(location = 0) out vec4 oDownSample;
 
 void main() {
-	ivec2 src_resolution = textureSize(uBloom, uSourceLod), dst_resolution = textureSize(uBloom, uSourceLod + 1);
+	ivec2 src_resolution = textureSize(uBloom, 0), dst_resolution = src_resolution >> 1;
 	vec2 texcoord = gl_FragCoord.xy / vec2(dst_resolution);
 	vec2 src_texel_size = 1.0 / vec2(src_resolution);
 	float x = src_texel_size.x;
@@ -31,22 +28,22 @@ void main() {
 	// - l - m -
 	// g - h - i
 	// === ('e' is the current texel) ===
-	vec3 a = textureLod(uBloom, vec2(texcoord.x - 2 * x, texcoord.y + 2 * y), uSourceLod).rgb;
-	vec3 b = textureLod(uBloom, vec2(texcoord.x, texcoord.y + 2 * y), uSourceLod).rgb;
-	vec3 c = textureLod(uBloom, vec2(texcoord.x + 2 * x, texcoord.y + 2 * y), uSourceLod).rgb;
+	vec3 a = texture(uBloom, vec2(texcoord.x - 2 * x, texcoord.y + 2 * y)).rgb;
+	vec3 b = texture(uBloom, vec2(texcoord.x, texcoord.y + 2 * y)).rgb;
+	vec3 c = texture(uBloom, vec2(texcoord.x + 2 * x, texcoord.y + 2 * y)).rgb;
 
-	vec3 d = textureLod(uBloom, vec2(texcoord.x - 2 * x, texcoord.y), uSourceLod).rgb;
-	vec3 e = textureLod(uBloom, vec2(texcoord.x, texcoord.y), uSourceLod).rgb;
-	vec3 f = textureLod(uBloom, vec2(texcoord.x + 2 * x, texcoord.y), uSourceLod).rgb;
+	vec3 d = texture(uBloom, vec2(texcoord.x - 2 * x, texcoord.y)).rgb;
+	vec3 e = texture(uBloom, vec2(texcoord.x, texcoord.y)).rgb;
+	vec3 f = texture(uBloom, vec2(texcoord.x + 2 * x, texcoord.y)).rgb;
 
-	vec3 g = textureLod(uBloom, vec2(texcoord.x - 2 * x, texcoord.y - 2 * y), uSourceLod).rgb;
-	vec3 h = textureLod(uBloom, vec2(texcoord.x, texcoord.y - 2 * y), uSourceLod).rgb;
-	vec3 i = textureLod(uBloom, vec2(texcoord.x + 2 * x, texcoord.y - 2 * y), uSourceLod).rgb;
+	vec3 g = texture(uBloom, vec2(texcoord.x - 2 * x, texcoord.y - 2 * y)).rgb;
+	vec3 h = texture(uBloom, vec2(texcoord.x, texcoord.y - 2 * y)).rgb;
+	vec3 i = texture(uBloom, vec2(texcoord.x + 2 * x, texcoord.y - 2 * y)).rgb;
 
-	vec3 j = textureLod(uBloom, vec2(texcoord.x - x, texcoord.y + y), uSourceLod).rgb;
-	vec3 k = textureLod(uBloom, vec2(texcoord.x + x, texcoord.y + y), uSourceLod).rgb;
-	vec3 l = textureLod(uBloom, vec2(texcoord.x - x, texcoord.y - y), uSourceLod).rgb;
-	vec3 m = textureLod(uBloom, vec2(texcoord.x + x, texcoord.y - y), uSourceLod).rgb;
+	vec3 j = texture(uBloom, vec2(texcoord.x - x, texcoord.y + y)).rgb;
+	vec3 k = texture(uBloom, vec2(texcoord.x + x, texcoord.y + y)).rgb;
+	vec3 l = texture(uBloom, vec2(texcoord.x - x, texcoord.y - y)).rgb;
+	vec3 m = texture(uBloom, vec2(texcoord.x + x, texcoord.y - y)).rgb;
 
 	// Apply weighted distribution:
 	// 0.5 + 0.125 + 0.125 + 0.125 + 0.125 = 1
@@ -61,8 +58,9 @@ void main() {
 	// contribute 0.5 to the final color output. The code below is written
 	// to effectively yield this sum. We get:
 	// 0.125*5 + 0.03125*4 + 0.0625*4 = 1
-	oDownSample = e * 0.125;
-	oDownSample += (a + c + g + i) * 0.03125;
-	oDownSample += (b + d + f + h) * 0.0625;
-	oDownSample += (j + k + l + m) * 0.125;
+	vec3 down = e * 0.125;
+	down += (a + c + g + i) * 0.03125;
+	down += (b + d + f + h) * 0.0625;
+	down += (j + k + l + m) * 0.125;
+	oDownSample = vec4(down, 1.0);
 }

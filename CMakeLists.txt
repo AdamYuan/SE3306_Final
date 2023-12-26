@@ -50,6 +50,7 @@ add_executable(Tumbler src/main.cpp
         src/rg/BloomPass.cpp
         src/rg/MBTilePass.cpp
         src/rg/MotionBlurPass.cpp
+        src/rg/ScreenPass.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 

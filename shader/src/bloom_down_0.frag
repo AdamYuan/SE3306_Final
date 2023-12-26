@@ -11,11 +11,10 @@
 // Remember to use a floating-point texture format (for HDR)!
 // Remember to use edge clamping for this texture!
 
-#include "Binding.h"
 #include "Config.h"
 
-layout(binding = GBUFFER_ALBEDO_TEXTURE) uniform sampler2D uAlbedo;
-layout(location = 0) out vec3 oDownSample;
+layout(binding = 0) uniform sampler2D uAlbedo;
+layout(location = 0) out vec4 oDownSample;
 
 vec3 sample_emissive(in const vec2 uv) {
 	vec3 color = texture(uAlbedo, uv).rgb;
@@ -66,8 +65,9 @@ void main() {
 	// contribute 0.5 to the final color output. The code below is written
 	// to effectively yield this sum. We get:
 	// 0.125*5 + 0.03125*4 + 0.0625*4 = 1
-	oDownSample = e * 0.125;
-	oDownSample += (a + c + g + i) * 0.03125;
-	oDownSample += (b + d + f + h) * 0.0625;
-	oDownSample += (j + k + l + m) * 0.125;
+	vec3 down = e * 0.125;
+	down += (a + c + g + i) * 0.03125;
+	down += (b + d + f + h) * 0.0625;
+	down += (j + k + l + m) * 0.125;
+	oDownSample = vec4(down, 1.0);
 }

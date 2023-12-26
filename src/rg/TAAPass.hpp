@@ -21,8 +21,8 @@ private:
 		auto prev_taa = CreateResource<myvk_rg::LastFrameImage>({"prev_taa"}, taa);
 
 		AddColorAttachmentInput<0, myvk_rg::Usage::kColorAttachmentW>({"taa_in"}, taa);
-		AddDescriptorInput<0, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"velocity_in"}, velocity, sampler_edge);
+
+		AddInputAttachmentInput<0, 0>({"velocity_in"}, velocity);
 		AddDescriptorInput<1, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
 		    {"light_in"}, light, sampler_edge);
 		AddDescriptorInput<2, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(

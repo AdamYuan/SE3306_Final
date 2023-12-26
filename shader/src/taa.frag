@@ -4,7 +4,7 @@
 
 layout(location = 0) out vec4 oColor;
 
-layout(binding = 0) uniform sampler2D uVelocity;
+layout(input_attachment_index = 0, binding = 0) uniform subpassInput uVelocity;
 layout(binding = 1) uniform sampler2D uLight;
 layout(binding = 2) uniform sampler2D uPrevTAA;
 
@@ -47,7 +47,7 @@ void main() {
 	if (uFirst == 1)
 		oColor = vec4(light, 1.0);
 	else {
-		vec2 velocity = texelFetch(uVelocity, coord, 0).rg * INV_VELOCITY_SCALE;
+		vec2 velocity = subpassLoad(uVelocity).rg * INV_VELOCITY_SCALE;
 		vec3 prev_light = RGB2YCoCg(texture(uPrevTAA, uv - velocity).rgb);
 
 		light = RGB2YCoCg(light);
