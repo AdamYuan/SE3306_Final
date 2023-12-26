@@ -478,7 +478,6 @@ protected:
 	                                          PipelineStageFlags &&
 	                                      kUsageForImage<Usage>>>
 	inline bool AddDescriptorInput(const std::vector<SamplerDescriptorInput> &sampler_descriptor_array) {
-		assert(sampler);
 		return add_input_descriptor(sampler_descriptor_array, Usage, PipelineStageFlags, Binding);
 	}
 	template <uint32_t Binding, Usage Usage, VkPipelineStageFlags2 PipelineStageFlags,
