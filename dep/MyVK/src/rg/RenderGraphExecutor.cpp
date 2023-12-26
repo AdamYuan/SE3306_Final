@@ -370,7 +370,7 @@ public:
 			}
 		}
 #else
-		// VERY NECESSARY
+		// VERY NECESSARY For Validation Barriers
 		if (is_from_attachment || is_to_attachment) {
 			// Check attachment
 			auto *image = static_cast<const ImageBase *>(m_resource);
