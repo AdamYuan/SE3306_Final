@@ -9,7 +9,7 @@ class MBTileMaxPass final : public myvk_rg::ComputePassBase {
 
 private:
 	myvk::Ptr<myvk::ComputePipeline> m_pipeline;
-	uint32_t m_tile_size, m_subgroup_size, m_shared_size;
+	uint32_t m_tile_size{}, m_subgroup_size{}, m_shared_size{};
 
 	inline static constexpr auto div_ceil(auto x, auto y) { return x / y + (x % y == 0 ? 0 : 1); }
 
