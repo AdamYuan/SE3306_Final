@@ -48,8 +48,7 @@ add_executable(Tumbler src/main.cpp
         src/rg/LightPass.cpp
         src/rg/TAAPass.cpp
         src/rg/BloomPass.cpp
-        src/rg/MBTileMaxPass.cpp
-        src/rg/MBTileNeiPass.cpp
+        src/rg/MBTilePass.cpp
 )
 target_link_libraries(Tumbler PRIVATE shader texture dep)
 

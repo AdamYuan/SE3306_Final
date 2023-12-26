@@ -43,7 +43,7 @@ void TAAPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) c
 	command_buffer->CmdBindPipeline(m_pipeline);
 	static_assert(sizeof(float) == sizeof(int32_t));
 	float pc_data[3];
-	*(glm::vec2 *)pc_data = m_jitter;
+	*(glm::vec2 *)pc_data = glm::vec2(m_jitter.x, -m_jitter.y) * 0.5f;
 	*(int32_t *)(pc_data + 2) = m_first;
 	command_buffer->CmdBindDescriptorSets({GetVkDescriptorSet()}, m_pipeline);
 	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_FRAGMENT_BIT, 0,

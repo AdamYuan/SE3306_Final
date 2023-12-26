@@ -1,10 +1,8 @@
 #version 450
 
-#include "Binding.h"
-
 layout(location = 0) out vec2 oVelocity;
 
-layout(binding = MOTION_BLUR_TILE_0_TEXTURE) uniform sampler2D uTile0;
+layout(binding = 0) uniform sampler2D uTile0;
 
 vec2 reduce(in const vec2 l, in const vec2 r) { return dot(l, l) >= dot(r, r) ? l : r; }
 

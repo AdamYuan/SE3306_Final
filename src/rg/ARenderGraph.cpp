@@ -2,6 +2,7 @@
 
 #include "GBufferPass.hpp"
 #include "LightPass.hpp"
+#include "MBTilePass.hpp"
 #include "ShadowMapPass.hpp"
 #include "TAAPass.hpp"
 #include "VoxelMipmapPass.hpp"
@@ -36,8 +37,10 @@ void ARenderGraph::Initialize(const myvk::Ptr<myvk::FrameManager> &frame_manager
 
 	auto taa_pass = CreatePass<TAAPass>({"taa_pass"}, gbuffer_pass->GetVelocityOutput(), light_pass->GetLightOutput());
 
-	auto blit_pass =
-	    CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, taa_pass->GetTAAOutput(), swapchain_image, VK_FILTER_NEAREST);
+	auto mb_tile_pass = CreatePass<MBTilePass>({"mb_tile_pass"}, gbuffer_pass->GetVelocityOutput(), 16);
+
+	auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, mb_tile_pass->GetVelocityTileOutput(),
+	                                                    swapchain_image, VK_FILTER_NEAREST);
 
 	AddResult({"result"}, blit_pass->GetDstOutput());
 }

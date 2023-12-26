@@ -9,7 +9,7 @@ layout(binding = 1) uniform sampler2D uLight;
 layout(binding = 2) uniform sampler2D uPrevTAA;
 
 layout(push_constant) uniform uuPushConstant {
-	vec2 uJitter;
+	vec2 uUVJitter;
 	int uFirst;
 };
 
@@ -40,7 +40,7 @@ vec3 YCoCg2RGB(in const vec3 ycocg) {
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy), resolution = textureSize(uLight, 0);
 	vec2 inv_resolution = 1.0 / resolution;
-	vec2 uv = gl_FragCoord.xy * inv_resolution, uv_unjitter = uv + uJitter * .5;
+	vec2 uv = gl_FragCoord.xy * inv_resolution, uv_unjitter = uv + uUVJitter;
 
 	vec3 light = texture(uLight, uv_unjitter).rgb;
 

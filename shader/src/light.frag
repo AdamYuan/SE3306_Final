@@ -30,14 +30,6 @@ vec3 oct_to_float32x3(vec2 e) {
 	return normalize(v);
 }
 
-float linearize_depth(in const float depth) {
-	return (2.0 * Z_NEAR * Z_FAR) / (Z_FAR + Z_NEAR - depth * (Z_FAR - Z_NEAR));
-}
-// float linearize_depth(in const float d) { return Z_NEAR * Z_FAR / (Z_FAR + d * (Z_NEAR - Z_FAR)); }
-float de_linearize_depth(in const float linear_depth) {
-	return (2.0 * Z_NEAR * Z_FAR / linear_depth - Z_FAR - Z_NEAR) / (Z_NEAR - Z_FAR);
-}
-
 float InterleavedGradientNoise(in const ivec2 pixel_pos) {
 	return fract(52.9829189 * fract(dot(vec2(pixel_pos), vec2(0.06711056, 0.00583715))));
 }
@@ -48,11 +40,7 @@ float DirectVisibility(in const vec3 position, in const vec3 normal) {
 	shadow_pos /= shadow_pos.w;
 	shadow_pos.xy = shadow_pos.xy * 0.5 + 0.5;
 
-	// shadow_pos.z = de_linearize_depth(linearize_depth(shadow_pos.z) + clamp(0.1 * dot(normal, light_dir), -0.02,
-	// 0.05));
-
 	float shadow = 0;
-
 	const vec2 kPoissonDisk[16] =
 	    vec2[](vec2(-0.94201624, -0.39906216), vec2(0.94558609, -0.76890725), vec2(-0.094184101, -0.92938870),
 	           vec2(0.34495938, 0.29387760), vec2(-0.91588581, 0.45771432), vec2(-0.81544232, -0.87912464),
@@ -110,7 +98,7 @@ vec3 cone_trace(in const vec3 origin,
 	ivec3 axis_indices = ivec3(dir.x < 0.0 ? 0 : 1, dir.y < 0.0 ? 2 : 3, dir.z < 0.0 ? 4 : 5);
 	vec3 axis_weights = dir * dir;
 
-	while (dist < 4. && acc.a < 1.) {
+	while (dist < 4. && acc.a < .99) {
 		float diameter = 2. * tan_half_cone * dist;
 		vec4 samp = sample_voxel(origin + dist * dir, log2(diameter * inv_voxel_size), axis_indices, axis_weights);
 		acc += samp * (1.0 - acc.a);
@@ -185,9 +173,9 @@ void main() {
 	/* {
 	    vec3 origin = vec3(0, 0, 1 + sqrt(3.));
 	    vec3 dir = normalize(position - origin);
-	    vec3 color = VoxelRayMarch(uVoxelRadiance, 0, origin, dir);
-	    color = vec3(1) - exp(-color * 1.2);
-	    oLight = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
+	    vec3 color = VoxelRayMarch(uVoxelRadianceMipmaps[0], 0, origin, dir);
+	    color /= color + 1;
+	    oLight = vec4(color, 1.0);
 	    return;
 	} */
 

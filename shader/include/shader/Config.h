@@ -4,8 +4,8 @@
 #define VOXEL_SCALE 0.75f
 #define Z_NEAR 0.1f
 #define Z_FAR 4.0f
-#define VELOCITY_SCALE 16.0f
-#define INV_VELOCITY_SCALE 0.0625f
+#define VELOCITY_SCALE 8.0f
+#define INV_VELOCITY_SCALE 0.125f
 
 #ifndef GLSL
 #include <glm/glm.hpp>
