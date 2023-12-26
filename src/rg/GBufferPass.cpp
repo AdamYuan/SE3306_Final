@@ -47,7 +47,7 @@ void GBufferPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffe
 	command_buffer->CmdBindDescriptorSets({m_ani_instance.GetDescriptorSet()}, m_pipeline);
 	float pc_data[16 + 2];
 	*(glm::mat4 *)pc_data = Animation::GetCameraViewProj();
-	*(glm::vec2 *)(pc_data + 16) = {}; // jitter
+	*(glm::vec2 *)(pc_data + 16) = {}; // TODO: jitter
 	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc_data),
 	                                 pc_data);
 	m_ani_instance.CmdDraw(command_buffer, {.opt_cornell_lod = 0,

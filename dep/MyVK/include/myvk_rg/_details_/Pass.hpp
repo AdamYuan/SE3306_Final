@@ -18,6 +18,14 @@ class ComputePassBase;
 class TransferPassBase;
 class PassGroupBase;
 
+struct RenderPassArea {
+	VkExtent2D extent{};
+	uint32_t layers{};
+	inline bool operator==(const RenderPassArea &r) const {
+		return std::tie(extent.width, extent.height, layers) == std::tie(r.extent.width, r.extent.height, r.layers);
+	}
+};
+
 class PassBase : public ObjectBase {
 private:
 	PassType m_type{};
@@ -27,7 +35,18 @@ private:
 	const DescriptorSetData *m_p_descriptor_set_data{};
 	// GraphicsPass
 	const AttachmentData *m_p_attachment_data{};
-	std::optional<VkExtent3D> m_opt_area;
+
+	using AreaFunc = std::function<RenderPassArea(const VkExtent2D &)>;
+	std::optional<RenderPassArea> m_opt_area = std::nullopt;
+	std::optional<AreaFunc> m_opt_area_func = std::nullopt;
+
+	inline std::optional<RenderPassArea> get_opt_area() const {
+		if (m_opt_area)
+			return *m_opt_area;
+		if (m_opt_area_func)
+			return (*m_opt_area_func)(GetRenderGraphPtr()->GetCanvasSize());
+		return std::nullopt;
+	}
 
 	mutable struct {
 	private:
@@ -142,15 +161,23 @@ public:
 	uint32_t GetSubpass() const;
 	const myvk::Ptr<myvk::RenderPass> &GetVkRenderPass() const;
 
-	inline void SetAreaForce(uint32_t width, uint32_t height, uint32_t layer = 1) {
-		if (!m_opt_area || m_opt_area->width != width || m_opt_area->height != height || m_opt_area->depth != layer)
+	inline void SetRenderArea(VkExtent2D extent, uint32_t layer = 1) {
+		if (m_opt_area_func || !m_opt_area || m_opt_area != RenderPassArea{extent, layer})
 			GetRenderGraphPtr()->SetCompilePhrases(CompilePhrase::kSchedule);
-		m_opt_area = VkExtent3D{.width = width, .height = height, .depth = layer};
+		m_opt_area = RenderPassArea{extent, layer};
+		m_opt_area_func = std::nullopt;
 	}
-	inline void ClearArea() {
-		if (m_opt_area)
+	inline void SetRenderArea(const AreaFunc &area_func) {
+		if (m_opt_area || !m_opt_area_func)
 			GetRenderGraphPtr()->SetCompilePhrases(CompilePhrase::kSchedule);
 		m_opt_area = std::nullopt;
+		m_opt_area_func = area_func;
+	}
+	inline void ClearRenderArea() {
+		if (m_opt_area || m_opt_area_func)
+			GetRenderGraphPtr()->SetCompilePhrases(CompilePhrase::kSchedule);
+		m_opt_area = std::nullopt;
+		m_opt_area_func = std::nullopt;
 	}
 
 	inline void UpdatePipeline() const { m_executor_info.pipeline_updated = true; }

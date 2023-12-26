@@ -53,10 +53,13 @@ RenderGraphScheduler::_compute_pass_merge_info(const RenderGraphResolver &resolv
 			continue;
 
 		RenderPassArea &area = merge_infos[i].area;
-		if (pass->m_opt_area) {
-			area.extent = VkExtent2D{pass->m_opt_area->width, pass->m_opt_area->height};
-			area.layers = pass->m_opt_area->depth;
-			continue;
+
+		{
+			auto opt_area = pass->get_opt_area();
+			if (opt_area) {
+				area = *opt_area;
+				continue;
+			}
 		}
 
 		const auto maintain_area = [&area](const auto *resource) {
@@ -87,10 +90,9 @@ RenderGraphScheduler::_compute_pass_merge_info(const RenderGraphResolver &resolv
 					});
 				} else
 					assert(false);
-				if (area.layers == 0)
-					area = desired_area;
-				else
+				if (area.extent.width != 0)
 					assert(area == desired_area);
+				area = desired_area;
 			} else
 				assert(false);
 		};

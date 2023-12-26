@@ -39,7 +39,7 @@ private:
 	                myvk_rg::ImageInput shadow_map) {
 		m_ani_instance = ani_instance;
 		m_resolution = resolution;
-		SetAreaForce(resolution, resolution);
+		SetRenderArea(VkExtent2D{resolution, resolution});
 		AddDescriptorInput<0, myvk_rg::Usage::kStorageImageW, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>({"voxel_in"},
 		                                                                                               cleared_voxel);
 		VkSamplerCreateInfo sampler_info = {};

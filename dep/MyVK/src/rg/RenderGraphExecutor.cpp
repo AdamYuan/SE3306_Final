@@ -898,7 +898,7 @@ void RenderGraphExecutor::create_render_passes_and_framebuffers(
 #endif
 
 		// Create Framebuffer
-		RenderGraphScheduler::RenderPassArea area = pass_info.p_render_pass_info->area;
+		RenderPassArea area = pass_info.p_render_pass_info->area;
 
 		std::vector<VkFramebufferAttachmentImageInfo> attachment_image_infos;
 		attachment_image_infos.reserve(attachments.size());
