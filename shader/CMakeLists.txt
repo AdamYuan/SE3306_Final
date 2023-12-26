@@ -18,6 +18,7 @@ set(SHADER_SRC
         voxel_mipmap.comp
         voxel_mipmap_0.comp
         light.frag
+        taa.frag
 )
 
 set(SHADER_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/include/shader)

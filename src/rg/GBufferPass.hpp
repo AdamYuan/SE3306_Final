@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../GPUAnimation.hpp"
+#include <glm/glm.hpp>
 #include <myvk_rg/RenderGraph.hpp>
 
 namespace rg {
@@ -10,6 +11,7 @@ class GBufferPass final : public myvk_rg::GraphicsPassBase {
 private:
 	GPUAInstance m_ani_instance;
 	myvk::Ptr<myvk::GraphicsPipeline> m_pipeline;
+	glm::vec2 m_jitter = {};
 
 	void Initialize(const GPUAInstance &ani_instance) {
 		m_ani_instance = ani_instance;
@@ -31,6 +33,7 @@ public:
 	inline ~GBufferPass() final = default;
 	void CreatePipeline() final;
 	void CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const final;
+	inline void SetJitter(glm::vec2 jitter) { m_jitter = jitter; }
 	inline auto GetAlbedoOutput() { return MakeImageOutput({"albedo_in"}); }
 	inline auto GetNormalOutput() { return MakeImageOutput({"normal_in"}); }
 	inline auto GetVelocityOutput() { return MakeImageOutput({"velocity_in"}); }

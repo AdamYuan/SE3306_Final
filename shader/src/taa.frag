@@ -1,16 +1,17 @@
 #version 450
 
-#include "Binding.h"
 #include "Config.h"
 
-layout(location = 0) uniform int uFirst;
-layout(location = 1) uniform vec2 uJitter;
+layout(location = 0) out vec4 oColor;
 
-layout(location = 0) out vec3 oColor;
+layout(binding = 0) uniform sampler2D uVelocity;
+layout(binding = 1) uniform sampler2D uLight;
+layout(binding = 2) uniform sampler2D uPrevTAA;
 
-layout(binding = GBUFFER_VELOCITY_TEXTURE) uniform sampler2D uVelocity;
-layout(binding = TAA_TEXTURE) uniform sampler2D uPrevLight;
-layout(binding = LIGHT_TEXTURE) uniform sampler2D uLight;
+layout(push_constant) uniform uuPushConstant {
+	vec2 uJitter;
+	int uFirst;
+};
 
 vec3 VarianceClip(in const vec3 q, in const vec3 mean, in const vec3 stddev) {
 	vec3 v_clip = q - mean;
@@ -44,10 +45,10 @@ void main() {
 	vec3 light = texture(uLight, uv_unjitter).rgb;
 
 	if (uFirst == 1)
-		oColor = light;
+		oColor = vec4(light, 1.0);
 	else {
 		vec2 velocity = texelFetch(uVelocity, coord, 0).rg * INV_VELOCITY_SCALE;
-		vec3 prev_light = RGB2YCoCg(texture(uPrevLight, uv - velocity).rgb);
+		vec3 prev_light = RGB2YCoCg(texture(uPrevTAA, uv - velocity).rgb);
 
 		light = RGB2YCoCg(light);
 		vec3 mean = light, stddev = light * light;
@@ -68,6 +69,6 @@ void main() {
 
 		prev_light = VarianceClip(prev_light, mean, stddev);
 
-		oColor = YCoCg2RGB(mix(light, prev_light, 0.8));
+		oColor = vec4(YCoCg2RGB(mix(light, prev_light, 0.8)), 1.0);
 	}
 }
