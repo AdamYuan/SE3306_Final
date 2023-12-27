@@ -14,10 +14,9 @@ layout(binding = MOTION_BLUR_TILE_TEXTURE) uniform sampler2D uTile;
 // From Next-Generation-Post-Processing-in-Call-of-Duty-Advanced-Warfare-v18 and Unreal Engine
 
 #define STEP_COUNT 8
-#define SOFT_Z_EXTENT 24.0
 vec2 DepthCmp(in const float center_depth, in const float sample_depth) {
 	// return center_depth < sample_depth ? vec2(1, 0) : vec2(0, 1);
-	return clamp(0.5 + vec2(SOFT_Z_EXTENT, -SOFT_Z_EXTENT) * (sample_depth - center_depth), vec2(0), vec2(1));
+	return clamp(0.5 + vec2(1.0, -1.0) * (sample_depth - center_depth), vec2(0), vec2(1));
 }
 vec2 SpreadCmp(in const float offset_length, in const vec2 spread_length, in const float pixel_to_sample_scale) {
 	return clamp(pixel_to_sample_scale * spread_length - max(offset_length - 1., 0.), vec2(0), vec2(1));
