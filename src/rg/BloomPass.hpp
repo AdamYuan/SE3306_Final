@@ -100,8 +100,7 @@ private:
 		auto sampler = myvk::Sampler::Create(device, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
 		AddDescriptorInput<0, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>({"lower_in"},
 		                                                                                              lower, sampler);
-		AddDescriptorInput<1, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>({"albedo_in"},
-		                                                                                              albedo, sampler);
+		AddInputAttachmentInput<0, 1>({"albedo_in"}, albedo);
 		auto current = CreateResource<myvk_rg::ManagedImage>({"current"}, VK_FORMAT_R16G16B16A16_SFLOAT);
 		AddColorAttachmentInput<0, myvk_rg::Usage::kColorAttachmentW>({"current_in"}, current);
 	}

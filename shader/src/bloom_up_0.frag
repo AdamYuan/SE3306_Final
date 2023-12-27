@@ -10,6 +10,7 @@
 // Remember to use edge clamping for this texture!
 //
 layout(binding = 0) uniform sampler2D uBloom;
+layout(input_attachment_index = 0, binding = 1) uniform subpassInput uAlbedo;
 
 layout(location = 0) out vec4 oUpSample;
 
@@ -19,9 +20,8 @@ layout(push_constant) uniform uuPushConstant {
 };
 
 #include "Config.h"
-layout(binding = 1) uniform sampler2D uAlbedo;
-vec3 sample_emissive(in const vec2 uv) {
-	vec3 color = texture(uAlbedo, uv).rgb;
+vec3 sample_emissive() {
+	vec3 color = subpassLoad(uAlbedo).rgb;
 	return IsEmissive(color) ? color : vec3(0);
 }
 
@@ -57,6 +57,6 @@ void main() {
 	up += (b + d + f + h) * 2.0;
 	up += (a + c + g + i);
 	up *= 1.0 / 16.0;
-	up += sample_emissive(uv);
+	up += sample_emissive();
 	oUpSample = vec4(up, 1.0);
 }

@@ -39,13 +39,14 @@ private:
 
 		AddColorAttachmentInput<0, myvk_rg::Usage::kColorAttachmentW>({"light_in"}, light);
 		AddInputAttachmentInput<0, 0>({"albedo_in"}, albedo);
-		// AddInputAttachmentInput<1, 1>({"normal_in"}, normal);
+		AddInputAttachmentInput<1, 1>({"normal_in"}, normal);
+		AddInputAttachmentInput<2, 2>({"depth_in"}, depth);
 		/* AddDescriptorInput<0, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"albedo_in"}, albedo, sampler_edge); */
+		    {"albedo_in"}, albedo, sampler_edge);
 		AddDescriptorInput<1, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
 		    {"normal_in"}, normal, sampler_edge);
 		AddDescriptorInput<2, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"depth_in"}, depth, sampler_edge);
+		    {"depth_in"}, depth, sampler_edge); */
 		AddDescriptorInput<3, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
 		    {"sm_in"}, shadow_map, sampler_shadow);
 		AddDescriptorInput<4, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(

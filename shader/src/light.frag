@@ -7,10 +7,11 @@ const uint uTick = 0;
 layout(location = 0) out vec4 oLight;
 
 layout(input_attachment_index = 0, binding = 0) uniform subpassInput uAlbedo;
-// layout(input_attachment_index = 1, binding = 1) uniform subpassInput uNormal;
+layout(input_attachment_index = 1, binding = 1) uniform subpassInput uNormal;
+layout(input_attachment_index = 2, binding = 2) uniform subpassInput uDepth;
 // layout(binding = 0) uniform sampler2D uAlbedo;
-layout(binding = 1) uniform sampler2D uNormal;
-layout(binding = 2) uniform sampler2D uDepth;
+// layout(binding = 1) uniform sampler2D uNormal;
+// layout(binding = 2) uniform sampler2D uDepth;
 layout(binding = 3) uniform sampler2DShadow uShadowMap;
 layout(binding = 4) uniform sampler3D uVoxelRadiance;
 layout(binding = 5) uniform sampler3D uVoxelRadianceMipmaps[6];
@@ -18,7 +19,7 @@ layout(binding = 5) uniform sampler3D uVoxelRadianceMipmaps[6];
 layout(push_constant) uniform uuPushConstant { mat4 uInvViewProj, uShadowViewProj; };
 
 vec3 reconstruct_position(in const vec2 frag_coord, in float depth) {
-	vec4 clip = vec4((frag_coord / textureSize(uDepth, 0).xy) * 2.0 - 1.0, depth, 1.0);
+	vec4 clip = vec4((frag_coord / 720.0) * 2.0 - 1.0, depth, 1.0);
 	clip.y = -clip.y;
 	vec4 rec = uInvViewProj * clip;
 	return rec.xyz / rec.w;
@@ -168,10 +169,11 @@ vec3 VoxelRayMarch(sampler3D voxels, in const int lod, in const vec3 origin, in 
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
 	// vec3 albedo = texelFetch(uAlbedo, coord, 0).rgb;
-	vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
+	// vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
+	// float depth = texelFetch(uDepth, coord, 0).r;
 	vec3 albedo = subpassLoad(uAlbedo).rgb;
-	// vec3 normal = normalize(oct_to_float32x3(subpassLoad(uNormal).rg));
-	float depth = texelFetch(uDepth, coord, 0).r;
+	vec3 normal = normalize(oct_to_float32x3(subpassLoad(uNormal).rg));
+	float depth = subpassLoad(uDepth).r;
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
 
 	/* {
