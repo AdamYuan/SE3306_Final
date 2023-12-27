@@ -243,7 +243,7 @@ void Animation::Draw(float delta_t, int width, int height) {
 	m_quad_vao.Bind();
 
 	// Generate Bloom
-	m_bloom.Generate(width, height, 6, 0.005f, [](int w, int h) {
+	m_bloom.Generate(width, height, 5, 0.005f, [](int w, int h) {
 		glViewport(0, 0, w, h);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	});
@@ -256,7 +256,7 @@ void Animation::Draw(float delta_t, int width, int height) {
 	m_taa.Generate(width, height, jitter, []() { glDrawArrays(GL_TRIANGLES, 0, 3); });
 	// Motion Blur
 	if (m_motion_blur_flag)
-		m_motion_blur.Generate(width, height, 16, glm::max(0.015f / delta_t, 1.0f), jitter, [](int w, int h) {
+		m_motion_blur.Generate(width, height, 16, glm::max(0.02f / delta_t, 1.0f), jitter, [](int w, int h) {
 			glViewport(0, 0, w, h);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 		});
