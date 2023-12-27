@@ -6,8 +6,6 @@
 CONST_SPEC_MATRIX(0, kInvViewProj)
 CONST_SPEC_MATRIX(16, kShadowViewProj)
 
-const uint uTick = 0;
-
 layout(location = 0) out vec4 oLight;
 
 layout(input_attachment_index = 0, binding = 0) uniform subpassInput uAlbedo;
@@ -20,10 +18,13 @@ layout(binding = 3) uniform sampler2DShadow uShadowMap;
 layout(binding = 4) uniform sampler3D uVoxelRadiance;
 layout(binding = 5) uniform sampler3D uVoxelRadianceMipmaps[6];
 
-layout(push_constant) uniform uuPushConstant { mat4 uInvViewProj, uShadowViewProj; };
+layout(push_constant) uniform uuPushConstant {
+	uvec2 uResolution;
+	uint uTick;
+};
 
 vec3 reconstruct_position(in const vec2 frag_coord, in float depth) {
-	vec4 clip = vec4((frag_coord / 720.0) * 2.0 - 1.0, depth, 1.0); // TODO: replace 720 with sth.
+	vec4 clip = vec4((frag_coord / vec2(uResolution)) * 2.0 - 1.0, depth, 1.0);
 	clip.y = -clip.y;
 	vec4 rec = kInvViewProj * clip;
 	return rec.xyz / rec.w;
@@ -183,7 +184,7 @@ void main() {
 	/* {
 	    vec3 origin = vec3(0, 0, 1 + sqrt(3.));
 	    vec3 dir = normalize(position - origin);
-	    vec3 color = VoxelRayMarch(uVoxelRadianceMipmaps[0], 0, origin, dir);
+	    vec3 color = VoxelRayMarch(uVoxelRadiance, 0, origin, dir);
 	    color /= color + 1;
 	    oLight = vec4(color, 1.0);
 	    return;

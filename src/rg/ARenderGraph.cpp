@@ -77,6 +77,7 @@ void ARenderGraph::Update(const Animation &animation) {
 	GetPass<MotionBlurPass>({"mb_pass"})->SetJitter(jitter);
 	GetPass<MotionBlurPass>({"mb_pass"})->SetSearchScale(glm::max(float(0.015 / delta), 1.0f));
 	GetPass<ScreenPass>({"screen_pass"})->SetJitter(jitter);
+	GetPass<LightPass>({"light_pass"})->SetTick(m_tick ^ m_tick_mask);
 
 	++m_tick;
 	m_time = new_time;

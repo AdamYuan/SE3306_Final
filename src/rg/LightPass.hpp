@@ -10,6 +10,7 @@ class LightPass final : public myvk_rg::GraphicsPassBase {
 
 private:
 	myvk::Ptr<myvk::GraphicsPipeline> m_pipeline;
+	uint32_t m_tick = 0;
 
 	void Initialize(myvk_rg::ImageInput albedo, myvk_rg::ImageInput normal, myvk_rg::ImageInput depth,
 	                myvk_rg::ImageInput shadow_map, //
@@ -62,6 +63,7 @@ public:
 	void CreatePipeline() final;
 	void CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const final;
 	inline auto GetLightOutput() { return MakeImageOutput({"light_in"}); }
+	inline void SetTick(uint32_t tick) { m_tick = tick; }
 };
 
 } // namespace rg

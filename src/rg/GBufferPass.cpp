@@ -7,7 +7,7 @@ void GBufferPass::CreatePipeline() {
 
 	auto pipeline_layout =
 	    myvk::PipelineLayout::Create(device, {m_ani_instance.GetDescriptorSet()->GetDescriptorSetLayoutPtr()},
-	                                 {{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4) + sizeof(glm::vec2)}});
+	                                 {{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(m_jitter)}});
 
 	constexpr uint32_t kVertSpv[] = {
 #include <shader/gbuffer.vert.u32>
@@ -19,6 +19,10 @@ void GBufferPass::CreatePipeline() {
 	std::shared_ptr<myvk::ShaderModule> vert_shader_module, frag_shader_module;
 	vert_shader_module = myvk::ShaderModule::Create(device, kVertSpv, sizeof(kVertSpv));
 	frag_shader_module = myvk::ShaderModule::Create(device, kFragSpv, sizeof(kFragSpv));
+
+	auto view_proj = Animation::GetCameraViewProj();
+	for (int i = 0; i < 16; ++i)
+		vert_shader_module->AddSpecialization(i, view_proj[i / 4][i % 4]);
 
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stages = {
 	    vert_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
@@ -45,11 +49,8 @@ void GBufferPass::CreatePipeline() {
 void GBufferPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const {
 	command_buffer->CmdBindPipeline(m_pipeline);
 	command_buffer->CmdBindDescriptorSets({m_ani_instance.GetDescriptorSet()}, m_pipeline);
-	float pc_data[16 + 2];
-	*(glm::mat4 *)pc_data = Animation::GetCameraViewProj();
-	*(glm::vec2 *)(pc_data + 16) = m_jitter;
-	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc_data),
-	                                 pc_data);
+	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_VERTEX_BIT, 0,
+	                                 sizeof(m_jitter), &m_jitter);
 	m_ani_instance.CmdDraw(command_buffer, {.opt_cornell_lod = 0,
 	                                        .opt_tumbler_lod = 0,
 	                                        .opt_marble_lod = 0,

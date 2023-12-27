@@ -7,7 +7,7 @@ namespace rg {
 void LightPass::CreatePipeline() {
 	auto pipeline_layout = myvk::PipelineLayout::Create(
 	    GetRenderGraphPtr()->GetDevicePtr(), {GetVkDescriptorSetLayout()},
-	    {VkPushConstantRange{.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT, .offset = 0, .size = 2 * sizeof(glm::mat4)}});
+	    {VkPushConstantRange{.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT, .offset = 0, .size = 3 * sizeof(uint32_t)}});
 
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 
@@ -48,9 +48,8 @@ void LightPass::CreatePipeline() {
 }
 void LightPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const {
 	command_buffer->CmdBindPipeline(m_pipeline);
-	float pc_data[32];
-	*(glm::mat4 *)pc_data = Animation::GetInvCameraViewProj();
-	*(glm::mat4 *)(pc_data + 16) = Animation::GetShadowViewProj();
+	auto extent = GetRenderGraphPtr()->GetCanvasSize();
+	uint32_t pc_data[3] = {extent.width, extent.height, m_tick};
 	command_buffer->CmdBindDescriptorSets({GetVkDescriptorSet()}, m_pipeline);
 	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_FRAGMENT_BIT, 0,
 	                                 sizeof(pc_data), pc_data);

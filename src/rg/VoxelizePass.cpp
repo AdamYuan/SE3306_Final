@@ -6,8 +6,7 @@ void VoxelDrawPass::CreatePipeline() {
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 
 	auto pipeline_layout = myvk::PipelineLayout::Create(
-	    device, {GetVkDescriptorSetLayout(), m_ani_instance.GetDescriptorSet()->GetDescriptorSetLayoutPtr()},
-	    {{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}});
+	    device, {GetVkDescriptorSetLayout(), m_ani_instance.GetDescriptorSet()->GetDescriptorSetLayoutPtr()}, {});
 
 	constexpr uint32_t kVertSpv[] = {
 #include <shader/voxelize.vert.u32>
@@ -23,6 +22,10 @@ void VoxelDrawPass::CreatePipeline() {
 	vert_shader_module = myvk::ShaderModule::Create(device, kVertSpv, sizeof(kVertSpv));
 	geom_shader_module = myvk::ShaderModule::Create(device, kGeomSpv, sizeof(kGeomSpv));
 	frag_shader_module = myvk::ShaderModule::Create(device, kFragSpv, sizeof(kFragSpv));
+
+	auto shadow_view_proj = Animation::GetShadowViewProj();
+	for (int i = 0; i < 16; ++i)
+		vert_shader_module->AddSpecialization(i, shadow_view_proj[i / 4][i % 4]);
 
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stages = {
 	    vert_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
@@ -47,10 +50,6 @@ void VoxelDrawPass::CreatePipeline() {
 void VoxelDrawPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const {
 	command_buffer->CmdBindPipeline(m_pipeline);
 	command_buffer->CmdBindDescriptorSets({GetVkDescriptorSet(), m_ani_instance.GetDescriptorSet()}, m_pipeline);
-	float pc_data[16];
-	*(glm::mat4 *)pc_data = Animation::GetShadowViewProj();
-	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc_data),
-	                                 pc_data);
 	m_ani_instance.CmdDraw(command_buffer, {.opt_cornell_lod = 1,
 	                                        .opt_tumbler_lod = 1,
 	                                        // .opt_marble_lod = 1,

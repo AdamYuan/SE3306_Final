@@ -5,8 +5,7 @@ namespace rg {
 void ShadowMapPass::CreatePipeline() {
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 
-	auto pipeline_layout =
-	    myvk::PipelineLayout::Create(device, {}, {{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}});
+	auto pipeline_layout = myvk::PipelineLayout::Create(device, {}, {});
 
 	constexpr uint32_t kVertSpv[] = {
 #include <shader/shadow.vert.u32>
@@ -18,6 +17,10 @@ void ShadowMapPass::CreatePipeline() {
 	std::shared_ptr<myvk::ShaderModule> vert_shader_module, frag_shader_module;
 	vert_shader_module = myvk::ShaderModule::Create(device, kVertSpv, sizeof(kVertSpv));
 	frag_shader_module = myvk::ShaderModule::Create(device, kFragSpv, sizeof(kFragSpv));
+
+	auto shadow_view_proj = Animation::GetShadowViewProj();
+	for (int i = 0; i < 16; ++i)
+		vert_shader_module->AddSpecialization(i, shadow_view_proj[i / 4][i % 4]);
 
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stages = {
 	    vert_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
@@ -41,10 +44,6 @@ void ShadowMapPass::CreatePipeline() {
 
 void ShadowMapPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const {
 	command_buffer->CmdBindPipeline(m_pipeline);
-	float pc_data[16];
-	*(glm::mat4 *)pc_data = Animation::GetShadowViewProj();
-	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc_data),
-	                                 pc_data);
 	m_ani_instance.CmdDraw(command_buffer, m_draw_config);
 }
 } // namespace rg
