@@ -38,12 +38,10 @@ private:
 		auto light = CreateResource<myvk_rg::ManagedImage>({"light"}, VK_FORMAT_A2R10G10B10_UNORM_PACK32);
 
 		AddColorAttachmentInput<0, myvk_rg::Usage::kColorAttachmentW>({"light_in"}, light);
-		AddInputAttachmentInput<0, 0>({"albedo_in"}, albedo);
-		AddInputAttachmentInput<1, 1>({"normal_in"}, normal);
-		/* AddDescriptorInput<0, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
+		AddDescriptorInput<0, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
 		    {"albedo_in"}, albedo, sampler_edge);
 		AddDescriptorInput<1, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"normal_in"}, normal, sampler_edge); */
+		    {"normal_in"}, normal, sampler_edge);
 		AddDescriptorInput<2, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
 		    {"depth_in"}, depth, sampler_edge);
 		AddDescriptorInput<3, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
