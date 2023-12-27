@@ -2,7 +2,7 @@
 
 layout(location = 0) out vec4 oColor;
 
-layout(input_attachment_index = 0, binding = 0) uniform subpassInput uColor;
+layout(binding = 0) uniform sampler2D uColor;
 layout(binding = 1) uniform sampler2D uBloom;
 
 layout(push_constant) uniform uuPushConstant { vec2 uUVJitter; };
@@ -19,7 +19,7 @@ void main() {
 	vec2 inv_resolution = 1.0 / textureSize(uBloom, 0);
 	vec2 uv = gl_FragCoord.xy * inv_resolution, uv_unjitter = uv + uUVJitter;
 
-	vec3 color = subpassLoad(uColor).rgb;
+	vec3 color = texelFetch(uColor, coord, 0).rgb;
 	vec3 bloom = textureLod(uBloom, uv_unjitter, 0).rgb;
 	color /= 1.0 - color; // Inverse Tone Mapping
 	color = mix(color, bloom, 0.1);

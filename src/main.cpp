@@ -11,6 +11,8 @@ constexpr int kWidth = 720, kHeight = 720, kFrameCount = 3;
 
 Animation animation = {};
 
+bool enable_motion_blur = true;
+
 static void key_callback(GLFWwindow *, int key, int, int action, int) {
 	if (action != GLFW_PRESS)
 		return;
@@ -19,8 +21,8 @@ static void key_callback(GLFWwindow *, int key, int, int action, int) {
 		animation.ToggleMarbles();
 	else if (key == GLFW_KEY_F)
 		animation.ToggleFireball();
-	// else if (key == GLFW_KEY_M)
-	// 	animation.ToggleMotionBlur();
+	else if (key == GLFW_KEY_M)
+		enable_motion_blur = !enable_motion_blur;
 }
 
 int main() {
@@ -79,6 +81,7 @@ int main() {
 			const auto &command_buffer = frame_manager->GetCurrentCommandBuffer();
 			const auto &render_graph = render_graphs[current_frame];
 
+			render_graph->SetMotionBlur(enable_motion_blur);
 			render_graph->Update(animation);
 
 			command_buffer->Begin();

@@ -15,13 +15,9 @@
 
 namespace rg {
 
-void ARenderGraph::Initialize(const myvk::Ptr<myvk::FrameManager> &frame_manager, const GPUAInstance &gpu_ani_instance,
-                              uint64_t tick_mask) {
-	m_ani_instance = gpu_ani_instance;
-	m_tick_mask = tick_mask;
-	m_time = glfwGetTime();
-
-	auto swapchain_image = CreateResource<myvk_rg::SwapchainImage>({"swapchain_image"}, frame_manager);
+void ARenderGraph::create_passes() {
+	ClearPasses();
+	ClearResults();
 
 	auto gbuffer_pass = CreatePass<GBufferPass>({"gbuffer_pass"}, m_ani_instance);
 	auto shadowmap_pass_0 =
@@ -51,12 +47,25 @@ void ARenderGraph::Initialize(const myvk::Ptr<myvk::FrameManager> &frame_manager
 
 	auto bloom_pass = CreatePass<BloomPass>({"bloom_pass"}, gbuffer_pass->GetAlbedoOutput(), 6, 0.005f);
 
-	auto screen_pass = CreatePass<ScreenPass>({"screen_pass"}, mb_pass->GetMotionBlurOutput(),
-	                                          bloom_pass->GetBloomOutput(), swapchain_image);
+	auto swapchain_image = GetResource<myvk_rg::SwapchainImage>({"swapchain_image"});
+
+	auto screen_pass =
+	    CreatePass<ScreenPass>({"screen_pass"}, m_enable_mb ? mb_pass->GetMotionBlurOutput() : taa_pass->GetTAAOutput(),
+	                           bloom_pass->GetBloomOutput(), swapchain_image);
 	// auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, bloom_pass->GetBloomOutput(), swapchain_image,
 	//                                                     VK_FILTER_NEAREST);
 
 	AddResult({"result"}, screen_pass->GetOutput());
+}
+
+void ARenderGraph::Initialize(const myvk::Ptr<myvk::FrameManager> &frame_manager, const GPUAInstance &gpu_ani_instance,
+                              uint64_t tick_mask) {
+	m_ani_instance = gpu_ani_instance;
+	m_tick_mask = tick_mask;
+	m_time = glfwGetTime();
+
+	auto swapchain_image = CreateResource<myvk_rg::SwapchainImage>({"swapchain_image"}, frame_manager);
+	create_passes();
 }
 
 void ARenderGraph::Update(const Animation &animation) {
