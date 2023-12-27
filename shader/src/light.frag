@@ -19,7 +19,7 @@ layout(binding = 5) uniform sampler3D uVoxelRadianceMipmaps[6];
 layout(push_constant) uniform uuPushConstant { mat4 uInvViewProj, uShadowViewProj; };
 
 vec3 reconstruct_position(in const vec2 frag_coord, in float depth) {
-	vec4 clip = vec4((frag_coord / 720.0) * 2.0 - 1.0, depth, 1.0);
+	vec4 clip = vec4((frag_coord / 720.0) * 2.0 - 1.0, depth, 1.0); // TODO: replace 720 with sth.
 	clip.y = -clip.y;
 	vec4 rec = uInvViewProj * clip;
 	return rec.xyz / rec.w;
