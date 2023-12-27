@@ -1,6 +1,10 @@
 #version 450
 
 #include "Config.h"
+#include "Util.h"
+
+CONST_SPEC_MATRIX(0, kInvViewProj)
+CONST_SPEC_MATRIX(16, kShadowViewProj)
 
 const uint uTick = 0;
 
@@ -21,7 +25,7 @@ layout(push_constant) uniform uuPushConstant { mat4 uInvViewProj, uShadowViewPro
 vec3 reconstruct_position(in const vec2 frag_coord, in float depth) {
 	vec4 clip = vec4((frag_coord / 720.0) * 2.0 - 1.0, depth, 1.0); // TODO: replace 720 with sth.
 	clip.y = -clip.y;
-	vec4 rec = uInvViewProj * clip;
+	vec4 rec = kInvViewProj * clip;
 	return rec.xyz / rec.w;
 }
 
@@ -38,7 +42,7 @@ float InterleavedGradientNoise(in const ivec2 pixel_pos) {
 }
 float DirectVisibility(in const vec3 position, in const vec3 normal) {
 	vec3 light_dir = GetCornellLightDir(position);
-	vec4 shadow_pos = uShadowViewProj * vec4(position, 1);
+	vec4 shadow_pos = kShadowViewProj * vec4(position, 1);
 	shadow_pos.y = -shadow_pos.y;
 	shadow_pos /= shadow_pos.w;
 	shadow_pos.xy = shadow_pos.xy * 0.5 + 0.5;

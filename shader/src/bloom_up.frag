@@ -8,22 +8,21 @@
 // Remember to add bilinear minification filter for this texture!
 // Remember to use a floating-point texture format (for HDR)!
 // Remember to use edge clamping for this texture!
-//
+
+layout(constant_id = 0) const float kFilterRadius = 0.0;
+
 layout(binding = 0) uniform sampler2D uBloom;
 
 layout(location = 0) out vec4 oUpSample;
 
-layout(push_constant) uniform uuPushConstant {
-	ivec2 uDstResolution;
-	float uFilterRadius;
-};
+layout(push_constant) uniform uuPushConstant { ivec2 uDstResolution; };
 
 void main() {
 	vec2 uv = gl_FragCoord.xy / vec2(uDstResolution);
 
 	// The filter kernel is applied with a radius, specified in texture
 	// coordinates, so that the radius will vary across mip resolutions.
-	float x = uFilterRadius, y = uFilterRadius;
+	float x = kFilterRadius, y = kFilterRadius;
 
 	// Take 9 samples around current texel:
 	// a - b - c

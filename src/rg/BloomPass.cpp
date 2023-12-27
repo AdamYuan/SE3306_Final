@@ -77,8 +77,7 @@ void BloomDownPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buf
 void BloomUpPass::CreatePipeline() {
 	auto pipeline_layout = myvk::PipelineLayout::Create(
 	    GetRenderGraphPtr()->GetDevicePtr(), {GetVkDescriptorSetLayout()},
-	    {VkPushConstantRange{
-	        .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT, .offset = 0, .size = sizeof(float) + sizeof(uint32_t) * 2}});
+	    {VkPushConstantRange{.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT, .offset = 0, .size = sizeof(uint32_t) * 2}});
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 	constexpr uint32_t kVertSpv[] = {
 #include <shader/quad.vert.u32>
@@ -89,6 +88,9 @@ void BloomUpPass::CreatePipeline() {
 	std::shared_ptr<myvk::ShaderModule> vert_shader_module, frag_shader_module;
 	vert_shader_module = myvk::ShaderModule::Create(device, kVertSpv, sizeof(kVertSpv));
 	frag_shader_module = myvk::ShaderModule::Create(device, kFragSpv, sizeof(kFragSpv));
+
+	frag_shader_module->AddSpecialization<float>(0, m_filter_radius);
+
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stages = {
 	    vert_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
 	    frag_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT)};
@@ -115,10 +117,7 @@ void BloomUpPass::CreatePipeline() {
 void BloomUpPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const {
 	auto extent = GetRenderGraphPtr()->GetCanvasSize();
 	extent = VkExtent2D{std::max(extent.width >> m_level, 1u), std::max(extent.height >> m_level, 1u)};
-	float pc_data[3];
-	*(uint32_t *)pc_data = extent.width;
-	*(uint32_t *)(pc_data + 1) = extent.height;
-	pc_data[2] = m_filter_radius;
+	uint32_t pc_data[2] = {extent.width, extent.height};
 	command_buffer->CmdBindPipeline(m_pipeline);
 	command_buffer->CmdBindDescriptorSets({GetVkDescriptorSet()}, m_pipeline);
 	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_FRAGMENT_BIT, 0,
@@ -129,8 +128,7 @@ void BloomUpPass::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffe
 void BloomUpPass0::CreatePipeline() {
 	auto pipeline_layout = myvk::PipelineLayout::Create(
 	    GetRenderGraphPtr()->GetDevicePtr(), {GetVkDescriptorSetLayout()},
-	    {VkPushConstantRange{
-	        .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT, .offset = 0, .size = sizeof(float) + sizeof(uint32_t) * 2}});
+	    {VkPushConstantRange{.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT, .offset = 0, .size = sizeof(uint32_t) * 2}});
 	const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 	constexpr uint32_t kVertSpv[] = {
 #include <shader/quad.vert.u32>
@@ -141,6 +139,9 @@ void BloomUpPass0::CreatePipeline() {
 	std::shared_ptr<myvk::ShaderModule> vert_shader_module, frag_shader_module;
 	vert_shader_module = myvk::ShaderModule::Create(device, kVertSpv, sizeof(kVertSpv));
 	frag_shader_module = myvk::ShaderModule::Create(device, kFragSpv, sizeof(kFragSpv));
+
+	frag_shader_module->AddSpecialization<float>(0, m_filter_radius);
+
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stages = {
 	    vert_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
 	    frag_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT)};
@@ -159,10 +160,7 @@ void BloomUpPass0::CreatePipeline() {
 }
 void BloomUpPass0::CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const {
 	auto extent = GetRenderGraphPtr()->GetCanvasSize();
-	float pc_data[3];
-	*(uint32_t *)pc_data = extent.width;
-	*(uint32_t *)(pc_data + 1) = extent.height;
-	pc_data[2] = m_filter_radius;
+	uint32_t pc_data[2] = {extent.width, extent.height};
 	command_buffer->CmdBindPipeline(m_pipeline);
 	command_buffer->CmdBindDescriptorSets({GetVkDescriptorSet()}, m_pipeline);
 	command_buffer->CmdPushConstants(m_pipeline->GetPipelineLayoutPtr(), VK_SHADER_STAGE_FRAGMENT_BIT, 0,

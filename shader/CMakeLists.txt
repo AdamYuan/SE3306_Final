@@ -4,6 +4,7 @@ project(SE3306_Final)
 set(SHADER_HEADER
         Texture.h
         Config.h
+        Util.h
 )
 
 set(SHADER_SRC

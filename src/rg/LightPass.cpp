@@ -21,6 +21,12 @@ void LightPass::CreatePipeline() {
 	std::shared_ptr<myvk::ShaderModule> vert_shader_module, frag_shader_module;
 	vert_shader_module = myvk::ShaderModule::Create(device, kVertSpv, sizeof(kVertSpv));
 	frag_shader_module = myvk::ShaderModule::Create(device, kFragSpv, sizeof(kFragSpv));
+	auto inv_view_proj = Animation::GetInvCameraViewProj();
+	auto shadow_view_proj = Animation::GetShadowViewProj();
+	for (int i = 0; i < 16; ++i)
+		frag_shader_module->AddSpecialization(i, inv_view_proj[i / 4][i % 4]);
+	for (int i = 0; i < 16; ++i)
+		frag_shader_module->AddSpecialization(i + 16, shadow_view_proj[i / 4][i % 4]);
 
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stages = {
 	    vert_shader_module->GetPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT),
