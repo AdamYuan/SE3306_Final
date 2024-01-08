@@ -109,7 +109,7 @@ vec3 cone_trace(in const vec3 origin,
 	ivec3 axis_indices = ivec3(dir.x < 0.0 ? 0 : 1, dir.y < 0.0 ? 2 : 3, dir.z < 0.0 ? 4 : 5);
 	vec3 axis_weights = dir * dir;
 
-	while (dist < 4. && acc.a < 1.) {
+	while (dist < 4. && acc.a < .99) {
 		float diameter = 2. * tan_half_cone * dist;
 		vec4 samp = sample_voxel(origin + dist * dir, log2(diameter * inv_voxel_size), axis_indices, axis_weights);
 		acc += samp * (1.0 - acc.a);
@@ -135,12 +135,60 @@ vec3 IndirectLight(in const vec3 position, in const vec3 normal) {
 	return radiance;
 }
 
+// from https://www.shadertoy.com/view/7ltGz7, for presentation
+vec3 VoxelRayMarch(sampler3D voxels, in const int lod, in const vec3 origin, in const vec3 dir) {
+	ivec3 voxel_dim = textureSize(voxels, lod);
+	float voxel_size = 2.0 / (VOXEL_SCALE * voxel_dim.x);
+
+	vec3 position = (origin * VOXEL_SCALE * .5 + .5) * vec3(voxel_dim);
+	vec3 voxel_pos = floor(position);
+
+	vec3 step_dir = sign(dir);
+
+	vec3 delta = voxel_size / dir;
+
+	vec3 max_dist = vec3(step_dir.x > 0.0 ? voxel_pos.x + 1.0 - position.x : position.x - voxel_pos.x,
+	                     step_dir.y > 0.0 ? voxel_pos.y + 1.0 - position.y : position.y - voxel_pos.y,
+	                     step_dir.z > 0.0 ? voxel_pos.z + 1.0 - position.z : position.z - voxel_pos.z);
+
+	max_dist *= delta;
+
+	for (int i = 0; i < 256; i++) {
+		vec4 samp = texelFetch(voxels, clamp(ivec3(voxel_pos), ivec3(0), voxel_dim - 1), lod);
+		if (samp.a > 0)
+			return samp.rgb;
+
+		vec3 abs_max = abs(max_dist);
+
+		if (abs_max.x < abs_max.y && abs_max.x < abs_max.z) {
+			voxel_pos.x += step_dir.x;
+			max_dist.x += delta.x;
+		} else if (abs_max.y < abs_max.z) {
+			voxel_pos.y += step_dir.y;
+			max_dist.y += delta.y;
+		} else {
+			voxel_pos.z += step_dir.z;
+			max_dist.z += delta.z;
+		}
+	}
+	return vec3(0);
+}
+
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
 	vec3 albedo = texelFetch(uAlbedo, coord, 0).rgb;
 	vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
 	float depth = texelFetch(uDepth, coord, 0).r;
 	vec3 position = reconstruct_position(gl_FragCoord.xy, depth);
+
+	/* {
+	    vec3 origin = vec3(0, 0, 1 + sqrt(3.));
+	    vec3 dir = normalize(position - origin);
+	    vec3 color = VoxelRayMarch(uVoxelRadiance, 0, origin, dir);
+	    color /= color + 1;
+	    oLight = color;
+	    return;
+	} */
 
 	vec3 light =
 	    IsEmissive(albedo) ? albedo : albedo * IndirectLight(position, normal) * DirectVisibility(position, normal);
