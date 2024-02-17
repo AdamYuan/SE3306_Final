@@ -11,9 +11,6 @@ layout(location = 0) out vec4 oLight;
 layout(input_attachment_index = 0, binding = 0) uniform subpassInput uAlbedo;
 layout(input_attachment_index = 1, binding = 1) uniform subpassInput uNormal;
 layout(input_attachment_index = 2, binding = 2) uniform subpassInput uDepth;
-// layout(binding = 0) uniform sampler2D uAlbedo;
-// layout(binding = 1) uniform sampler2D uNormal;
-// layout(binding = 2) uniform sampler2D uDepth;
 layout(binding = 3) uniform sampler2DShadow uShadowMap;
 layout(binding = 4) uniform sampler3D uVoxelRadiance;
 layout(binding = 5) uniform sampler3D uVoxelRadianceMipmaps[6];
@@ -173,9 +170,6 @@ vec3 VoxelRayMarch(sampler3D voxels, in const int lod, in const vec3 origin, in 
 
 void main() {
 	ivec2 coord = ivec2(gl_FragCoord.xy);
-	// vec3 albedo = texelFetch(uAlbedo, coord, 0).rgb;
-	// vec3 normal = normalize(oct_to_float32x3(texelFetch(uNormal, coord, 0).rg));
-	// float depth = texelFetch(uDepth, coord, 0).r;
 	vec3 albedo = subpassLoad(uAlbedo).rgb;
 	vec3 normal = normalize(oct_to_float32x3(subpassLoad(uNormal).rg));
 	float depth = subpassLoad(uDepth).r;

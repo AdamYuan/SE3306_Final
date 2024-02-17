@@ -6,15 +6,15 @@
 namespace rg {
 
 class LightPass final : public myvk_rg::GraphicsPassBase {
-	MYVK_RG_FRIENDS
-
 private:
 	myvk::Ptr<myvk::GraphicsPipeline> m_pipeline;
 	uint32_t m_tick = 0;
 
-	void Initialize(myvk_rg::ImageInput albedo, myvk_rg::ImageInput normal, myvk_rg::ImageInput depth,
-	                myvk_rg::ImageInput shadow_map, //
-	                myvk_rg::ImageInput voxel, std::array<myvk_rg::ImageInput, 6> voxel_mipmaps) {
+public:
+	LightPass(myvk_rg::Parent parent, const myvk_rg::Image &albedo, const myvk_rg::Image &normal,
+	          const myvk_rg::Image &depth, const myvk_rg::Image &shadow_map, const myvk_rg::Image &voxel,
+	          std::array<myvk_rg::Image, 6> voxel_mipmaps)
+	    : myvk_rg::GraphicsPassBase(parent) {
 		const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 		auto sampler_edge = myvk::Sampler::Create(device, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
 		auto sampler_border = myvk::Sampler::CreateClampToBorder(
@@ -38,27 +38,18 @@ private:
 
 		auto light = CreateResource<myvk_rg::ManagedImage>({"light"}, VK_FORMAT_A2R10G10B10_UNORM_PACK32);
 
-		AddColorAttachmentInput<0, myvk_rg::Usage::kColorAttachmentW>({"light_in"}, light);
-		AddInputAttachmentInput<0, 0>({"albedo_in"}, albedo);
-		AddInputAttachmentInput<1, 1>({"normal_in"}, normal);
-		AddInputAttachmentInput<2, 2>({"depth_in"}, depth);
-		/* AddDescriptorInput<0, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"albedo_in"}, albedo, sampler_edge);
-		AddDescriptorInput<1, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"normal_in"}, normal, sampler_edge);
-		AddDescriptorInput<2, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"depth_in"}, depth, sampler_edge); */
-		AddDescriptorInput<3, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"sm_in"}, shadow_map, sampler_shadow);
-		AddDescriptorInput<4, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {"voxel_in"}, voxel, sampler_border);
-		std::vector<myvk_rg::SamplerDescriptorInput> mip_inputs(6);
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"light_in"}, light->AsInput());
+		AddInputAttachmentInput(0, {0}, {"albedo_in"}, albedo);
+		AddInputAttachmentInput(1, {1}, {"normal_in"}, normal);
+		AddInputAttachmentInput(2, {2}, {"depth_in"}, depth);
+		AddDescriptorInput<myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
+		    {3}, {"sm_in"}, shadow_map, sampler_shadow);
+		AddDescriptorInput<myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
+		    {4}, {"voxel_in"}, voxel, sampler_border);
 		for (uint32_t i = 0; i < 6; ++i)
-			mip_inputs[i] = {.input_key = {"voxel_mip_in", i}, .resource = voxel_mipmaps[i], .sampler = sampler_border};
-		AddDescriptorInput<5, myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(mip_inputs);
+			AddDescriptorInput<myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
+			    {5, i}, {"voxel_mip_in", i}, voxel_mipmaps[i], sampler_border);
 	}
-
-public:
 	inline ~LightPass() final = default;
 	void CreatePipeline() final;
 	void CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const final;

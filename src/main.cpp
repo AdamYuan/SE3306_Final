@@ -55,8 +55,8 @@ int main() {
 	myvk::Ptr<rg::ARenderGraph> render_graphs[kFrameCount];
 	for (uint32_t f = 0; f < kFrameCount; ++f) {
 		auto &render_graph = render_graphs[f];
-		render_graph = rg::ARenderGraph::Create(generic_queue, frame_manager,
-		                                        GPUAInstance::Create(gpu_ani_mesh, gpu_ani_texture), f);
+		render_graph =
+		    myvk::MakePtr<rg::ARenderGraph>(frame_manager, GPUAInstance::Create(gpu_ani_mesh, gpu_ani_texture), f);
 		render_graph->SetCanvasSize(VkExtent2D{kWidth, kHeight});
 	}
 

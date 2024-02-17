@@ -21,7 +21,7 @@ void ARenderGraph::create_passes() {
 
 	auto gbuffer_pass = CreatePass<GBufferPass>({"gbuffer_pass"}, m_ani_instance);
 	auto shadowmap_pass_0 =
-	    CreatePass<ShadowMapPass>({"shadow_pass", 0}, m_ani_instance, ADrawConfig{.opt_tumbler_lod = 0}, 480, nullptr);
+	    CreatePass<ShadowMapPass>({"shadow_pass", 0}, m_ani_instance, ADrawConfig{.opt_tumbler_lod = 0}, 480);
 
 	auto voxelize_pass =
 	    CreatePass<VoxelizePass>({"voxelize_pass"}, m_ani_instance, 64, shadowmap_pass_0->GetShadowMapOutput());
@@ -51,15 +51,16 @@ void ARenderGraph::create_passes() {
 
 	auto screen_pass =
 	    CreatePass<ScreenPass>({"screen_pass"}, m_enable_mb ? mb_pass->GetMotionBlurOutput() : taa_pass->GetTAAOutput(),
-	                           bloom_pass->GetBloomOutput(), swapchain_image);
+	                           bloom_pass->GetBloomOutput(), swapchain_image->AsInput());
 	// auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, bloom_pass->GetBloomOutput(), swapchain_image,
 	//                                                     VK_FILTER_NEAREST);
 
 	AddResult({"result"}, screen_pass->GetOutput());
 }
 
-void ARenderGraph::Initialize(const myvk::Ptr<myvk::FrameManager> &frame_manager, const GPUAInstance &gpu_ani_instance,
-                              uint64_t tick_mask) {
+ARenderGraph::ARenderGraph(const myvk::Ptr<myvk::FrameManager> &frame_manager, const GPUAInstance &gpu_ani_instance,
+                           uint64_t tick_mask)
+    : myvk_rg::RenderGraphBase(frame_manager->GetDevicePtr()) {
 	m_ani_instance = gpu_ani_instance;
 	m_tick_mask = tick_mask;
 	m_time = glfwGetTime();

@@ -6,14 +6,13 @@
 
 namespace rg {
 class GBufferPass final : public myvk_rg::GraphicsPassBase {
-	MYVK_RG_FRIENDS
-
 private:
 	GPUAInstance m_ani_instance;
 	myvk::Ptr<myvk::GraphicsPipeline> m_pipeline;
 	glm::vec2 m_jitter = {};
 
-	void Initialize(const GPUAInstance &ani_instance) {
+public:
+	GBufferPass(myvk_rg::Parent parent, const GPUAInstance &ani_instance) : myvk_rg::GraphicsPassBase(parent) {
 		m_ani_instance = ani_instance;
 
 		auto albedo = CreateResource<myvk_rg::ManagedImage>({"albedo"}, VK_FORMAT_R16G16B16A16_SFLOAT);
@@ -23,13 +22,12 @@ private:
 		depth->SetLoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR);
 		depth->SetClearDepthStencilValue({.depth = 1.0f});
 
-		AddColorAttachmentInput<0, myvk_rg::Usage::kColorAttachmentW>({"albedo_in"}, albedo);
-		AddColorAttachmentInput<1, myvk_rg::Usage::kColorAttachmentW>({"normal_in"}, normal);
-		AddColorAttachmentInput<2, myvk_rg::Usage::kColorAttachmentW>({"velocity_in"}, velocity);
-		SetDepthAttachmentInput<myvk_rg::Usage::kDepthAttachmentRW>({"depth_in"}, depth);
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"albedo_in"}, albedo->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(1, {"normal_in"}, normal->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(2, {"velocity_in"}, velocity->AsInput());
+		AddDepthAttachmentInput<myvk_rg::Usage::kDepthAttachmentRW>({"depth_in"}, depth->AsInput());
 	}
 
-public:
 	inline ~GBufferPass() final = default;
 	void CreatePipeline() final;
 	void CmdExecute(const myvk::Ptr<myvk::CommandBuffer> &command_buffer) const final;
