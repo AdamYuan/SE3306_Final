@@ -65,7 +65,7 @@ ARenderGraph::ARenderGraph(const myvk::Ptr<myvk::FrameManager> &frame_manager, c
 	m_tick_mask = tick_mask;
 	m_time = glfwGetTime();
 
-	auto swapchain_image = CreateResource<myvk_rg::SwapchainImage>({"swapchain_image"}, frame_manager);
+	CreateResource<myvk_rg::SwapchainImage>({"swapchain_image"}, frame_manager);
 	create_passes();
 }
 

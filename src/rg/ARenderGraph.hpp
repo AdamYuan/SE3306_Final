@@ -14,7 +14,7 @@ private:
 	GPUAInstance m_ani_instance;
 	uint64_t m_tick = 0, m_tick_mask = 0;
 	double m_time;
-	bool m_enable_mb;
+	bool m_enable_mb{};
 
 	void create_passes();
 
