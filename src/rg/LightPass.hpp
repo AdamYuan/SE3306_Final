@@ -38,7 +38,7 @@ public:
 
 		auto light = CreateResource<myvk_rg::ManagedImage>({"light"}, VK_FORMAT_A2R10G10B10_UNORM_PACK32);
 
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"light_in"}, light->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"light_in"}, light->Alias());
 		AddInputAttachmentInput(0, {0}, {"albedo_in"}, albedo);
 		AddInputAttachmentInput(1, {1}, {"normal_in"}, normal);
 		AddInputAttachmentInput(2, {2}, {"depth_in"}, depth);

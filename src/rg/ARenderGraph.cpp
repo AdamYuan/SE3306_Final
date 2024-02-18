@@ -51,7 +51,7 @@ void ARenderGraph::create_passes() {
 
 	auto screen_pass =
 	    CreatePass<ScreenPass>({"screen_pass"}, m_enable_mb ? mb_pass->GetMotionBlurOutput() : taa_pass->GetTAAOutput(),
-	                           bloom_pass->GetBloomOutput(), swapchain_image->AsInput());
+	                           bloom_pass->GetBloomOutput(), swapchain_image->Alias());
 	// auto blit_pass = CreatePass<myvk_rg::ImageBlitPass>({"blit_pass"}, bloom_pass->GetBloomOutput(), swapchain_image,
 	//                                                     VK_FILTER_NEAREST);
 

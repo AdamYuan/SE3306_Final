@@ -25,7 +25,7 @@ public:
 			                                                 VK_IMAGE_VIEW_TYPE_3D);
 			mip->SetSize3D({m_dst_resolution, m_dst_resolution, m_dst_resolution}, 0, 1);
 			AddDescriptorInput<myvk_rg::Usage::kStorageImageW, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT>(
-			    {1, i}, {"mip_in", i}, mip->AsInput());
+			    {1, i}, {"mip_in", i}, mip->Alias());
 		}
 	}
 
@@ -62,7 +62,7 @@ public:
 			AddDescriptorInput<myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT>(
 			    {0, i}, {"src_mip_in", i}, src_voxels[i], sampler);
 			AddDescriptorInput<myvk_rg::Usage::kStorageImageW, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT>(
-			    {1, i}, {"mip_in", i}, mip->AsInput());
+			    {1, i}, {"mip_in", i}, mip->Alias());
 		}
 	}
 
@@ -113,7 +113,7 @@ public:
 	inline std::array<myvk_rg::Image, 6> GetVoxelMipmapOutputs() {
 		std::array<myvk_rg::Image, 6> ret{};
 		for (uint32_t i = 0; i < 6; ++i)
-			ret[i] = GetResource<myvk_rg::CombinedImage>({"voxel_mip", i})->AsInput();
+			ret[i] = GetResource<myvk_rg::CombinedImage>({"voxel_mip", i})->Alias();
 		return ret;
 	}
 };

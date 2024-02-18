@@ -12,7 +12,7 @@ private:
 	inline static constexpr auto div_ceil(auto x, auto y) { return x / y + (x % y == 0 ? 0 : 1); }
 
 public:
-	inline MBTileMaxPass(myvk_rg::Parent parent, myvk_rg::Image velocity, uint32_t tile_size)
+	inline MBTileMaxPass(myvk_rg::Parent parent, const myvk_rg::Image &velocity, uint32_t tile_size)
 	    : myvk_rg::ComputePassBase(parent) {
 		const auto &device = GetRenderGraphPtr()->GetDevicePtr();
 
@@ -38,7 +38,7 @@ public:
 		});
 
 		AddDescriptorInput<myvk_rg::Usage::kStorageImageW, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT>(
-		    {1}, {"vel_tile_in"}, velocity_tile->AsInput());
+		    {1}, {"vel_tile_in"}, velocity_tile->Alias());
 	}
 
 	inline ~MBTileMaxPass() final = default;
@@ -71,7 +71,7 @@ public:
 			    VkExtent2D{div_ceil(canvas_size.width, tile_size), div_ceil(canvas_size.height, tile_size)}};
 		});
 
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"nei_tile_in"}, nei_velocity_tile->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"nei_tile_in"}, nei_velocity_tile->Alias());
 	}
 
 	inline ~MBTileNeiPass() final = default;

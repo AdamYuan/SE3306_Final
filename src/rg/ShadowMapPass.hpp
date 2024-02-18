@@ -27,7 +27,7 @@ public:
 			depth->SetLoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR);
 			depth->SetClearDepthStencilValue({.depth = 1.0f});
 
-			AddDepthAttachmentInput<myvk_rg::Usage::kDepthAttachmentRW>({"depth_in"}, depth->AsInput());
+			AddDepthAttachmentInput<myvk_rg::Usage::kDepthAttachmentRW>({"depth_in"}, depth->Alias());
 		}
 	}
 

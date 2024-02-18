@@ -22,7 +22,7 @@ public:
 			return myvk_rg::SubImageSize{VkExtent2D{std::max(c.width >> 1u, 1u), std::max(c.height >> 1u, 1u)}};
 		});
 
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"down_in"}, down->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"down_in"}, down->Alias());
 	}
 	inline ~BloomDownPass1() final = default;
 	void CreatePipeline() final;
@@ -48,7 +48,7 @@ public:
 			return myvk_rg::SubImageSize{VkExtent2D{std::max(c.width >> level, 1u), std::max(c.height >> level, 1u)}};
 		});
 
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"down_in"}, down->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"down_in"}, down->Alias());
 	}
 	inline ~BloomDownPass() final = default;
 	void CreatePipeline() final;
@@ -96,7 +96,7 @@ public:
 		                                                                                           lower, sampler);
 		AddInputAttachmentInput(0, {1}, {"albedo_in"}, albedo);
 		auto current = CreateResource<myvk_rg::ManagedImage>({"current"}, VK_FORMAT_R16G16B16A16_SFLOAT);
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"current_in"}, current->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"current_in"}, current->Alias());
 	}
 
 	inline ~BloomUpPass0() final = default;

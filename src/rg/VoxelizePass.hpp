@@ -14,7 +14,7 @@ public:
 		auto voxel =
 		    CreateResource<myvk_rg::ManagedImage>({"voxel"}, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_VIEW_TYPE_3D);
 		voxel->SetSize3D({resolution, resolution, resolution});
-		AddInput<myvk_rg::Usage::kTransferImageDst, VK_PIPELINE_STAGE_2_CLEAR_BIT>({"voxel_in"}, voxel->AsInput());
+		AddInput<myvk_rg::Usage::kTransferImageDst, VK_PIPELINE_STAGE_2_CLEAR_BIT>({"voxel_in"}, voxel->Alias());
 	}
 
 	inline ~VoxelClearPass() final = default;

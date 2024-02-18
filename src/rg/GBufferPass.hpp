@@ -22,10 +22,10 @@ public:
 		depth->SetLoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR);
 		depth->SetClearDepthStencilValue({.depth = 1.0f});
 
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"albedo_in"}, albedo->AsInput());
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(1, {"normal_in"}, normal->AsInput());
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(2, {"velocity_in"}, velocity->AsInput());
-		AddDepthAttachmentInput<myvk_rg::Usage::kDepthAttachmentRW>({"depth_in"}, depth->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"albedo_in"}, albedo->Alias());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(1, {"normal_in"}, normal->Alias());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(2, {"velocity_in"}, velocity->Alias());
+		AddDepthAttachmentInput<myvk_rg::Usage::kDepthAttachmentRW>({"depth_in"}, depth->Alias());
 	}
 
 	inline ~GBufferPass() final = default;

@@ -19,15 +19,15 @@ public:
 		auto sampler_edge = myvk::Sampler::Create(device, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
 
 		auto taa = CreateResource<myvk_rg::ManagedImage>({"taa"}, VK_FORMAT_A2R10G10B10_UNORM_PACK32);
-		auto prev_taa = CreateResource<myvk_rg::LastFrameImage>({"prev_taa"}, taa->AsInput());
+		auto prev_taa = CreateResource<myvk_rg::LastFrameImage>({"prev_taa"}, taa->Alias());
 
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"taa_in"}, taa->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"taa_in"}, taa->Alias());
 
 		AddInputAttachmentInput(0, {0}, {"velocity_in"}, velocity);
 		AddDescriptorInput<myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>({1}, {"light_in"},
 		                                                                                           light, sampler_edge);
 		AddDescriptorInput<myvk_rg::Usage::kSampledImage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT>(
-		    {2}, {"prev_taa_in"}, prev_taa->AsInput(), sampler_edge);
+		    {2}, {"prev_taa_in"}, prev_taa->Alias(), sampler_edge);
 	}
 
 	inline ~TAAPass() final = default;

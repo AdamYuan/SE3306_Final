@@ -15,7 +15,7 @@ public:
 		auto speed_depth = CreateResource<myvk_rg::ManagedImage>({"sd"}, VK_FORMAT_R16G16_SFLOAT);
 		AddInputAttachmentInput(0, {0}, {"velocity"}, velocity);
 		AddInputAttachmentInput(1, {1}, {"depth"}, depth);
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"sd_in"}, speed_depth->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"sd_in"}, speed_depth->Alias());
 	}
 
 	inline ~MBSpeedDepthPass() final = default;
@@ -44,7 +44,7 @@ public:
 		                                                                                           tile, sampler_edge);
 
 		auto mb = CreateResource<myvk_rg::ManagedImage>({"mb"}, VK_FORMAT_A2R10G10B10_UNORM_PACK32);
-		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"mb_in"}, mb->AsInput());
+		AddColorAttachmentInput<myvk_rg::Usage::kColorAttachmentW>(0, {"mb_in"}, mb->Alias());
 	}
 	inline ~MBDrawPass() final = default;
 	void CreatePipeline() final;
