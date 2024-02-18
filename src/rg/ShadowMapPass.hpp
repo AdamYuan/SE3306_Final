@@ -22,7 +22,7 @@ public:
 		if (depth_input) {
 			AddDepthAttachmentInput<myvk_rg::Usage::kDepthAttachmentRW>({"depth_in"}, depth_input);
 		} else {
-			auto depth = CreateResource<myvk_rg::ManagedImage>({"depth"}, VK_FORMAT_D32_SFLOAT);
+			auto depth = CreateResource<myvk_rg::ManagedImage>({"depth"}, VK_FORMAT_D16_UNORM);
 			depth->SetSize2D({resolution, resolution});
 			depth->SetLoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR);
 			depth->SetClearDepthStencilValue({.depth = 1.0f});

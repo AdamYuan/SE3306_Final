@@ -18,7 +18,7 @@ public:
 		auto albedo = CreateResource<myvk_rg::ManagedImage>({"albedo"}, VK_FORMAT_R16G16B16A16_SFLOAT);
 		auto normal = CreateResource<myvk_rg::ManagedImage>({"normal"}, VK_FORMAT_R8G8_SNORM);
 		auto velocity = CreateResource<myvk_rg::ManagedImage>({"velocity"}, VK_FORMAT_R16G16_SFLOAT);
-		auto depth = CreateResource<myvk_rg::ManagedImage>({"depth"}, VK_FORMAT_D32_SFLOAT);
+		auto depth = CreateResource<myvk_rg::ManagedImage>({"depth"}, VK_FORMAT_D16_UNORM);
 		depth->SetLoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR);
 		depth->SetClearDepthStencilValue({.depth = 1.0f});
 

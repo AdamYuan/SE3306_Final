@@ -84,7 +84,7 @@ int main() {
 			render_graph->SetMotionBlur(enable_motion_blur);
 			render_graph->Update(animation);
 
-			command_buffer->Begin();
+			command_buffer->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 			render_graph->CmdExecute(command_buffer);
 			command_buffer->End();
 
